@@ -1,0 +1,8 @@
+//
+// Created by wyz on 2021/6/8.
+//
+
+#ifndef VOLUMESLICER_WRITER_HPP
+#define VOLUMESLICER_WRITER_HPP
+
+#endif //VOLUMESLICER_WRITER_HPP
