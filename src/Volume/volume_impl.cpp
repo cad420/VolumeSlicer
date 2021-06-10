@@ -1,4 +1,83 @@
 //
 // Created by wyz on 2021/6/7.
 //
+#include<fstream>
+#include<spdlog/spdlog.h>
+#include <VolumeSlicer/volume.hpp>
+
 #include"Volume/volume_impl.hpp"
+#include"Volume/block_loader.hpp"
+
+VS_START
+
+template<class Ty>
+void LoadRawVolumeData(const char* file_name,std::vector<uint8_t>& volume_data){
+    std::ifstream in(file_name,std::ios::binary);
+    if(!in.is_open()){
+        throw std::runtime_error("file open failed!");
+    }
+    in.seekg(0,std::ios::end);
+    size_t file_size=in.tellg();
+    in.seekg(0,std::ios::beg);
+    std::vector<Ty> read_data;
+    read_data.resize(file_size,0);
+    in.read(reinterpret_cast<char*>(read_data.data()),file_size);
+    in.close();
+
+    Ty min_value=std::numeric_limits<Ty>::max();
+    Ty max_value=std::numeric_limits<Ty>::min();
+    spdlog::info("Type({0}) max value is {1}, min value is {2}.",typeid(Ty).name(),min_value,max_value);
+    auto min_max=std::minmax_element(read_data.cbegin(),read_data.cend());
+    min_value=*min_max.first;
+    max_value=*min_max.second;
+    spdlog::info("Read volume data max value is {0}, min value is {1}.",max_value,min_value);
+    volume_data.resize(file_size,0);
+    for(size_t i=0;i<volume_data.size();i++){
+        volume_data[i]=1.f*(read_data[i]-min_value)/(max_value-min_value)*255;
+    }
+}
+
+std::unique_ptr<Volume<VolumeType::Raw>> Volume<VolumeType::Raw>::Load(const char *file_name,VoxelType type,const std::array<uint32_t,3>& dim,
+                                                       const std::array<float,3>& space) {
+    try{
+        std::vector<uint8_t> volume_data;
+        switch (type) {
+            case VoxelType::UInt8:
+                LoadRawVolumeData<uint8_t>(file_name, volume_data);
+                break;
+            case VoxelType::UInt16:
+                LoadRawVolumeData<uint16_t>(file_name, volume_data);
+                break;
+            case VoxelType::UInt32:
+                LoadRawVolumeData<uint32_t>(file_name, volume_data);
+                break;
+        }
+        std::unique_ptr<Volume<VolumeType::Raw>> volume;
+        volume->SetDimX(dim[0]);
+        volume->SetDimY(dim[1]);
+        volume->SetDimZ(dim[2]);
+        volume->SetSpaceX(space[0]);
+        volume->SetSpaceY(space[1]);
+        volume->SetSpaceZ(space[2]);
+        return volume;
+    }
+    catch (const std::exception& err) {
+        spdlog::error("Raw volume data({0}) load error: {1}",file_name,err.what());
+        return std::unique_ptr<Volume<VolumeType::Raw>>(nullptr);
+    }
+}
+
+std::unique_ptr<Volume<VolumeType::Comp>> Volume<VolumeType::Comp>::Load(const char *file_name) {
+    return nullptr;
+
+}
+
+std::unique_ptr<VolumeSampler> vs::VolumeSampler::CreateVolumeSampler(const std::shared_ptr<VolumeBase> &) {
+    return std::unique_ptr<VolumeSampler>();
+}
+
+
+
+VS_END
+
+

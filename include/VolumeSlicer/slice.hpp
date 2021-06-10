@@ -7,8 +7,10 @@
 
 #include<cstdint>
 #include<array>
+#include<memory>
 #include<VolumeSlicer/export.hpp>
-
+#include<VolumeSlicer/status.hpp>
+#include<VolumeSlicer/define.hpp>
 VS_START
 
 
@@ -35,22 +37,23 @@ public:
 
     Slicer& operator=(Slicer&&)=delete;
 
-    virtual ~Slicer();
+    virtual ~Slicer(){};
 
-    static Slicer* CreateSlicer(const Slice& slice);
+    static std::unique_ptr<Slicer> CreateSlicer(const Slice& slice) noexcept;
 
-    virtual void RotateByX()=0;
+    virtual void RotateByX(float)=0;
 
-    virtual void RotateByY()=0;
+    virtual void RotateByY(float)=0;
 
-    virtual void RotateByZ()=0;
+    virtual void RotateByZ(float)=0;
 
-    virtual void MoveByNormal()=0;
+    virtual void MoveByNormal(float dist)=0;
 
     virtual void MoveInPlane(float offsetX,float offsetY)=0;
 
     virtual void StretchInXY(float scaleX,float scaleY)=0;
 
+    //cpu host ptr
     virtual uint8_t* GetImageData()=0;
 
     virtual uint32_t GetImageW() const=0;

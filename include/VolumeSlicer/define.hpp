@@ -1,0 +1,13 @@
+//
+// Created by wyz on 2021/6/9.
+//
+
+#ifndef VOLUMESLICER_DEFINE_HPP
+#define VOLUMESLICER_DEFINE_HPP
+
+#define MAX_SLICE_W 10000
+#define MAX_SLICE_H 10000
+
+#define FLOAT_ZERO 0.001f
+
+#endif //VOLUMESLICER_DEFINE_HPP
