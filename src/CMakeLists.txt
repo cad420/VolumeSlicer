@@ -8,6 +8,7 @@ list(
         Slice/slice_impl.cpp
         Volume/volume_impl.cpp
         Volume/block_loader.cpp
+        Volume/volume_sampler_impl.cpp
         Render/render_impl.cpp
         IO/reader_impl.cpp
 )

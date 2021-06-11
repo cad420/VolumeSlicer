@@ -32,7 +32,7 @@ public:
     size_t GetSize() const{return size;}
     T* GetDataPtr() {return device_ptr;}
     bool IsValidPtr() const{return device_ptr;}
-    bool IsOccupied() const{
+    bool IsOccupied(){
         std::unique_lock<std::mutex> lk(mtx);
         return occupied;
     }

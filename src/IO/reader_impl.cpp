@@ -22,4 +22,13 @@ void ReaderImpl::AddLodData(int lod, const char *path) {
     readers[lod]=std::make_unique<sv::Reader>(path);
 }
 
+size_t ReaderImpl::GetBlockSizeByte() const {
+    return 0;
+}
+
+auto ReaderImpl::GetDim(int lod) -> std::array<uint32_t, 3> {
+    auto header=readers[lod]->get_header();
+    return {};
+}
+
 VS_END

@@ -10,4 +10,6 @@
 
 #define FLOAT_ZERO 0.001f
 
+#define INVALID 0xffffffff
+
 #endif //VOLUMESLICER_DEFINE_HPP

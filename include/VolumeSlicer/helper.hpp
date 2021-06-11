@@ -7,7 +7,9 @@
 
 
 #include<cuda.h>
-
+#include<VolumeSlicer/export.hpp>
+#include<VolumeSlicer/status.hpp>
+#include<VolumeSlicer/define.hpp>
 
 
 

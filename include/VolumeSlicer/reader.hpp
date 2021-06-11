@@ -24,6 +24,9 @@ public:
 
     virtual void GetPacket(const std::array<uint32_t,4>& idx,std::vector<std::vector<uint8_t>>& packet)=0;
 
+    virtual size_t GetBlockSizeByte() const =0;
+
+    virtual auto GetDim(int lod)->std::array<uint32_t,3> =0;
 };
 
 

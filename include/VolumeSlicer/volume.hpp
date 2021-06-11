@@ -11,7 +11,7 @@
 
 VS_START
 
-enum class VoxelType{
+enum class VS_EXPORT VoxelType{
     Int8,
     UInt8,
     Int16,
@@ -23,12 +23,12 @@ enum class VoxelType{
     Float64
 };
 
-enum class VolumeType{
+enum class VS_EXPORT VolumeType{
     Raw,
     Comp
 };
 
-class VolumeBase{
+class VS_EXPORT VolumeBase{
 public:
     virtual VolumeType GetVolumeType() const=0;
 
@@ -60,7 +60,7 @@ template<VolumeType type>
 class Volume;
 
 template<>
-class Volume<VolumeType::Raw>: public VolumeBase{
+class VS_EXPORT Volume<VolumeType::Raw>: public VolumeBase{
 public:
 
     static std::unique_ptr<Volume<VolumeType::Raw>> Load(const char* file_name,VoxelType type,
@@ -73,24 +73,57 @@ public:
 
 
 
+
 template<>
-class Volume<VolumeType::Comp>: public VolumeBase{
+class VS_EXPORT Volume<VolumeType::Comp>: public VolumeBase{
 public:
     struct alignas(16) VolumeBlock{
-        std::array<uint32_t,4> index;
+        VolumeBlock():valid(false){}
+        bool operator==(const std::array<uint32_t,4>& idx) const{
+            return index==idx;
+        }
+        std::array<uint32_t,4> index;//3+1: idx+lod
         std::shared_ptr<CUDAMem<uint8_t>> block_data;
-        int lod;
+        bool valid;//false rep nullptr for block_data and invalid, should be used any more
     };
+
 public:
-    //comp file must be uint8_t
+    //comp file must be uint8_t volume data
     static std::unique_ptr<Volume<VolumeType::Comp>> Load(const char* file_name);
 
-    virtual void RequestBlock(const std::array<uint32_t,4>&) noexcept =0;
-    virtual void EraseBlock(const std::array<uint32_t,4>&) noexcept =0;
-    virtual int GetQueueSize() const=0;
+    //clear all blocks in request
+    virtual void ClearRequestBlock() noexcept=0;
+
+    //set blocks in request
+    virtual void SetRequestBlock(const std::array<uint32_t,4>&) noexcept =0;
+
+    //erase a certain block in request
+    virtual void EraseBlockInRequest(const std::array<uint32_t,4>&) noexcept =0;
+
+    //clear blocks which are not in current request blocks
+    virtual void ClearBlockQueue() noexcept=0;
+
+    //clear all blocks in queue
+    virtual void ClearAllBlockInQueue() noexcept=0;
+
+    //return block num in queue which can get
+    virtual int GetBlockQueueSize() =0;
+
+    //pause loading meanings block queue will not increase
     virtual void PauseLoadBlock() noexcept = 0;
+
+    //restart loading block in request
     virtual void StartLoadBlock() noexcept = 0;
+
+    //will return immediately(no blocking)
+    //VolumeBlock::valid is false meanings not get supposed block and cant's use
     virtual VolumeBlock GetBlock(const std::array<uint32_t,4>&) noexcept =0;
+
+    //get lod volume's dim: dim-xyz+padding
+    virtual auto GetBlockDim(int lod) const ->std::array<uint32_t,3>  =0;
+
+    //get comp volume's block length and padding
+    virtual auto GetBlockLength() const ->std::array<uint32_t,2> =0;
 };
 
 

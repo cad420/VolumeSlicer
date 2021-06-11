@@ -17,7 +17,9 @@ public:
 
     void GetPacket(const std::array<uint32_t,4>& idx,std::vector<std::vector<uint8_t>>& packet) override;
 
+    size_t GetBlockSizeByte() const override;
 
+    auto GetDim(int lod)->std::array<uint32_t,3> override;
 private:
     std::unordered_map<int,std::unique_ptr<sv::Reader> > readers;
 
