@@ -1,0 +1,8 @@
+//
+// Created by wyz on 2021/6/15.
+//
+
+#ifndef VOLUMESLICER_FRAME_HPP
+#define VOLUMESLICER_FRAME_HPP
+
+#endif //VOLUMESLICER_FRAME_HPP

@@ -10,10 +10,18 @@
 VS_START
 
 class VolumeSamplerImpl: public VolumeSampler{
+public:
 
 
+    void Sample(const Slice& slice,uint8_t* data) override;
 
+private:
+    void SampleRaw(const Slice& slice,uint8_t* data);
 
+    void SampleComp(const Slice& slice,uint8_t* data);
+
+private:
+    std::shared_ptr<VolumeBase> volume;
 
 };
 

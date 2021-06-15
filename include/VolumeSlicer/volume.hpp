@@ -5,7 +5,7 @@
 #ifndef VOLUMESLICER_VOLUME_HPP
 #define VOLUMESLICER_VOLUME_HPP
 
-
+#include<type_traits>
 #include<VolumeSlicer/slice.hpp>
 #include<VolumeSlicer/cuda_memory.hpp>
 
@@ -28,7 +28,7 @@ enum class VS_EXPORT VolumeType{
     Comp
 };
 
-class VS_EXPORT VolumeBase{
+class VS_EXPORT VolumeBase {
 public:
     virtual VolumeType GetVolumeType() const=0;
 
@@ -60,7 +60,7 @@ template<VolumeType type>
 class Volume;
 
 template<>
-class VS_EXPORT Volume<VolumeType::Raw>: public VolumeBase{
+class VS_EXPORT Volume<VolumeType::Raw>: public VolumeBase,public std::true_type {
 public:
 
     static std::unique_ptr<Volume<VolumeType::Raw>> Load(const char* file_name,VoxelType type,
@@ -75,7 +75,7 @@ public:
 
 
 template<>
-class VS_EXPORT Volume<VolumeType::Comp>: public VolumeBase{
+class VS_EXPORT Volume<VolumeType::Comp>: public VolumeBase,public std::false_type{
 public:
     struct alignas(16) VolumeBlock{
         VolumeBlock():valid(false){}

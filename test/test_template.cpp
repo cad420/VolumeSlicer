@@ -2,6 +2,7 @@
 // Created by wyz on 2021/6/8.
 //
 #include<VolumeSlicer/volume.hpp>
+#include<VolumeSlicer/render.hpp>
 #include<iostream>
 #include<list>
 using namespace vs;
