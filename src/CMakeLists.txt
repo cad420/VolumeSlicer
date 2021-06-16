@@ -11,6 +11,8 @@ list(
         Volume/volume_sampler_impl.cpp
         Render/render_impl.cpp
         IO/reader_impl.cpp
+        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
+        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
 )
 add_library(VS_CORE ${VS_SRCS})
 
@@ -23,7 +25,7 @@ target_include_directories(VS_CORE
         ${CUDA_INCLUDE_DIRS}
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-
+        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
 
         )
 

@@ -71,7 +71,7 @@ public:
     virtual uint8_t* GetData()=0;
 };
 
-
+using RawVolume=Volume<VolumeType::Raw>;
 
 
 template<>
@@ -126,7 +126,7 @@ public:
     virtual auto GetBlockLength() const ->std::array<uint32_t,2> =0;
 };
 
-
+using CompVolume=Volume<VolumeType::Comp>;
 
 class VS_EXPORT VolumeSampler{
 public:
