@@ -50,6 +50,7 @@ VS_START
 
     inline void TransferFuncImpl::generateTransferFunc()
     {
+
         transfer_func.resize(TF_DIM*4);
         std::vector<uint8_t> keys;
         for(auto it:color_setting)

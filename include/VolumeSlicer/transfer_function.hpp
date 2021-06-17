@@ -13,6 +13,7 @@ VS_START
 
 class TFPoint{
 public:
+    TFPoint(uint8_t key,std::array<double,4> value):key(key),value(value){}
     uint8_t key;
     std::array<double,4> value;
 };

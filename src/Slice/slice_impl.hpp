@@ -17,6 +17,10 @@ class SlicerImpl: public Slicer{
 public:
     explicit SlicerImpl(const Slice&);
 
+    bool IsModified() const override;
+
+    void SetStatus(bool modified) override;
+
     void RotateByX(float degree) override;
 
     void RotateByY(float degree) override;
@@ -51,6 +55,7 @@ private:
     float voxel_per_pixel_width,voxel_per_pixel_height;
 
     std::vector<uint8_t> image;
+    bool is_modified;
 };
 
 VS_END

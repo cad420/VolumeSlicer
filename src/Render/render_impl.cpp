@@ -3,6 +3,7 @@
 //
 
 #include<random>
+#include<glm/gtc/matrix_transform.hpp>
 #include"Common/gl_helper.hpp"
 #include"Render/render_impl.hpp"
 #include"Render/transfer_function_impl.hpp"
@@ -21,18 +22,32 @@ MultiVolumeRender::MultiVolumeRender(int w, int h) {
     if(w>0 && h>0 && w<MAX_SLICE_W && h<MAX_SLICE_H) {
         this->window_width=w;
         this->window_height=h;
-        initGL();
         volume_tex=0;
         volume_x=volume_y=volume_z=0;
         space_x=space_y=space_z=0.f;
         volume_visible=slice_visible=false;
         x0=y0=z0=0.f;
         x1=y1=z1=1.f;
+        volume_board_vao=volume_board_vbo=volume_board_ebo=0;
+        volume_visible_board_vao=volume_visible_board_vbo=volume_visible_board_ebo=0;
+        transfer_func_tex=preInt_tf_tex=0;
+        slice_vao=slice_vbo=0;
+        screen_quad_vao=screen_quad_vbo=0;
+        initGL();
+        setPosFrameBuffer();
+        setScreenQuad();
+        setShader();
     }
 }
 
 
 void MultiVolumeRender::SetVolume(const std::unique_ptr<RawVolume>& volume) noexcept {
+    if(!volume){
+        spdlog::error("Set empty volume.");
+        return;
+    }
+    this->volume_visible=true;
+
     this->volume_x=volume->GetVolumeDimX();
     this->volume_y=volume->GetVolumeDimY();
     this->volume_z=volume->GetVolumeDimZ();
@@ -98,6 +113,8 @@ void MultiVolumeRender::SetVisibleZ(float z0, float z1) noexcept {
 
 void MultiVolumeRender::SetSlicer(std::shared_ptr<Slicer> slicer) noexcept {
     this->slicer=slicer;
+    this->slice_visible=true;
+    setSlice();
 }
 
 void MultiVolumeRender::resize(int w, int h) noexcept{
@@ -118,7 +135,8 @@ void MultiVolumeRender::initGL() {
     HWND window=create_window(ins,("wgl_invisable"+idx).c_str(),window_width,window_height);
     this->window_handle=GetDC(window);
     this->gl_context=create_opengl_context(this->window_handle);
-
+    glEnable(GL_DEPTH_TEST);
+    spdlog::info("successfully init OpenGL context.");
 }
 
 void MultiVolumeRender::SetVisible(bool volume, bool slice) noexcept {
@@ -127,15 +145,100 @@ void MultiVolumeRender::SetVisible(bool volume, bool slice) noexcept {
 
 }
 
+void MultiVolumeRender::bindShaderUniform() {
+    multi_volume_render_shader->use();
+    multi_volume_render_shader->setInt("transfer_func",0);
+    multi_volume_render_shader->setInt("preInt_transferfunc",1);
+    multi_volume_render_shader->setInt("volume_data",2);
+
+    multi_volume_render_shader->setFloat("ka",0.5f);
+    multi_volume_render_shader->setFloat("kd",0.8f);
+    multi_volume_render_shader->setFloat("shininess",100.0f);
+    multi_volume_render_shader->setFloat("ks",1.0f);
+    multi_volume_render_shader->setVec3("light_direction",glm::normalize(glm::vec3(-1.0f,-1.0f,-1.0f)));
+
+    multi_volume_render_shader->setFloat("space_x",space_x);
+    multi_volume_render_shader->setFloat("space_y",space_y);
+    multi_volume_render_shader->setFloat("space_z",space_z);
+
+    multi_volume_render_shader->setVec3("volume_board",volume_board_x,volume_board_y,volume_board_z);
 
 
+    slice_render_shader->use();
+    slice_render_shader->setInt("volume_data",2);
+    slice_render_shader->setVec3("volume_board",volume_board_x,volume_board_y,volume_board_z);
+}
+
+void MultiVolumeRender::bindTextureUnit() {
+    glBindTextureUnit(0,transfer_func_tex);
+    glBindTextureUnit(1,preInt_tf_tex);
+    glBindTextureUnit(2,volume_tex);
+    glBindTextureUnit(3,raycast_entry_pos_tex);
+    glBindTextureUnit(4,raycast_exit_pos_tex);
+    glBindTextureUnit(5,slice_color_tex);
+    glBindTextureUnit(6,slice_pos_tex);
+    GL_CHECK
+}
 
 void MultiVolumeRender::render() noexcept {
-
-
+    spdlog::info("{0}",__FUNCTION__ );
+    bindTextureUnit();
+    bindShaderUniform();
+    GL_CHECK
+    glm::mat4 view=glm::lookAt(glm::vec3{camera.pos[0],camera.pos[1],camera.pos[2]},
+                               glm::vec3{camera.pos[0]+camera.front[0],camera.pos[1]+camera.front[1],camera.pos[2]+camera.front[2]},
+                               glm::vec3{camera.up[0],camera.up[1],camera.up[2]});
+    glm::mat4 projection=glm::perspective(glm::radians(camera.zoom),(float)window_width/window_height,camera.n,camera.f);
+    glm::mat4 mvp=projection*view;
     //1. render slice and volume board position
 
     //2. render volume and slice
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    volume_render_pos_shader->use();
+    volume_render_pos_shader->setMat4("MVPMatrix",mvp);
+
+    glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindVertexArray(volume_visible_board_vao);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
+
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glDrawBuffer(GL_COLOR_ATTACHMENT1);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
+    glDisable(GL_CULL_FACE);
+
+    slice_render_shader->use();
+    slice_render_shader->setMat4("MVPMatrix",mvp);
+    glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
+//    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    static GLenum drawBuffers[ 2 ] = { GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(2,drawBuffers);
+    glBindVertexArray(slice_vao);
+    glDrawArrays(GL_TRIANGLES,0,6);
+
+//    glBindVertexArray(volume_visible_board_vao);
+//        glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+//        glDisable(GL_DEPTH_TEST);
+//    glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
+//    glEnable(GL_DEPTH_TEST);
+//    glPolygonMode(GL_FRONT_AND_BACK,GL_TRIANGLES);
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    multi_volume_render_shader->use();
+    glBindVertexArray(screen_quad_vao);
+    glDrawArrays(GL_TRIANGLES,0,6);
+
+
+    glFinish();
+
+    GL_CHECK
+
 }
 
 void MultiVolumeRender::RenderSlice() noexcept {
@@ -243,7 +346,7 @@ void MultiVolumeRender::setPosFrameBuffer() {
     glBindTexture(GL_TEXTURE_2D,raycast_entry_pos_tex);
 //    glBindTextureUnit
     glTextureStorage2D(raycast_entry_pos_tex,1,GL_RGBA32F,window_width,window_height);
-    glBindImageTexture(0,raycast_entry_pos_tex,0,GL_FALSE,0,GL_READ_ONLY,GL_RGBA32F);
+    glBindImageTexture(0,raycast_entry_pos_tex,0,GL_FALSE,0,GL_READ_WRITE,GL_RGBA32F);
     glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,raycast_entry_pos_tex,0);
     GL_CHECK;
 
@@ -256,8 +359,23 @@ void MultiVolumeRender::setPosFrameBuffer() {
     glBindTexture(GL_TEXTURE_2D,raycast_exit_pos_tex);
 //    glBindTextureUnit
     glTextureStorage2D(raycast_exit_pos_tex,1,GL_RGBA32F,window_width,window_height);
-    glBindImageTexture(1,raycast_exit_pos_tex,0,GL_FALSE,0,GL_READ_ONLY,GL_RGBA32F);
+    glBindImageTexture(1,raycast_exit_pos_tex,0,GL_FALSE,0,GL_READ_WRITE,GL_RGBA32F);
     glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT1,GL_TEXTURE_2D,raycast_exit_pos_tex,0);
+    GL_CHECK
+
+
+    glGenTextures(1,&slice_color_tex);
+    glBindTexture(GL_TEXTURE_2D,slice_color_tex);
+    glTextureStorage2D(slice_color_tex,1,GL_RGBA32F,window_width,window_height);
+    glBindImageTexture(2,slice_color_tex,0,GL_FALSE,0,GL_READ_WRITE,GL_RGBA32F);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT2,GL_TEXTURE_2D,slice_color_tex,0);
+    GL_CHECK
+
+    glGenTextures(1,&slice_pos_tex);
+    glBindTexture(GL_TEXTURE_2D,slice_pos_tex);
+    glTextureStorage2D(slice_pos_tex,1,GL_RGBA32F,window_width,window_height);
+    glBindImageTexture(3,slice_pos_tex,0,GL_FALSE,0,GL_READ_WRITE,GL_RGBA32F);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT3,GL_TEXTURE_2D,slice_pos_tex,0);
     GL_CHECK
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE){
@@ -336,15 +454,77 @@ auto MultiVolumeRender::GetFrame() noexcept -> Frame {
     Frame frame;
     frame.width=window_width;
     frame.height=window_height;
-    frame.channels=3;
-    frame.data.resize((size_t)window_height*window_width*3);
+    frame.channels=4;
+    frame.data.resize((size_t)window_height*window_width*4);
     glBindFramebuffer(GL_FRAMEBUFFER,0);
-    glReadPixels(0,0,window_width,window_height,GL_RGB,GL_UNSIGNED_BYTE,reinterpret_cast<void*>(frame.data.data()));
+    glReadPixels(0,0,window_width,window_height,GL_RGBA,GL_UNSIGNED_BYTE,reinterpret_cast<void*>(frame.data.data()));
     GL_CHECK
     return frame;
 }
 
+void MultiVolumeRender::SetCamera(Camera camera) noexcept {
+    this->camera=camera;
+}
 
+void MultiVolumeRender::clear() noexcept {
+
+}
+
+void MultiVolumeRender::setSlice() {
+    auto calcSliceV=[&]()->void{
+        auto slice=slicer->GetSlice();
+        glm::vec3 origin= {slice.origin[0],slice.origin[1],slice.origin[2]};
+        glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
+        glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
+        auto lu=origin+up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
+        auto lb=origin-up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
+        auto ru=origin+up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
+        auto rb=origin-up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
+        glm::vec3 space={space_x,space_y,space_z};
+        lu=lu * space;
+        lb=lb * space;
+        ru=ru * space;
+        rb=rb * space;
+        spdlog::info("lu {0} {1} {2}",lu.x,lu.y,lu.z);
+        spdlog::info("lb {0} {1} {2}",lb.x,lb.y,lb.z);
+        spdlog::info("ru {0} {1} {2}",ru.x,ru.y,ru.z);
+        spdlog::info("rb {0} {1} {2}",rb.x,rb.y,rb.z);
+        slice_vertices={
+                lu.x,lu.y,lu.z,
+                lb.x,lb.y,lb.z,
+                ru.x,ru.y,ru.z,
+
+                ru.x,ru.y,ru.z,
+                lb.x,lb.y,lb.z,
+                rb.x,rb.y,rb.z
+        };
+    };
+    if(!slice_vao || !slice_vbo){
+        calcSliceV();
+        glGenVertexArrays(1,&slice_vao);
+        glGenBuffers(1,&slice_vbo);
+        glBindVertexArray(slice_vao);
+        glBindBuffer(GL_ARRAY_BUFFER,slice_vbo);
+        glBufferData(GL_ARRAY_BUFFER,sizeof(slice_vertices),slice_vertices.data(),GL_STATIC_DRAW);
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
+        glEnableVertexAttribArray(0);
+        glBindVertexArray(0);
+        GL_CHECK
+        spdlog::info("init slice vertices");
+    }
+    else{
+        if(slicer->IsModified()){
+            calcSliceV();
+            glNamedBufferSubData(slice_vbo,0,sizeof(slice_vertices),slice_vertices.data());
+            GL_CHECK
+            spdlog::info("update slice vertices");
+        }
+    }
+}
 
 
 VS_END

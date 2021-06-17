@@ -25,7 +25,7 @@ struct alignas(16) Slice{
     float voxel_per_pixel_height;
 };
 
-class VS_EXPORT Slicer{
+class VS_EXPORT Slicer: public std::enable_shared_from_this<Slicer>{
 public:
     Slicer()=default;
 
@@ -41,6 +41,11 @@ public:
 
     static std::unique_ptr<Slicer> CreateSlicer(const Slice& slice) noexcept;
 
+    virtual bool IsModified() const =0;
+
+    virtual void SetStatus(bool modified) =0;
+    //***************************************
+    //functions modified slice
     virtual void RotateByX(float)=0;
 
     virtual void RotateByY(float)=0;
@@ -52,7 +57,7 @@ public:
     virtual void MoveInPlane(float offsetX,float offsetY)=0;
 
     virtual void StretchInXY(float scaleX,float scaleY)=0;
-
+    //***************************************
     //cpu host ptr
     virtual uint8_t* GetImageData()=0;
 

@@ -28,6 +28,7 @@ public:
         this->data=std::move(frame.data);
         frame.width=frame.height=frame.channels=0;
         assert(frame.data.size()==0);
+        return *this;
     }
 
     uint32_t width = 0;

@@ -25,7 +25,7 @@ class MultiVolumeRender: public RawVolumeRenderer {
 public:
     MultiVolumeRender(int w,int h);
 
-    void SetCamera(Camera&& camera) noexcept override;
+    void SetCamera(Camera camera) noexcept override;
 
     void SetTransferFunction(TransferFunc&& tf) noexcept override;
 
@@ -59,6 +59,9 @@ private:
     void setPosFrameBuffer();
     void setScreenQuad();
     void setShader();
+    void bindShaderUniform();
+    void bindTextureUnit();
+    void setSlice();
 private:
     //wgl window
     HDC window_handle;
@@ -86,6 +89,8 @@ private:
     //slice
     std::shared_ptr<Slicer> slicer;
     bool slice_visible;
+    GLuint slice_vao,slice_vbo;
+    std::array<GLfloat,18> slice_vertices;
 
     //transfer function
     GLuint transfer_func_tex;
@@ -98,11 +103,16 @@ private:
     //raycast framebuffer
     GLuint raycast_pos_fbo,raycast_pos_rbo;
     GLuint raycast_entry_pos_tex,raycast_exit_pos_tex;
+    GLuint slice_color_tex,slice_pos_tex;
 
     //glsl shader
-    std::unique_ptr<Shader> slice_render_shader;
+    std::unique_ptr<Shader> slice_render_shader;//no need to use unique_ptr
     std::unique_ptr<Shader> volume_render_pos_shader;
     std::unique_ptr<Shader> multi_volume_render_shader;
+
+    //simple camera
+    //may inside volume
+    Camera camera;//no need to use unique_ptr
 };
 
 

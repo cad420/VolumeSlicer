@@ -2,6 +2,7 @@ include(${PROJECT_SOURCE_DIR}/third_party/spdlog.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/glm.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/VolumeCompression.cmake)
 find_package(CUDA REQUIRED)
+find_package(OpenGL REQUIRED)
 list(
         APPEND
         VS_SRCS
@@ -18,7 +19,9 @@ add_library(VS_CORE ${VS_SRCS})
 
 
 set_target_properties(VS_CORE PROPERTIES PUBLIC_HEAD
-        ${PROJECT_SOURCE_DIR}/include)
+        ${PROJECT_SOURCE_DIR}/include
+        ${OPENGL_INCLUDE_DIR}
+        )
 
 target_include_directories(VS_CORE
         PUBLIC
@@ -34,6 +37,8 @@ target_link_libraries(VS_CORE PRIVATE
         glm::glm
         ${CUDA_CUDA_LIBRARY}
         voxel_uncompress
+        ${OPENGL_LIBRARIES}
+        ${CMAKE_DL_LIBS}
         )
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)

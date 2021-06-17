@@ -21,13 +21,14 @@ class VolumeImpl;
 template<>
 class VolumeImpl<VolumeType::Raw>: public Volume<VolumeType::Raw>{
 public:
-    VolumeImpl(std::vector<uint8_t>&& data):raw_volume_data(std::move(raw_volume_data)){};
+    VolumeImpl(std::vector<uint8_t>&& data):raw_volume_data(std::move(data)){};
     VolumeType GetVolumeType() const override{return VolumeType::Raw;}
 
-    uint8_t* GetData() override{return nullptr;};
+    uint8_t* GetData() override{return raw_volume_data.data();};
 private:
     std::vector<uint8_t> raw_volume_data;
 };
+using RawVolumeImpl=VolumeImpl<VolumeType::Raw>;
 
 template<>
 class VolumeImpl<VolumeType::Comp>: public Volume<VolumeType::Comp>{

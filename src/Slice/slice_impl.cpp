@@ -25,6 +25,8 @@ SlicerImpl::SlicerImpl(const Slice &slice){
     this->voxel_per_pixel_height=slice.voxel_per_pixel_height;
 
     this->image.resize((size_t)this->n_pixels_width*this->n_pixels_height,0);
+    SetStatus(true);
+    spdlog::info("Successfully create slicer.");
 }
 
 bool SlicerImpl::IsValidSlice(const Slice &slice) const {
@@ -55,10 +57,12 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
 
 void SlicerImpl::MoveByNormal(float dist) {
     this->origin+=dist*this->normal;
+    SetStatus(true);
 }
 
 void SlicerImpl::MoveInPlane(float offsetX, float offsetY) {
     this->origin+=offsetX*this->right+offsetY*this->up;
+    SetStatus(true);
 }
 
 void SlicerImpl::StretchInXY(float scaleX, float scaleY) {
@@ -68,6 +72,7 @@ void SlicerImpl::StretchInXY(float scaleX, float scaleY) {
     }
     this->voxel_per_pixel_width *=scaleX;
     this->voxel_per_pixel_height*=scaleY;
+    SetStatus(true);
 }
 
 void SlicerImpl::RotateByX(float degree) {
@@ -75,6 +80,7 @@ void SlicerImpl::RotateByX(float degree) {
     trans=glm::rotate(trans,degree,this->right);
     this->normal=trans*glm::vec4(this->normal,0.f);
     this->up=trans*glm::vec4(this->up,0.f);
+    SetStatus(true);
 }
 
 void SlicerImpl::RotateByY(float degree) {
@@ -82,6 +88,7 @@ void SlicerImpl::RotateByY(float degree) {
     trans=glm::rotate(trans,degree,this->up);
     this->normal=trans*glm::vec4(this->normal,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
+    SetStatus(true);
 }
 
 void SlicerImpl::RotateByZ(float degree) {
@@ -89,6 +96,7 @@ void SlicerImpl::RotateByZ(float degree) {
     trans=glm::rotate(trans,degree,this->normal);
     this->up=trans*glm::vec4(this->up,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
+    SetStatus(true);
 }
 
 bool SlicerImpl::IsValidVector() const {
@@ -127,8 +135,16 @@ uint8_t *SlicerImpl::GetImageData() {
     return image.data();
 }
 
+    bool SlicerImpl::IsModified() const {
+        return is_modified;
+    }
 
-std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
+    void SlicerImpl::SetStatus(bool modified) {
+        this->is_modified=modified;
+    }
+
+
+    std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
     try{
         return std::make_unique<SlicerImpl>(slice);
     }

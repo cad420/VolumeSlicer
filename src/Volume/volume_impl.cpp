@@ -41,7 +41,7 @@ void LoadRawVolumeData(const char* file_name,std::vector<uint8_t>& volume_data){
     }
 }
 
-std::unique_ptr<Volume<VolumeType::Raw>> Volume<VolumeType::Raw>::Load(const char *file_name,VoxelType type,const std::array<uint32_t,3>& dim,
+std::unique_ptr<RawVolume> Volume<VolumeType::Raw>::Load(const char *file_name,VoxelType type,const std::array<uint32_t,3>& dim,
                                                        const std::array<float,3>& space) {
     try{
         std::vector<uint8_t> volume_data;
@@ -56,7 +56,7 @@ std::unique_ptr<Volume<VolumeType::Raw>> Volume<VolumeType::Raw>::Load(const cha
                 LoadRawVolumeData<uint32_t>(file_name, volume_data);
                 break;
         }
-        std::unique_ptr<Volume<VolumeType::Raw>> volume;
+        std::unique_ptr<RawVolume> volume(new RawVolumeImpl(std::move(volume_data)));
         volume->SetDimX(dim[0]);
         volume->SetDimY(dim[1]);
         volume->SetDimZ(dim[2]);

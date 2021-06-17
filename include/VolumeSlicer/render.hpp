@@ -26,7 +26,10 @@ public:
     Renderer()=default;
     virtual ~Renderer()=default;
 
-    virtual void SetCamera(Camera&& camera) noexcept =0;
+    //just receive class Camera, camera's operation processing should be imply other place in client.
+    //if not set, renderer will try to use last saved camera
+    //camera's pos should according to volume's space and dim
+    virtual void SetCamera(Camera camera) noexcept =0;
 
     virtual void SetTransferFunction(TransferFunc&& tf) noexcept =0;
 
@@ -67,7 +70,7 @@ public:
 
 using RawVolumeRenderer=Renderer<RawVolume>;
 
-inline static std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
+std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
 
 VS_END
 
