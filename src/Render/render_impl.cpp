@@ -41,7 +41,7 @@ MultiVolumeRender::MultiVolumeRender(int w, int h) {
 }
 
 
-void MultiVolumeRender::SetVolume(const std::unique_ptr<RawVolume>& volume) noexcept {
+void MultiVolumeRender::SetVolume(const std::shared_ptr<RawVolume>& volume) noexcept {
     if(!volume){
         spdlog::error("Set empty volume.");
         return;

@@ -12,6 +12,7 @@
 #include<VolumeSlicer/transfer_function.hpp>
 #include<VolumeSlicer/camera.hpp>
 #include<VolumeSlicer/frame.hpp>
+#include<VolumeSlicer/volume_sampler.hpp>
 
 using namespace vs;
 
@@ -50,9 +51,10 @@ private:
     QDockWidget* m_volume_render_dock_widget;
 
     //volume and render test
-    std::unique_ptr<RawVolume> raw_volume;
+    std::shared_ptr<RawVolume> raw_volume;
     std::unique_ptr<RawVolumeRenderer> multi_renderer;
     std::shared_ptr<Slicer> slicer;
+    std::unique_ptr<VolumeSampler> volume_sampler;
 };
 
 

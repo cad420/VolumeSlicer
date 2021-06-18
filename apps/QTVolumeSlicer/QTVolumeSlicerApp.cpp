@@ -43,13 +43,21 @@ void VolumeSlicerMainWindow::createActions() {
 void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     std::cout<<__FUNCTION__ <<std::endl;
     QPainter p(this);
-    multi_renderer->render();
-    auto frame=multi_renderer->GetFrame();
+
+//    multi_renderer->render();
+//    auto frame=multi_renderer->GetFrame();
+    Frame frame;
+    frame.width=slicer->GetImageW();
+    frame.height=slicer->GetImageH();
+    frame.channels=1;
+    frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
+    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+
     const uchar* data=frame.data.data();
-    QImage image(data,frame.width,frame.height,QImage::Format::Format_RGBA8888,nullptr,nullptr);
+    QImage image(data,frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
 //    QImage image(QString(ICONS_PATH)+"open.png");
 
-    auto pix=QPixmap::fromImage(image.mirrored(false,true));
+    auto pix=QPixmap::fromImage(image.mirrored(false,false));
     auto w=pix.width();
     p.drawPixmap(0,0,pix);
 }
@@ -87,10 +95,10 @@ void VolumeSlicerMainWindow::initTest() {
     slice.right={1.f,0.f,0.f,0.f};
     slice.up={0.f,1.f,-1.f,0.f};
     slice.normal={0.f,1.f,1.f,0.f};
-    slice.n_pixels_height=400;
-    slice.n_pixels_width=300;
-    slice.voxel_per_pixel_height=1.f;
-    slice.voxel_per_pixel_width=1.f;
+    slice.n_pixels_height=800;
+    slice.n_pixels_width=600;
+    slice.voxel_per_pixel_height=0.2f;
+    slice.voxel_per_pixel_width=0.2f;
     slicer=Slicer::CreateSlicer(slice);
     multi_renderer->SetSlicer(slicer);
     TransferFunc tf;
@@ -109,5 +117,5 @@ void VolumeSlicerMainWindow::initTest() {
     camera.f=10.f;
     multi_renderer->SetCamera(camera);
     multi_renderer->SetVisible(true,true);
-
+    volume_sampler=VolumeSampler::CreateVolumeSampler(raw_volume);
 }

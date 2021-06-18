@@ -128,20 +128,7 @@ public:
 
 using CompVolume=Volume<VolumeType::Comp>;
 
-class VS_EXPORT VolumeSampler{
-public:
-    VolumeSampler()=default;
 
-
-    static std::unique_ptr<VolumeSampler> CreateVolumeSampler(const std::shared_ptr<VolumeBase>&);
-
-    //data should has be alloc and its size equal to slice.n_pixels_width * slice.n_pixels_height
-    //data could be cuda device ptr or cpu host ptr
-    virtual void Sample(const Slice& slice,uint8_t* data)=0;
-
-
-
-};
 
 VS_END
 

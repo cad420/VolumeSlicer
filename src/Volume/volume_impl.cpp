@@ -215,14 +215,6 @@ auto VolumeImpl<VolumeType::Comp>::FetchRequest() -> std::array<uint32_t, 4> {
     }
 }
 
-/**************************************************************************************************
- * API for VolumeSamplerImpl
- */
-
-std::unique_ptr<VolumeSampler> vs::VolumeSampler::CreateVolumeSampler(const std::shared_ptr<VolumeBase> &) {
-    return std::unique_ptr<VolumeSampler>();
-}
-
 
 
 VS_END

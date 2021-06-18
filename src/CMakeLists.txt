@@ -9,7 +9,9 @@ list(
         Slice/slice_impl.cpp
         Volume/volume_impl.cpp
         Volume/block_loader.cpp
-        Volume/volume_sampler_impl.cpp
+        Algorithm/volume_sampler_impl.cpp
+        Algorithm/raw_volume_sample.cu
+        Algorithm/comp_volume_sample.cu
         Render/render_impl.cpp
         IO/reader_impl.cpp
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
@@ -32,8 +34,13 @@ target_include_directories(VS_CORE
 
         )
 
-target_link_libraries(VS_CORE PRIVATE
+target_link_libraries(VS_CORE
+        PUBLIC
+
         spdlog::spdlog
+
+        PRIVATE
+
         glm::glm
         ${CUDA_CUDA_LIBRARY}
         voxel_uncompress

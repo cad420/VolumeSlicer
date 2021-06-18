@@ -7,7 +7,7 @@
 
 #include<vector>
 
-#include<VolumeSlicer/volume.hpp>
+#include<VolumeSlicer/volume_sampler.hpp>
 #include<VolumeSlicer/utils.hpp>
 
 
@@ -81,16 +81,9 @@ private:
     ConcurrentQueue<VolumeBlock> block_queue;
 
 };
+using CompVolumeImpl=VolumeImpl<VolumeType::Comp>;
 
 
-
-
-class VolumeSamplerImpl: public VolumeSampler{
-public:
-
-    void Sample(const Slice& slice,uint8_t* data) override;
-
-};
 
 VS_END
 

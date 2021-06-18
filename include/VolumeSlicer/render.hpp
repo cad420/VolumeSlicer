@@ -35,9 +35,9 @@ public:
 
     //in general, volume data would not modify since loaded.
     //this function just load volume data upto GPU's texture once.
-    virtual void SetVolume(const std::unique_ptr<T>& volume) noexcept =0;
+    virtual void SetVolume(const std::shared_ptr<T>& volume) noexcept =0;
 
-    //reset space for current volume data
+    //reset space for current volume data. todo should delete this interface
     virtual void ResetVolumeSpace(float x,float y,float z) noexcept =0;
 
     //x0 and x1 are within 0.f~1.f, and x0<=x1
