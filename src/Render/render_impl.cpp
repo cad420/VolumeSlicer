@@ -182,6 +182,7 @@ void MultiVolumeRender::bindTextureUnit() {
 
 void MultiVolumeRender::render() noexcept {
     spdlog::info("{0}",__FUNCTION__ );
+    setSlice();
     bindTextureUnit();
     bindShaderUniform();
     GL_CHECK
@@ -194,7 +195,7 @@ void MultiVolumeRender::render() noexcept {
 
     //2. render volume and slice
     glBindFramebuffer(GL_FRAMEBUFFER,0);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     volume_render_pos_shader->use();
@@ -205,6 +206,7 @@ void MultiVolumeRender::render() noexcept {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindVertexArray(volume_visible_board_vao);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
 
     glEnable(GL_CULL_FACE);
@@ -220,6 +222,7 @@ void MultiVolumeRender::render() noexcept {
 //    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     static GLenum drawBuffers[ 2 ] = { GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     glDrawBuffers(2,drawBuffers);
+//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glBindVertexArray(slice_vao);
     glDrawArrays(GL_TRIANGLES,0,6);
 
@@ -230,6 +233,7 @@ void MultiVolumeRender::render() noexcept {
 //    glEnable(GL_DEPTH_TEST);
 //    glPolygonMode(GL_FRONT_AND_BACK,GL_TRIANGLES);
     glBindFramebuffer(GL_FRAMEBUFFER,0);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     multi_volume_render_shader->use();
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLES,0,6);

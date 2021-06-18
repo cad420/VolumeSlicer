@@ -36,6 +36,7 @@ private:
 private:
     //todo: test
     void initTest();
+    void drawVolume();
 private:
     //menu
     QMenu* m_file_menu;

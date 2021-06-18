@@ -6,6 +6,8 @@
 #include <QMenuBar>
 #include <iostream>
 #include <QPainter>
+#include <QMouseEvent>
+#include <QWheelEvent>
 #include "global.hpp"
 VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
 :QMainWindow(parent)
@@ -50,6 +52,29 @@ void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     auto pix=QPixmap::fromImage(image.mirrored(false,true));
     auto w=pix.width();
     p.drawPixmap(0,0,pix);
+}
+void VolumeSlicerMainWindow::drawVolume() {
+
+}
+
+void VolumeSlicerMainWindow::wheelEvent(QWheelEvent *event) {
+    auto angle_delta=event->angleDelta();
+    if(angle_delta.y()>0)
+        slicer->MoveByNormal(1.f);
+    else
+        slicer->MoveByNormal(-1.f);
+    event->accept();
+    repaint();
+}
+void VolumeSlicerMainWindow::mousePressEvent(QMouseEvent *event) {
+    QWidget::mousePressEvent(event);
+}
+void VolumeSlicerMainWindow::mouseMoveEvent(QMouseEvent *event) {
+    QWidget::mouseMoveEvent(event);
+}
+
+void VolumeSlicerMainWindow::mouseReleaseEvent(QMouseEvent *event) {
+    QWidget::mouseReleaseEvent(event);
 }
 
 void VolumeSlicerMainWindow::initTest() {
