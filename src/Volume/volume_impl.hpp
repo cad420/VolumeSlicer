@@ -33,7 +33,11 @@ using RawVolumeImpl=VolumeImpl<VolumeType::Raw>;
 template<>
 class VolumeImpl<VolumeType::Comp>: public Volume<VolumeType::Comp>{
 public:
-    VolumeImpl();
+    explicit VolumeImpl(const char* file_name);
+
+    //base class must define ~ function
+    ~VolumeImpl();
+
     VolumeType GetVolumeType() const override{return VolumeType::Comp;}
 
     void ClearRequestBlock() noexcept override;
@@ -53,6 +57,10 @@ public:
     void StartLoadBlock() noexcept override;
 
     VolumeBlock GetBlock(const std::array<uint32_t,4>&) noexcept override;
+
+    auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> override;
+
+    auto GetBlockLength() const ->std::array<uint32_t,2> override;
 
 private:
     bool FindInRequestBlock(const std::array<uint32_t,4>& idx);
@@ -75,6 +83,8 @@ private:
     bool stop;
 
     std::unique_ptr<BlockLoader> block_loader;
+
+    std::thread task;
 
     std::list<std::array<uint32_t,4>> request_queue;
 

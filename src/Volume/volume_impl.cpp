@@ -75,11 +75,16 @@ std::unique_ptr<RawVolume> Volume<VolumeType::Raw>::Load(const char *file_name,V
  * API for API for VolumeImpl<VolumeType::Comp>
  */
 
-std::unique_ptr<Volume<VolumeType::Comp>> Volume<VolumeType::Comp>::Load(const char *file_name) {
-    return nullptr;
-
+std::unique_ptr<CompVolume> Volume<VolumeType::Comp>::Load(const char *file_name) {
+    return std::make_unique<CompVolumeImpl>(file_name);
 }
 
+VolumeImpl<VolumeType::Comp>::VolumeImpl(const char *file_name)
+:pause(true),stop(false)
+{
+    this->block_loader=std::make_unique<BlockLoader>(file_name);
+    this->Loading();
+}
 
 void VolumeImpl<VolumeType::Comp>::ClearRequestBlock() noexcept {
     std::unique_lock<std::mutex> lk(mtx);
@@ -94,7 +99,7 @@ void VolumeImpl<VolumeType::Comp>::SetRequestBlock(const std::array<uint32_t, 4>
 }
 
 bool VolumeImpl<VolumeType::Comp>::FindInRequestBlock(const std::array<uint32_t, 4> &idx) {
-    std::unique_lock<std::mutex> lk(mtx);
+//    std::unique_lock<std::mutex> lk(mtx);
     //std::any_of();
     for(auto& it:this->request_queue){
         if(it==idx){
@@ -154,34 +159,38 @@ Volume<VolumeType::Comp>::VolumeBlock VolumeImpl<VolumeType::Comp>::GetBlock(con
 }
 
 void VolumeImpl<VolumeType::Comp>::Loading() {
-    std::thread t=std::thread([&](){
+    task=std::thread([&](){
         while(true){
             if(this->stop){
+                spdlog::info("stop and return.");
                 return;
             }
             if(pause){
                 std::mutex _mtx;
                 std::unique_lock<std::mutex> lk(_mtx);
                 cv.wait(lk,[&](){
-                    if(pause)
+                    if(pause){
+//                        spdlog::info("pause");
                         return false;
+                    }
                     else
                         return true;
                 });
             }
             //no blocking until AddBlocks()
             auto num=block_loader->GetAvailableNum();
+//            spdlog::info("start add task");
             for(size_t i=0;i<num;i++){
                 auto req=FetchRequest();
+                //req maybe invalid, should be checked in AddTask
+//                spdlog::info("fetch result {0} {1} {2} {3}.",req[0],req[1],req[2],req[3]);
                 block_loader->AddTask(req);
             }
 
             AddBlocks();
-
+//            spdlog::info("end of while.");
         }
     });
-    if(t.joinable())
-        t.join();
 }
 
 void VolumeImpl<VolumeType::Comp>::StartLoadBlock() noexcept {
@@ -191,13 +200,16 @@ void VolumeImpl<VolumeType::Comp>::StartLoadBlock() noexcept {
 
 void VolumeImpl<VolumeType::Comp>::PauseLoadBlock() noexcept {
     pause=true;
+    cv.notify_one();
 }
 
 void VolumeImpl<VolumeType::Comp>::AddBlocks() {
+//    spdlog::info("start AddBlocks.");
     std::unique_lock<std::mutex> lk(mtx);
     while(!block_loader->IsEmpty()){
         auto block=block_loader->GetBlock();
         assert(block.valid && block.block_data);
+        spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
         block_queue.push_back(block);
     }
 
@@ -211,10 +223,29 @@ auto VolumeImpl<VolumeType::Comp>::FetchRequest() -> std::array<uint32_t, 4> {
     else{
         auto req=request_queue.front();
         request_queue.pop_front();
+        spdlog::info("fetch request {0} {1} {2} {3}.",req[0],req[1],req[2],req[3]);
         return req;
     }
 }
 
+auto VolumeImpl<VolumeType::Comp>::GetBlockDim(int lod) const -> std::array<uint32_t, 3> {
+    return block_loader->GetBlockDim(lod);
+}
+
+auto VolumeImpl<VolumeType::Comp>::GetBlockLength() const -> std::array<uint32_t, 2> {
+    return block_loader->GetBlockLength();
+}
+
+VolumeImpl<VolumeType::Comp>::~VolumeImpl() {
+     this->stop=true;
+    this->pause=false;
+    cv.notify_one();
+    if(task.joinable())
+        task.join();
+    spdlog::info("Finish Loading...");
+    spdlog::info("Delete comp_volume... Remain request num: {0}, block num: {1}.",request_queue.size(),block_queue.size());
+
+}
 
 
 VS_END

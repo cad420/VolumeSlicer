@@ -10,6 +10,6 @@
 
 #define VS_EXPORT __declspec(dllexport)
 
-
+#define C_DECLARE_FUNC extern "C"
 
 #endif //VOLUMESLICER_EXPORT_HPP

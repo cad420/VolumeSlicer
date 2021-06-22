@@ -25,5 +25,23 @@ int main()
 
     auto volume_sampler=VolumeSampler::CreateVolumeSampler(raw_volume);
 
-
+    std::unique_ptr<CompVolume> comp_volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
+    auto block_length=comp_volume->GetBlockLength();
+    std::cout<<"block length: "<<block_length[0]<<" "<<block_length[1]<<std::endl;
+    auto block_dim=comp_volume->GetBlockDim(0);
+    std::cout<<"block dim: "<<block_dim[0]<<" "<<block_dim[1]<<" "<<block_dim[2]<<std::endl;
+    comp_volume->PauseLoadBlock();
+    std::cout<<"set 0"<<std::endl;
+    comp_volume->SetRequestBlock({0,0,0,0});
+    std::cout<<"set 1"<<std::endl;
+    comp_volume->SetRequestBlock({0,0,0,1});
+    std::cout<<"set 2"<<std::endl;
+    comp_volume->SetRequestBlock({0,0,0,2});
+    std::cout<<"set 3"<<std::endl;
+    comp_volume->SetRequestBlock({0,0,0,3});
+    comp_volume->StartLoadBlock();
+    while(true){
+        _sleep(1000);
+        break;
+    };
 }

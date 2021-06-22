@@ -380,5 +380,46 @@ private:
         }
     };
 
+#define START_CPU_TIMER \
+{auto _start=std::chrono::steady_clock::now();
+
+#define END_CPU_TIMER \
+auto _end=std::chrono::steady_clock::now();\
+auto _t=std::chrono::duration_cast<std::chrono::milliseconds>(_end-_start);\
+spdlog::info("CPU cost time {0} ms.",_t.count());}
+
+#define START_CUDA_DRIVER_TIMER \
+CUevent start,stop;\
+float elapsed_time;\
+cuEventCreate(&start,CU_EVENT_DEFAULT);\
+cuEventCreate(&stop,CU_EVENT_DEFAULT);\
+cuEventRecord(start,0);
+
+#define STOP_CUDA_DRIVER_TIMER \
+cuEventRecord(stop,0);\
+cuEventSynchronize(stop);\
+cuEventElapsedTime(&elapsed_time,start,stop);\
+cuEventDestroy(start);\
+cuEventDestroy(stop);          \
+spdlog::info("GPU cost time {0} ms.",elapsed_time);
+
+
+
+#define START_CUDA_RUNTIME_TIMER \
+{cudaEvent_t     start, stop;\
+float   elapsedTime;\
+(cudaEventCreate(&start)); \
+(cudaEventCreate(&stop));\
+(cudaEventRecord(start, 0));
+
+#define STOP_CUDA_RUNTIME_TIMER \
+(cudaEventRecord(stop, 0));\
+(cudaEventSynchronize(stop));\
+(cudaEventElapsedTime(&elapsedTime, start, stop)); \
+spdlog::info("GPU cost time {0} ms.",elapsedTime);\
+(cudaEventDestroy(start));\
+(cudaEventDestroy(stop));}
+
+
 VS_END
 #endif //VOLUMESLICER_UTILS_HPP

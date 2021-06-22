@@ -30,6 +30,8 @@ enum class VS_EXPORT VolumeType{
 
 class VS_EXPORT VolumeBase {
 public:
+    virtual ~VolumeBase(){}
+
     virtual VolumeType GetVolumeType() const=0;
 
     void SetSpaceX(float space){this->space_x=space;}
@@ -88,6 +90,8 @@ public:
     };
 
 public:
+    ~Volume(){};
+
     //comp file must be uint8_t volume data
     static std::unique_ptr<Volume<VolumeType::Comp>> Load(const char* file_name);
 

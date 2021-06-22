@@ -7,28 +7,40 @@
 
 #include<VolumeSlicer/export.hpp>
 #include<VolumeSlicer/define.hpp>
+#include<VolumeSlicer/reader.hpp>
 #include<Common/cuda_mem_pool.hpp>
-#include<IO/reader_impl.hpp>
 #include"Volume/volume_impl.hpp"
-
+#include<vector>
 VS_START
+
 using VolumeBlock=typename VolumeImpl<VolumeType::Comp>::VolumeBlock;
 class Worker;
+
 class BlockLoader{
 public:
-    BlockLoader(const char* file_path);
-
+    explicit BlockLoader(const char* file_path);
+    ~BlockLoader();
     size_t GetAvailableNum();
     void AddTask(const std::array<uint32_t,4>& );
     bool IsEmpty();
-    auto GetBlock()->Volume<VolumeType::Comp>::VolumeBlock;
+    auto GetBlock()->CompVolume::VolumeBlock;
+public:
+    auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> ;
+
+    auto GetBlockLength() const ->std::array<uint32_t,2> ;
 private:
     size_t block_size_bytes;
 
+    int cu_mem_num;
     std::unique_ptr<CUDAMemoryPool<uint8_t>> cu_mem_pool;
+
     std::unique_ptr<Reader> packet_reader;
+
+    int worker_num;
     std::vector<Worker> workers;
+
     std::unique_ptr<ThreadPool> jobs;
+
     ConcurrentQueue<VolumeBlock> products;
 };
 

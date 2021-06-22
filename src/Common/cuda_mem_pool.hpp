@@ -13,6 +13,7 @@ VS_START
 
 template <class T>
 class CUDAMemImpl: public CUDAMem<T>{
+public:
     CUDAMemImpl(size_t size,std::condition_variable& cv):
     CUDAMem<T>(size),cv(cv)
     {}
@@ -30,7 +31,9 @@ private:
 template <class T>
 class VS_EXPORT CUDAMemoryPool{
 public:
+    //block_size is byte count for any type T
     explicit CUDAMemoryPool(size_t num,size_t block_size);
+    ~CUDAMemoryPool();
     void Resize(size_t num);
     size_t GetTotalCUDAMemNum() const;
     size_t GetValidCUDAMemNum() const;
@@ -101,6 +104,16 @@ void CUDAMemoryPool<T>::Resize(size_t num) {
             cu_mems.emplace_back(new CUDAMemImpl<T>(block_size,cv));
         }
     }
+}
+
+template<class T>
+CUDAMemoryPool<T>::~CUDAMemoryPool() {
+    std::unique_lock<std::mutex> lk(mtx);
+    for(auto& cu_mem:cu_mems){
+        cu_mem->Release();
+        cu_mem->Destroy();
+    }
+    spdlog::info("Delete CUDA memory pool.");
 }
 
 

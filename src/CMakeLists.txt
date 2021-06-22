@@ -31,7 +31,7 @@ target_include_directories(VS_CORE
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
-
+        ${PROJECT_SOURCE_DIR}/third_party
         )
 
 target_link_libraries(VS_CORE

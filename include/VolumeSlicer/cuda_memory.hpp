@@ -22,7 +22,8 @@ public:
         alloc.alloc(&device_ptr,size);
     }
     ~CUDAMem(){
-        alloc.free(device_ptr);
+        Destroy();
+        spdlog::info("Delete a CUDA memory.");
     }
     CUDAMem(const CUDAMem&)=delete;
     CUDAMem& operator=(const CUDAMem&)=delete;
@@ -39,6 +40,12 @@ public:
     void SetOccupied(){
         std::unique_lock<std::mutex> lk(mtx);
         occupied=true;
+    }
+    void Destroy(){
+        std::unique_lock<std::mutex> lk(mtx);
+        alloc.free(device_ptr);
+        device_ptr= nullptr;
+        size=0;
     }
     virtual void Release() {
         std::unique_lock<std::mutex> lk(mtx);
