@@ -208,6 +208,7 @@ void VolumeImpl<VolumeType::Comp>::AddBlocks() {
     std::unique_lock<std::mutex> lk(mtx);
     while(!block_loader->IsEmpty()){
         auto block=block_loader->GetBlock();
+        //!assert get valid block if not empty but may get invalid in multi-thread
         assert(block.valid && block.block_data);
         spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
         block_queue.push_back(block);
@@ -232,7 +233,7 @@ auto VolumeImpl<VolumeType::Comp>::GetBlockDim(int lod) const -> std::array<uint
     return block_loader->GetBlockDim(lod);
 }
 
-auto VolumeImpl<VolumeType::Comp>::GetBlockLength() const -> std::array<uint32_t, 2> {
+auto VolumeImpl<VolumeType::Comp>::GetBlockLength() const -> std::array<uint32_t, 4> {
     return block_loader->GetBlockLength();
 }
 

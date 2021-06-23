@@ -20,7 +20,7 @@ public:
 
     size_t GetBlockSizeByte() override;
 
-    auto GetBlockLength() const -> std::array<uint32_t,2> override;
+    auto GetBlockLength() const -> std::array<uint32_t,4> override;
 
     auto GetBlockDim(int lod) const ->std::array<uint32_t,3> override;
 

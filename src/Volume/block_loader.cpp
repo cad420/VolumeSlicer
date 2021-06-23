@@ -100,7 +100,15 @@ bool BlockLoader::IsEmpty() {
 }
 
 auto BlockLoader::GetBlock() -> Volume<VolumeType::Comp>::VolumeBlock {
-    return products.pop_front();
+    if(IsEmpty()){
+        VolumeBlock block;
+        block.block_data=nullptr;
+        block.valid=false;
+        block.index={INVALID,INVALID,INVALID,INVALID};
+        return block;
+    }
+    else
+        return products.pop_front();
 }
 //!!!!!!
 BlockLoader::~BlockLoader() {
@@ -117,7 +125,7 @@ auto BlockLoader::GetBlockDim(int lod) const -> std::array<uint32_t, 3> {
     return packet_reader->GetBlockDim(lod);
 }
 
-auto BlockLoader::GetBlockLength() const -> std::array<uint32_t, 2> {
+auto BlockLoader::GetBlockLength() const -> std::array<uint32_t, 4> {
     return packet_reader->GetBlockLength();
 }
 

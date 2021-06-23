@@ -60,7 +60,7 @@ public:
 
     auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> override;
 
-    auto GetBlockLength() const ->std::array<uint32_t,2> override;
+    auto GetBlockLength() const ->std::array<uint32_t,4> override;
 
 private:
     bool FindInRequestBlock(const std::array<uint32_t,4>& idx);

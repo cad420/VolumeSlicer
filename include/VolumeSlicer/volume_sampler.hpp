@@ -14,6 +14,7 @@ class VS_EXPORT VolumeSampler{
 public:
     VolumeSampler()=default;
 
+    virtual ~VolumeSampler(){}
 
     static std::unique_ptr<VolumeSampler> CreateVolumeSampler(const std::shared_ptr<RawVolume>&);
 

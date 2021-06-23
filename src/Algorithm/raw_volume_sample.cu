@@ -4,7 +4,7 @@ VS_START
 
 
 
-__constant__ SampleParameter sampleParameter;//use for kernel function
+__constant__ RawSampleParameter sampleParameter;//use for kernel function
 
 
 __global__ void CUDARawVolumeSample(uint8_t* image,//output result
@@ -13,7 +13,7 @@ __global__ void CUDARawVolumeSample(uint8_t* image,//output result
                                     );
 
 
-    void CUDARawVolumeSampler::SetVolumeData(uint8_t *data, uint32_t dim_x, uint32_t dim_y, uint32_t dim_z) {
+void CUDARawVolumeSampler::SetVolumeData(uint8_t *data, uint32_t dim_x, uint32_t dim_y, uint32_t dim_z) {
     assert(data && dim_x && dim_y && dim_z);
     this->volume_x=dim_x;
     this->volume_y=dim_y;
@@ -60,7 +60,7 @@ __global__ void CUDARawVolumeSample(uint8_t* image,//output result
 }
 
 
-void CUDARawVolumeSampler::sample(uint8_t *data, Slice slice,float space_x,float space_y,float space_z) {
+void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float space_y,float space_z) {
     int w=slice.n_pixels_width;
     int h=slice.n_pixels_height;
     if(w!=old_w || h!=old_h){
@@ -72,7 +72,7 @@ void CUDARawVolumeSampler::sample(uint8_t *data, Slice slice,float space_x,float
     old_w=w;
     old_h=h;
 
-    SampleParameter sample_parameter;
+    RawSampleParameter sample_parameter;
     sample_parameter.image_w=w;
     sample_parameter.image_h=h;
     sample_parameter.origin=make_float3(slice.origin[0],slice.origin[1],slice.origin[2]);
@@ -80,7 +80,7 @@ void CUDARawVolumeSampler::sample(uint8_t *data, Slice slice,float space_x,float
     sample_parameter.down=make_float3(-slice.up[0],-slice.up[1],-slice.up[2]);
     sample_parameter.voxels_per_pixel=make_float2(slice.voxel_per_pixel_width,slice.voxel_per_pixel_height);
     sample_parameter.volume_board=make_float3(volume_x*space_x,volume_y*space_y,volume_z*space_z);
-    CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(sampleParameter,&sample_parameter,sizeof(SampleParameter)));
+    CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(sampleParameter,&sample_parameter,sizeof(RawSampleParameter)));
 
     dim3 threads_per_block={16,16};
     dim3 blocks_per_grid={(w+threads_per_block.x-1)/threads_per_block.x,(h+threads_per_block.y-1)/threads_per_block.y};

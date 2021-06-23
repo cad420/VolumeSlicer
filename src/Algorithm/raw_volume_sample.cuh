@@ -1,10 +1,10 @@
 #pragma once
 #include<VolumeSlicer/helper.hpp>
 #include<VolumeSlicer/slice.hpp>
-#include<glm/glm.hpp>
+
 VS_START
 
-struct SampleParameter{
+struct RawSampleParameter{
     uint32_t image_w;
     uint32_t image_h;
     float3 volume_board;//dim*space
@@ -26,7 +26,7 @@ public:
 
     void SetVolumeData(uint8_t* data,uint32_t dim_x,uint32_t dim_y,uint32_t dim_z);
 
-    void sample(uint8_t* data,Slice slice,float space_x,float space_y,float space_z);
+    void Sample(uint8_t* data,Slice slice,float space_x,float space_y,float space_z);
 private:
     int old_w,old_h;
     uint8_t* cu_sample_result;//image

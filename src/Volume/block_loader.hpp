@@ -20,14 +20,18 @@ class BlockLoader{
 public:
     explicit BlockLoader(const char* file_path);
     ~BlockLoader();
+    //num of not busy decode worker
     size_t GetAvailableNum();
+    //will check first in function, and only add valid block
     void AddTask(const std::array<uint32_t,4>& );
+    //if there have decoded block data
     bool IsEmpty();
+
     auto GetBlock()->CompVolume::VolumeBlock;
 public:
     auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> ;
 
-    auto GetBlockLength() const ->std::array<uint32_t,2> ;
+    auto GetBlockLength() const ->std::array<uint32_t,4> ;
 private:
     size_t block_size_bytes;
 

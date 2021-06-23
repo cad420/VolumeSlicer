@@ -174,7 +174,7 @@ VS_START
         friend class RayCastCamera;
 
         bool intersect_aabb(const AABB& aabb)=delete;
-        bool intersect_obb(const OBB& obb);
+        bool intersect_obb(const OBB& obb) const;
 
     private:
         glm::vec3 center_pos;
@@ -187,7 +187,7 @@ VS_START
         glm::vec3 hx,hy,hz;//normalized direction
     };
 
-    inline bool OBB::intersect_obb(const OBB &obb)
+    inline bool OBB::intersect_obb(const OBB &obb) const
     {
         auto T=obb.center_pos-this->center_pos;
 

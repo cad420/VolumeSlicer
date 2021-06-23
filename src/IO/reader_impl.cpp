@@ -80,15 +80,15 @@ auto ReaderImpl::GetBlockDim(int lod) const -> std::array<uint32_t, 3> {
     }
 }
 
-auto ReaderImpl::GetBlockLength() const -> std::array<uint32_t, 2> {
+auto ReaderImpl::GetBlockLength() const -> std::array<uint32_t, 4> {
     try{
         auto header = readers.at(min_lod)->get_header();
         uint32_t block_length = std::pow(2, header.log_block_length);
-        return std::array<uint32_t, 2>{block_length, header.padding};
+        return std::array<uint32_t, 4>{block_length, header.padding,(uint32_t)min_lod,(uint32_t)max_lod};
     }
     catch (const std::exception& err) {
         spdlog::error("GetBlockLength: {0}.",err.what());
-        return {0,0};
+        return {0,0,0,0};
     }
 }
 

@@ -84,7 +84,12 @@ public:
         bool operator==(const std::array<uint32_t,4>& idx) const{
             return index==idx;
         }
+        void Release(){
+            block_data->Release();
+            valid=false;
+        }
         std::array<uint32_t,4> index;//3+1: idx+lod
+        //if not used,should call Release
         std::shared_ptr<CUDAMem<uint8_t>> block_data;
         bool valid;//false rep nullptr for block_data and invalid, should be used any more
     };
@@ -121,13 +126,14 @@ public:
 
     //will return immediately(no blocking)
     //VolumeBlock::valid is false meanings not get supposed block and cant's use
+    //if returned VolumeBlock's data used, should call Release
     virtual VolumeBlock GetBlock(const std::array<uint32_t,4>&) noexcept =0;
 
     //get lod volume's dim: dim-xyz+padding
     virtual auto GetBlockDim(int lod) const ->std::array<uint32_t,3>  =0;
 
-    //get comp volume's block length and padding
-    virtual auto GetBlockLength() const ->std::array<uint32_t,2> =0;
+    //get comp volume's block length and padding,min_lod,max_lod
+    virtual auto GetBlockLength() const ->std::array<uint32_t,4> =0;
 };
 
 using CompVolume=Volume<VolumeType::Comp>;
