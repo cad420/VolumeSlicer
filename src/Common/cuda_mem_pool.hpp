@@ -35,8 +35,8 @@ public:
     explicit CUDAMemoryPool(size_t num,size_t block_size);
     ~CUDAMemoryPool();
     void Resize(size_t num);
-    size_t GetTotalCUDAMemNum() const;
-    size_t GetValidCUDAMemNum() const;
+    size_t GetTotalCUDAMemNum();
+    size_t GetValidCUDAMemNum();
     std::shared_ptr<CUDAMem<T>> GetCUDAMem();
 
 private:
@@ -61,16 +61,17 @@ std::shared_ptr<CUDAMem<T>> CUDAMemoryPool<T>::GetCUDAMem() {
     cv.wait(lk,[&](){
         for(auto& cu_mem:cu_mems){
             if(!cu_mem->IsOccupied()){
-                cu_mem->SetOccupied();
                 return true;
             }
         }
         return false;
     });
-
+    static auto num=16;
     for(auto& cu_mem:cu_mems){
         if(!cu_mem->IsOccupied()){
             cu_mem->SetOccupied();
+            num--;
+            spdlog::info("In cu_mem_pool remain cu_mem num: {0}.",num);
             return cu_mem;
         }
     }
@@ -78,14 +79,14 @@ std::shared_ptr<CUDAMem<T>> CUDAMemoryPool<T>::GetCUDAMem() {
 }
 
 template<class T>
-size_t CUDAMemoryPool<T>::GetTotalCUDAMemNum() const {
+size_t CUDAMemoryPool<T>::GetTotalCUDAMemNum()  {
     return cu_mems.size();
 }
 
 template<class T>
-size_t CUDAMemoryPool<T>::GetValidCUDAMemNum() const {
-    size_t num=0;
+size_t CUDAMemoryPool<T>::GetValidCUDAMemNum() {
     std::unique_lock<std::mutex> lk(mtx);
+    size_t num=0;
     for(auto& cu_mem:cu_mems){
         if(!cu_mem->IsOccupied()){
             num++;

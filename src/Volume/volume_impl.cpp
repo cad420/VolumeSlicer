@@ -224,7 +224,7 @@ auto VolumeImpl<VolumeType::Comp>::FetchRequest() -> std::array<uint32_t, 4> {
     else{
         auto req=request_queue.front();
         request_queue.pop_front();
-        spdlog::info("fetch request {0} {1} {2} {3}.",req[0],req[1],req[2],req[3]);
+        spdlog::info("fetch request {0} {1} {2} {3}. Remain: {4}.",req[0],req[1],req[2],req[3],request_queue.size());
         return req;
     }
 }

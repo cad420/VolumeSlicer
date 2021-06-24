@@ -61,6 +61,8 @@ void CUDARawVolumeSampler::SetVolumeData(uint8_t *data, uint32_t dim_x, uint32_t
 
 
 void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float space_y,float space_z) {
+    //todo multi cuda context should call this function like opengl
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     int w=slice.n_pixels_width;
     int h=slice.n_pixels_height;
     if(w!=old_w || h!=old_h){

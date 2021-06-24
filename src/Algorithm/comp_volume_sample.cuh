@@ -15,7 +15,7 @@ struct CompSampleParameter{
     float3 origin;
     float3 right;
     float3 down;
-
+    float3 space;
 };
 
 struct BlockParameter{
@@ -35,7 +35,20 @@ struct BlockParameter{
  */
 class CUDACompVolumeSampler{
 public:
-    CUDACompVolumeSampler()=default;
+    CUDACompVolumeSampler()
+    :old_h(0),old_w(0),cu_sample_result(nullptr)
+    {
+        CUDA_DRIVER_API_CALL(cuInit(0));
+        int cu_device_cnt=0;
+        CUdevice cu_device;
+        int using_gpu=0;
+        char using_device_name[80];
+        CUDA_DRIVER_API_CALL(cuDeviceGetCount(&cu_device_cnt));
+        CUDA_DRIVER_API_CALL(cuDeviceGet(&cu_device,using_gpu));
+        CUDA_DRIVER_API_CALL(cuDeviceGetName(using_device_name,sizeof(using_device_name),cu_device));
+        this->cu_ctx=nullptr;
+        CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
+    }
 
     void SetBlockInfo(uint32_t block_length,uint32_t padding);
 
@@ -71,17 +84,20 @@ private:
         bool cached;
     };
 private:
+    void uploadCUDATextureObject();
 
     void updateMappingTable(const std::array<uint32_t,4>& index,const std::array<uint32_t,4>& pos,bool valid=true);
 
     void createBlockTable();
 
     //call after every UploadCUDATexture3D
-    void UploadMappingTable();
+    void uploadMappingTable();
 
     //get empty or valid pos in one CUDA texture
     bool getTexturePos(const std::array<uint32_t,4>&,std::array<uint32_t,4>&);
 private:
+    CUcontext cu_ctx;
+
     uint32_t block_length,padding;
 
     int old_w,old_h;
