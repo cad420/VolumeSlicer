@@ -22,7 +22,7 @@ class VolumeSamplerImpl<RawVolume>: public VolumeSampler{
 public:
     explicit VolumeSamplerImpl(const std::shared_ptr<RawVolume>& volume);
 
-    void Sample(const Slice& slice,uint8_t* data) override;
+    bool Sample(const Slice& slice,uint8_t* data) override;
 
 private:
 
@@ -53,7 +53,7 @@ public:
 
     ~VolumeSamplerImpl();
     //data is host ptr
-    void Sample(const Slice& slice,uint8_t* data) override;
+    bool Sample(const Slice& slice,uint8_t* data) override;
 
 private:
     //set comp_volume's information for member data
@@ -76,9 +76,11 @@ private:
     void fetchBlocks();
 private:
     void createVirtualBlocks();
+    bool isSampleComplete() const;
 private:
     std::shared_ptr<CompVolume> comp_volume;
     std::unique_ptr<CUDACompVolumeSampler> cuda_comp_volume_sampler;
+    bool is_sample_complete;
 
     uint32_t block_length,padding,no_padding_block_length;
     uint32_t min_lod,max_lod;

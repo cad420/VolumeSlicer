@@ -54,9 +54,9 @@ void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     frame.channels=1;
     frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
 //    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
-
+    bool complete;
     START_CPU_TIMER
-    comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+    complete=comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
     END_CPU_TIMER
     const uchar* data=frame.data.data();
     QImage image(data,frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
@@ -65,6 +65,7 @@ void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     auto pix=QPixmap::fromImage(image.mirrored(false,true));
     auto w=pix.width();
     p.drawPixmap(0,0,pix);
+
 }
 void VolumeSlicerMainWindow::drawVolume() {
 
@@ -126,10 +127,10 @@ void VolumeSlicerMainWindow::initTest() {
     multi_renderer=CreateRenderer(1200,900);
     multi_renderer->SetVolume(raw_volume);
     Slice slice;
-    slice.origin={9765.f,8434.f,4541.f,1.f};
+    slice.origin={9765.f,8434.f,13698.f,1.f};
     slice.right={1.f,0.f,0.f,0.f};
-    slice.up={0.f,1.f,0.f,0.f};
-    slice.normal={0.f,0.f,1.f,0.f};
+    slice.up={0.f,0.f,-1.f,0.f};
+    slice.normal={0.f,1.f,0.f,0.f};
     slice.n_pixels_width=1200;
     slice.n_pixels_height=900;
     slice.voxel_per_pixel_height=2.f;
@@ -164,5 +165,5 @@ void VolumeSlicerMainWindow::initTest() {
     comp_volume_sampler=VolumeSampler::CreateVolumeSampler(comp_volume);
     comp_volume->SetSpaceX(0.01f);
     comp_volume->SetSpaceY(0.01f);
-    comp_volume->SetSpaceZ(0.01f);
+    comp_volume->SetSpaceZ(0.03f);
 }

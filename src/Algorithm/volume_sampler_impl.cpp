@@ -22,11 +22,12 @@ VolumeSamplerImpl<RawVolume>::VolumeSamplerImpl(const std::shared_ptr<RawVolume>
     spdlog::info("Successfully create raw volume sampler.");
 }
 
-void VolumeSamplerImpl<RawVolume>::Sample(const Slice &slice, uint8_t *data) {
+bool VolumeSamplerImpl<RawVolume>::Sample(const Slice &slice, uint8_t *data) {
     cuda_raw_volume_sampler->Sample(data,slice,
                                     raw_volume->GetVolumeSpaceX(),
                                     raw_volume->GetVolumeSpaceY(),
                                     raw_volume->GetVolumeSpaceZ());
+    return true;
 }
 
 
@@ -57,7 +58,7 @@ VolumeSamplerImpl<CompVolume>::VolumeSamplerImpl(const std::shared_ptr<CompVolum
 
 
 
-void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
+bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
 
     glm::vec3 origin={slice.origin[0],slice.origin[1],slice.origin[2]};
     glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
@@ -65,6 +66,7 @@ void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     glm::vec3 normal={slice.normal[0],slice.normal[1],slice.normal[2]};
     const float slice_space=0.01f;
     glm::vec3 space={comp_volume->GetVolumeSpaceX(),comp_volume->GetVolumeSpaceY(),comp_volume->GetVolumeSpaceZ()};
+    auto old_origin=origin;
     origin = origin * slice_space / space;
     right= right*(slice.n_pixels_width*slice.voxel_per_pixel_width)*slice_space/space /2.f;
     up= up* (slice.n_pixels_height*slice.voxel_per_pixel_height)*slice_space/space /2.f;
@@ -84,7 +86,7 @@ void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     comp_sampler_parameter.lod=this->current_lod;
     right=glm::normalize(right);
     up=glm::normalize(up);
-    comp_sampler_parameter.origin=make_float3(origin.x,origin.y,origin.z);
+    comp_sampler_parameter.origin=make_float3(old_origin.x,old_origin.y,old_origin.z);
     comp_sampler_parameter.right=make_float3(right.x,right.y,right.z);
     comp_sampler_parameter.down=make_float3(-up.x,-up.y,-up.z);
     comp_sampler_parameter.space=make_float3(space.x,space.y,space.z);
@@ -101,6 +103,8 @@ void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     fetchBlocks();
 
     cuda_comp_volume_sampler->Sample(data,slice,0.01f,0.01f,0.01f);
+
+    return isSampleComplete();
 }
 
 void VolumeSamplerImpl<CompVolume>::initVolumeInfo() {
@@ -154,7 +158,7 @@ VolumeSamplerImpl<CompVolume>::~VolumeSamplerImpl() {
 
 void VolumeSamplerImpl<CompVolume>::sendRequests() {
     spdlog::info("{0}",__FUNCTION__);
-    comp_volume->PauseLoadBlock();
+    comp_volume->PauseLoadBlock();//not necessary
     spdlog::info("end of pause");
     if(!new_need_blocks.empty()){
         std::vector<std::array<uint32_t,4>> targets;
@@ -175,12 +179,13 @@ void VolumeSamplerImpl<CompVolume>::sendRequests() {
     }
     no_need_blocks.clear();
     spdlog::info("end of erase");
-    comp_volume->StartLoadBlock();
+    comp_volume->StartLoadBlock();//not necessary
     spdlog::info("end of {0}",__FUNCTION__);
 }
 
 void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
-      for(auto& it:current_intersect_blocks){
+    this->is_sample_complete=true;
+    for(auto& it:current_intersect_blocks){
         auto block=comp_volume->GetBlock(it.index);
         if(block.valid){
 
@@ -188,6 +193,9 @@ void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
             spdlog::info("before release");
             block.Release();
             spdlog::info("after release");
+        }
+        else{
+            this->is_sample_complete=false;
         }
     }
 
@@ -260,6 +268,10 @@ void VolumeSamplerImpl<CompVolume>::calcIntersectBlocks(const OBB &obb) {
     spdlog::info("current no need num: {0}",new_need_blocks.size());
     current_intersect_blocks=std::move(current_obb_intersect_blocks);
     spdlog::info("end of: {0}",__FUNCTION__ );
+}
+
+bool VolumeSamplerImpl<CompVolume>::isSampleComplete() const {
+    return is_sample_complete;
 }
 
 
