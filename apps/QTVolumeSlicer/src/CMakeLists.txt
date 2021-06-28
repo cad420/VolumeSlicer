@@ -13,6 +13,11 @@ list(
         main.cpp
         QTVolumeSlicerApp.cpp
         VolumeRenderWidget.cpp
+        SliceRenderWidget.cpp
+        SliceSettingWidget.cpp
+        VolumeSettingWidget.cpp
+        VolumeRenderSettingWidget.cpp
+        SliceZoomWidget.cpp
 )
 add_executable(QTVolumeSlicerApp ${QTVolumeSlicerApp_SRCS})
 

@@ -19,7 +19,17 @@
 using namespace vs;
 
 class VolumeRenderWidget;
+class SliceRenderWidget;
+class SliceZoomWidget;
+class SliceSettingWidget;
+class VolumeSettingWidget;
+class VolumeRenderSettingWidget;
 
+//qt
+class QScrollArea;
+class QComboBox;
+class QToolButton;
+class QButtonGroup;
 
 class VolumeSlicerMainWindow: public QMainWindow{
     Q_OBJECT
@@ -37,9 +47,10 @@ private:
 
     void createActions();
     void createMenu();
-
+    void createWidgets();
+    void createToolBar();
 private:
-    //todo: test
+
     void initTest();
     void drawVolume();
 private:
@@ -48,12 +59,38 @@ private:
     QMenu* m_file_open_menu;
     QMenu* m_view_menu;
 
-    QAction* m_open_action;
+    //actions
+    QAction* m_open_raw_action;
+    QAction* m_open_comp_action;
+    //tool bar
+    QToolBar* m_tool_bar;
+    QComboBox* m_module_panel;
+
+    //tool button
+    QToolButton* m_slice_zoom_in_tool_button;
+    QToolButton* m_slice_zoom_out_tool_button;
+
+    //status bar
+    QStatusBar* m_status_bar;
+
+
 
     //widget
     VolumeRenderWidget* m_volume_render_widget;
     QDockWidget* m_volume_render_dock_widget;
 
+    SliceRenderWidget* m_slice_render_widget;
+    QDockWidget* m_slice_render_dock_widget;
+
+    SliceZoomWidget* m_slice_zoom_widget;
+    QDockWidget* m_slice_zoom_dock_widget;
+
+    SliceSettingWidget* m_slice_setting_widget;
+    VolumeSettingWidget* m_volume_setting_widget;
+    VolumeRenderSettingWidget* m_volume_render_setting_widget;
+
+    QScrollArea* m_setting_scroll_area_widget;
+    QDockWidget* m_setting_scroll_area_dock_widget;
 
 
 

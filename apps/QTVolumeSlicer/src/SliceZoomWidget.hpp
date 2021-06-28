@@ -1,17 +1,16 @@
 //
-// Created by wyz on 2021/6/15.
+// Created by wyz on 2021/6/28.
 //
 
-#ifndef VOLUMESLICER_VOLUMERENDERWIDGET_HPP
-#define VOLUMESLICER_VOLUMERENDERWIDGET_HPP
+#ifndef VOLUMESLICER_SLICEZOOMWIDGET_HPP
+#define VOLUMESLICER_SLICEZOOMWIDGET_HPP
 
 #include<QtWidgets/QWidget>
 
 
-class VolumeRenderWidget: public QWidget{
+class SliceZoomWidget: public QWidget{
 public:
-    explicit VolumeRenderWidget(QWidget* parent= nullptr);
-
+    explicit SliceZoomWidget(QWidget* parent= nullptr);
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -23,7 +22,4 @@ private:
 
 };
 
-
-
-
-#endif //VOLUMESLICER_VOLUMERENDERWIDGET_HPP
+#endif //VOLUMESLICER_SLICEZOOMWIDGET_HPP
