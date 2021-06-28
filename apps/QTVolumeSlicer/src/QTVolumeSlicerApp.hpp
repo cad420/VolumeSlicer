@@ -4,9 +4,11 @@
 
 #ifndef VOLUMESLICER_QTVOLUMESLICERAPP_HPP
 #define VOLUMESLICER_QTVOLUMESLICERAPP_HPP
+//qt
 #include <QMainWindow>
+//std
 #include <memory>
-
+//vs
 #include<VolumeSlicer/volume.hpp>
 #include<VolumeSlicer/render.hpp>
 #include<VolumeSlicer/transfer_function.hpp>
@@ -17,6 +19,7 @@
 using namespace vs;
 
 class VolumeRenderWidget;
+
 
 class VolumeSlicerMainWindow: public QMainWindow{
     Q_OBJECT
@@ -50,6 +53,9 @@ private:
     //widget
     VolumeRenderWidget* m_volume_render_widget;
     QDockWidget* m_volume_render_dock_widget;
+
+
+
 
     //volume and render test
     std::shared_ptr<RawVolume> raw_volume;
