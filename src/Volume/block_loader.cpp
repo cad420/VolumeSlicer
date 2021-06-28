@@ -15,7 +15,7 @@ public:
         return status._a;
     }
     void setStatus(bool _status){
-        status._a=_status;
+        status._a = _status;
     }
     void uncompress(uint8_t* dest_ptr,int64_t len,std::vector<std::vector<uint8_t>>& packets){
         uncmp->uncompress(dest_ptr,len,packets);
@@ -44,7 +44,7 @@ BlockLoader::BlockLoader(const char *file_path)
 
     jobs=std::make_unique<ThreadPool>(worker_num);
 
-    products.setSize(cu_mem_num);//max is cu_mem_num
+    products.setSize(cu_mem_num*2);//max is cu_mem_num
 }
 
 size_t BlockLoader::GetAvailableNum() {
@@ -71,7 +71,7 @@ void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
         for(size_t i=0;i<workers.size();i++){
             if(!workers[i].isBusy()){
                 workers[i].setStatus(true);
-//                spdlog::info("worker {0} append task.",i);
+                spdlog::info("worker {0} append task.",i);
                 jobs->AppendTask([&](int worker_id,const std::array<uint32_t,4>& idx){
                     std::vector<std::vector<uint8_t>> packet;
                     packet_reader->GetPacket(idx,packet);
@@ -82,13 +82,14 @@ void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
                     spdlog::info("before cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
                     block.block_data=cu_mem_pool->GetCUDAMem();
                     spdlog::info("after cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
-//                    spdlog::info("start uncompress");
+                    spdlog::info("start uncompress");
 //                    START_CPU_TIMER
                     workers[worker_id].uncompress(block.block_data->GetDataPtr(),block_size_bytes,packet);
 //                    END_CPU_TIMER
-//                    spdlog::info("finish uncompress");
+                    spdlog::info("finish uncompress");
                     block.valid=true;
                     products.push_back(block);
+                    spdlog::info("products size: {0}.",products.size());
                     workers[worker_id].setStatus(false);
 //                    spdlog::info("finish one job");
                 },i,idx);
@@ -110,8 +111,10 @@ auto BlockLoader::GetBlock() -> Volume<VolumeType::Comp>::VolumeBlock {
         block.index={INVALID,INVALID,INVALID,INVALID};
         return block;
     }
-    else
+    else{
+        spdlog::info("before GetBlock, products size: {0}.",products.size());
         return products.pop_front();
+    }
 }
 //!!!!!!
 BlockLoader::~BlockLoader() {

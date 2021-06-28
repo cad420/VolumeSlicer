@@ -48,6 +48,8 @@ public:
 
     void ClearBlockQueue() noexcept override;
 
+    void ClearBlockInQueue(const std::vector<std::array<uint32_t,4>>& targets) noexcept override;
+
     void ClearAllBlockInQueue() noexcept override;
 
     int GetBlockQueueSize() override;
@@ -79,8 +81,9 @@ private:
     std::mutex mtx;
 
     std::condition_variable cv;
-    bool pause;
+    std::atomic<bool> pause;
     bool stop;
+    std::atomic<bool> paused;
 
     std::unique_ptr<BlockLoader> block_loader;
 

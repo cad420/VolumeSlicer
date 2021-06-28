@@ -14,6 +14,7 @@
 #include<VolumeSlicer/export.hpp>
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
+#include<iostream>
 VS_START
 
 
@@ -22,7 +23,13 @@ class ConcurrentQueue
 {
 public:
 
+/**
+ * Pay attention to default construct function, it not explict initialize maxSize,
+ * so if not call setSize the value of maxSize will randomly assign, and will cause
+ * endless wait for push_back.
+ */
     ConcurrentQueue() {}
+
     ConcurrentQueue(size_t size) : maxSize(size) {}
     ConcurrentQueue(const ConcurrentQueue&) = delete;
     ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
@@ -37,6 +44,7 @@ public:
         // automatically try to acquire mutex once it wakes up
         // (which will happen on notify_one)
         std::unique_lock<std::mutex> lock(m_mutex);
+
         auto wasEmpty = m_List.empty();
 
         while (full()) {
@@ -44,6 +52,7 @@ public:
         }
 
         m_List.push_back(value);
+
         if (wasEmpty && !m_List.empty()) {
             lock.unlock();
             m_cond.notify_one();
@@ -65,6 +74,7 @@ public:
             m_cond.notify_one();
         }
 
+        spdlog::info("pop front and remain size:{0}.",m_List.size());
         return data;
     }
 

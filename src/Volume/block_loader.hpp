@@ -44,7 +44,7 @@ private:
     std::vector<Worker> workers;
 
     std::unique_ptr<ThreadPool> jobs;
-
+public:
     ConcurrentQueue<VolumeBlock> products;
 };
 

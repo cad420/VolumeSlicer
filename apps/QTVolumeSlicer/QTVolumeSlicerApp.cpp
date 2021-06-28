@@ -3,6 +3,7 @@
 //
 #include"QTVolumeSlicerApp.hpp"
 #include "VolumeRenderWidget.hpp"
+#include<VolumeSlicer/utils.hpp>
 #include <QMenuBar>
 #include <iostream>
 #include <QPainter>
@@ -54,13 +55,14 @@ void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
 //    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
 
+    START_CPU_TIMER
     comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
-
+    END_CPU_TIMER
     const uchar* data=frame.data.data();
     QImage image(data,frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
 //    QImage image(QString(ICONS_PATH)+"open.png");
 
-    auto pix=QPixmap::fromImage(image.mirrored(false,false));
+    auto pix=QPixmap::fromImage(image.mirrored(false,true));
     auto w=pix.width();
     p.drawPixmap(0,0,pix);
 }
@@ -72,6 +74,7 @@ void VolumeSlicerMainWindow::wheelEvent(QWheelEvent *event) {
 
     auto angle_delta=event->angleDelta();
     if((QApplication::keyboardModifiers() == Qt::ControlModifier)){
+        spdlog::info("{0}",__FUNCTION__ );
         if(angle_delta.y()>0){
             slicer->StretchInXY(1.1f,1.1f);
         }
@@ -98,7 +101,7 @@ void VolumeSlicerMainWindow::mousePressEvent(QMouseEvent *event) {
 void VolumeSlicerMainWindow::mouseMoveEvent(QMouseEvent *event) {
     if(left_mouse_button_pressed){
         auto pos=event->pos();
-        auto d=pos-last_pos;
+        auto d=last_pos-pos;
         last_pos=pos;
         std::cout<<d.x()<<" "<<d.y()<<std::endl;
         slicer->MoveInPlane(d.x(),d.y());

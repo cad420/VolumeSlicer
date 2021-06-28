@@ -151,7 +151,7 @@ void UpdateCUDATexture3D(uint8_t* data,cudaArray* pCudaArray,uint32_t block_leng
 bool CUDACompVolumeSampler::getTexturePos(const std::array<uint32_t, 4> &target, std::array<uint32_t, 4> &pos) {
     for(const auto& it:block_table){
         if(it.block_index==target && it.cached){
-            assert(!it.valid);
+//            assert(!it.valid);
             spdlog::info("Copy CUDA device memory to CUDA Array which already stored.");
             pos=it.pos_index;
             return true;
@@ -184,7 +184,11 @@ bool CUDACompVolumeSampler::IsCachedBlock(const std::array<uint32_t, 4> &target)
 bool CUDACompVolumeSampler::SetCachedBlockValid(const std::array<uint32_t, 4> &target) {
 //    spdlog::info("start set cached block valid" );
     for(auto& it:block_table){
-        if(it.block_index==target && it.cached){
+        if(it.block_index[0]==target[0]
+           &&    it.block_index[1]==target[1]
+           && it.block_index[2]==target[2]
+           && it.block_index[3]==target[3]
+        && it.cached){
             it.valid=true;
             //!if find then should update mapping_table
             updateMappingTable(target,it.pos_index);
@@ -313,7 +317,7 @@ void CUDACompVolumeSampler::updateMappingTable(const std::array<uint32_t, 4> &in
 }
 
 void CUDACompVolumeSampler::Sample(uint8_t *data, Slice slice, float space_x, float space_y, float space_z) {
-    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
+//    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     int w=slice.n_pixels_width;
     int h=slice.n_pixels_height;
     if(w!=old_w || h!=old_h){

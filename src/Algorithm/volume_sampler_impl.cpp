@@ -58,6 +58,7 @@ VolumeSamplerImpl<CompVolume>::VolumeSamplerImpl(const std::shared_ptr<CompVolum
 
 
 void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
+
     glm::vec3 origin={slice.origin[0],slice.origin[1],slice.origin[2]};
     glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
     glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
@@ -71,6 +72,7 @@ void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     OBB obb(origin,right,up,normal);
 
 
+//    cuda_comp_volume_sampler->SetCUDACtx();
 
     assert(slice.voxel_per_pixel_width==slice.voxel_per_pixel_height);
     this->current_lod=evaluateLod(slice.voxel_per_pixel_width);
@@ -95,10 +97,7 @@ void VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     filterIntersectBlocks();
 
     sendRequests();
-//    while(true){
-//        _sleep(2000);
-//        break;
-//    };
+
     fetchBlocks();
 
     cuda_comp_volume_sampler->Sample(data,slice,0.01f,0.01f,0.01f);
@@ -145,24 +144,39 @@ void VolumeSamplerImpl<CompVolume>::createVirtualBlocks() {
 }
 
 VolumeSamplerImpl<CompVolume>::~VolumeSamplerImpl() {
-    spdlog::info("Delete CompVolumeSampler...");
+    spdlog::info("Deleting CompVolumeSampler...");
     //not call is also ok, just need base class's virtual destruct function be called,
     //if that called, compiler will bind the real class to ptr and call this destruct function,
     //comp_volume would auto destruct
     comp_volume.reset();
+    spdlog::info("Deleted CompVolumeSampler...");
 }
 
 void VolumeSamplerImpl<CompVolume>::sendRequests() {
+    spdlog::info("{0}",__FUNCTION__);
     comp_volume->PauseLoadBlock();
+    spdlog::info("end of pause");
+    if(!new_need_blocks.empty()){
+        std::vector<std::array<uint32_t,4>> targets;
+        targets.reserve(new_need_blocks.size());
+        for(auto&it:new_need_blocks)
+            targets.push_back(it.index);
+        comp_volume->ClearBlockInQueue(targets);
+//        comp_volume->ClearBlockQueue();
+    }
+    spdlog::info("end of clear");
     for(auto & it:new_need_blocks){
         comp_volume->SetRequestBlock(it.index);
     }
     new_need_blocks.clear();
+    spdlog::info("end of set request");
     for(auto& it:no_need_blocks){
         comp_volume->EraseBlockInRequest(it.index);
     }
     no_need_blocks.clear();
+    spdlog::info("end of erase");
     comp_volume->StartLoadBlock();
+    spdlog::info("end of {0}",__FUNCTION__);
 }
 
 void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
@@ -180,24 +194,38 @@ void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
 }
 
 void VolumeSamplerImpl<CompVolume>::filterIntersectBlocks() {
+
     spdlog::info("{0}",__FUNCTION__ );
-    for(auto &it:new_need_blocks){
+    if(!new_need_blocks.empty())
+    {
+        std::unordered_set<AABB, AABBHash> temp;
+        for (const auto &it:new_need_blocks) {
 //        spdlog::info("before set" );
-        bool cached=cuda_comp_volume_sampler->SetCachedBlockValid(it.index);
+
+            bool cached = cuda_comp_volume_sampler->SetCachedBlockValid(it.index);
 //        spdlog::info("after set" );
-        if(cached){
-            new_need_blocks.erase(it);
+            if (cached) {
+//            new_need_blocks.erase(it);
+            } else {
+                temp.insert(it);
+            }
         }
+        new_need_blocks = std::move(temp);
     }
 //    spdlog::info("finish set" );
-    for(auto& it:no_need_blocks){
-        cuda_comp_volume_sampler->SetBlockInvalid(it.index);
+    if(!no_need_blocks.empty())
+    {
+        for (auto &it:no_need_blocks) {
+            cuda_comp_volume_sampler->SetBlockInvalid(it.index);
+        }
     }
+    spdlog::info("end of {0}",__FUNCTION__);
 }
 
 uint32_t VolumeSamplerImpl<CompVolume>::evaluateLod(float voxels_per_pixel) {
     if(voxels_per_pixel<1.f) return 0;
-    return std::log2f(voxels_per_pixel);
+    auto res=std::log2f(voxels_per_pixel);
+    return res>max_lod?max_lod:res;
 }
 
 void VolumeSamplerImpl<CompVolume>::calcIntersectBlocks(const OBB &obb) {
@@ -222,12 +250,16 @@ void VolumeSamplerImpl<CompVolume>::calcIntersectBlocks(const OBB &obb) {
             new_need_blocks.insert(it);
         }
     }
+    spdlog::info("current new need num: {0}",new_need_blocks.size());
+
     for(auto& it:current_intersect_blocks){
         if(current_obb_intersect_blocks.find(it)==current_obb_intersect_blocks.end()){
             no_need_blocks.insert(it);
         }
     }
+    spdlog::info("current no need num: {0}",new_need_blocks.size());
     current_intersect_blocks=std::move(current_obb_intersect_blocks);
+    spdlog::info("end of: {0}",__FUNCTION__ );
 }
 
 

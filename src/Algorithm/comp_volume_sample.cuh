@@ -49,7 +49,9 @@ public:
         this->cu_ctx=nullptr;
         CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
     }
-
+    void SetCUDACtx(){
+        CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
+    }
     void SetBlockInfo(uint32_t block_length,uint32_t padding);
 
     void Sample(uint8_t* data,Slice slice,float space_x,float space_y,float space_z);

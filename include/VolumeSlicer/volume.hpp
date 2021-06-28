@@ -80,6 +80,16 @@ template<>
 class VS_EXPORT Volume<VolumeType::Comp>: public VolumeBase,public std::false_type{
 public:
     struct alignas(16) VolumeBlock{
+        VolumeBlock(const VolumeBlock& block){
+            this->index=block.index;
+            this->block_data=block.block_data;
+            this->valid=block.valid;
+        }
+        VolumeBlock(VolumeBlock&& block){
+            this->index=block.index;
+            this->valid=block.valid;
+            this->block_data=std::move(block.block_data);
+        }
         VolumeBlock():valid(false){}
         bool operator==(const std::array<uint32_t,4>& idx) const{
             return index==idx;
@@ -111,6 +121,9 @@ public:
 
     //clear blocks which are not in current request blocks
     virtual void ClearBlockQueue() noexcept=0;
+
+    //clear blocks in queue which are not in targets
+    virtual void ClearBlockInQueue(const std::vector<std::array<uint32_t,4>>& targets) noexcept=0;
 
     //clear all blocks in queue
     virtual void ClearAllBlockInQueue() noexcept=0;
