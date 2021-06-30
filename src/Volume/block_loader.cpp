@@ -84,6 +84,7 @@ void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
                     spdlog::info("after cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
                     spdlog::info("start uncompress");
 //                    START_CPU_TIMER
+                    assert(block.block_data->GetDataPtr());
                     workers[worker_id].uncompress(block.block_data->GetDataPtr(),block_size_bytes,packet);
 //                    END_CPU_TIMER
                     spdlog::info("finish uncompress");

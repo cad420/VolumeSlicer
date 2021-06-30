@@ -188,7 +188,7 @@ void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
     for(auto& it:current_intersect_blocks){
         auto block=comp_volume->GetBlock(it.index);
         if(block.valid){
-
+            assert(block.block_data->GetDataPtr());
             cuda_comp_volume_sampler->UploadCUDATexture3D(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
             spdlog::info("before release");
             block.Release();

@@ -9,6 +9,7 @@
 
 
 class VolumeSettingWidget: public QWidget{
+    Q_OBJECT
 public:
     explicit VolumeSettingWidget(QWidget* parent= nullptr);
 };

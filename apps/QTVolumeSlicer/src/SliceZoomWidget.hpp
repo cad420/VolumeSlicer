@@ -7,8 +7,11 @@
 
 #include<QtWidgets/QWidget>
 
+#include <VolumeSlicer/slice.hpp>
+using namespace vs;
 
 class SliceZoomWidget: public QWidget{
+    Q_OBJECT
 public:
     explicit SliceZoomWidget(QWidget* parent= nullptr);
 protected:
@@ -19,7 +22,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-
+    std::shared_ptr<Slicer> slicer;
+    std::shared_ptr<Slicer> max_zoom_slicer;
 };
 
 #endif //VOLUMESLICER_SLICEZOOMWIDGET_HPP

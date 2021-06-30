@@ -9,6 +9,7 @@
 class VolumeRenderWidget;
 
 class VolumeRenderSettingWidget: public QWidget{
+    Q_OBJECT
 public:
     explicit VolumeRenderSettingWidget(VolumeRenderWidget* widget,QWidget* parent= nullptr);
 };

@@ -5,12 +5,26 @@
 #ifndef VOLUMESLICER_SLICERENDERWIDGET_HPP
 #define VOLUMESLICER_SLICERENDERWIDGET_HPP
 
+#include <memory>
+
 #include<QtWidgets/QWidget>
 
+#include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/volume_sampler.hpp>
+#include <VolumeSlicer/volume.hpp>
+using namespace vs;
+class SliceRenderWidget;
+class SliceZoomWidget;
+class SliceSettingWidget;
 
 class SliceRenderWidget: public QWidget{
+    Q_OBJECT
 public:
     explicit SliceRenderWidget(QWidget* parent= nullptr);
+    std::shared_ptr<Slicer> getSlicer();
+
+public:
+    void initTest();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -21,6 +35,9 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
+    std::shared_ptr<Slicer> slicer;
+    std::shared_ptr<CompVolume> volume;
+    std::unique_ptr<VolumeSampler> volume_sampler;
 
 };
 

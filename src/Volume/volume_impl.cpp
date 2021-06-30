@@ -79,7 +79,7 @@ std::unique_ptr<CompVolume> Volume<VolumeType::Comp>::Load(const char *file_name
     return std::make_unique<CompVolumeImpl>(file_name);
 }
 
-VolumeImpl<VolumeType::Comp>::VolumeImpl(const char *file_name)
+CompVolumeImpl::VolumeImpl(const char *file_name)
 :pause(false),stop(false)
 {
     this->block_queue.setSize(16);
@@ -244,8 +244,10 @@ void VolumeImpl<VolumeType::Comp>::AddBlocks() {
     while(!block_loader->IsEmpty()){
 //        spdlog::info("start AddBlocks not empty.");
         auto block=block_loader->GetBlock();
+        if(!block.valid)
+            continue;
 //        //!assert get valid block if not empty but may get invalid in multi-thread
-        assert(block.valid && block.block_data);
+        assert(block.valid && block.block_data->GetDataPtr());
 //        spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
 
         block_queue.push_back(block);

@@ -36,6 +36,8 @@ class VolumeSlicerMainWindow: public QMainWindow{
 public:
     explicit VolumeSlicerMainWindow(QWidget* parent= nullptr);
 
+public:
+    void open(const std::string& file_name);
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -49,6 +51,8 @@ private:
     void createMenu();
     void createWidgets();
     void createToolBar();
+
+    void setModulePanel(QWidget* widget);
 private:
 
     void initTest();
@@ -56,12 +60,18 @@ private:
 private:
     //menu
     QMenu* m_file_menu;
-    QMenu* m_file_open_menu;
+
     QMenu* m_view_menu;
 
     //actions
-    QAction* m_open_raw_action;
-    QAction* m_open_comp_action;
+    QAction* m_open_action;
+    QAction* m_volume_setting_action;
+    QAction* m_slice_setting_action;
+    QAction* m_volume_render_setting_action;
+    QAction* m_slice_default_zoom_action;
+    QAction* m_capture_slice_action;
+    QAction* m_capture_volume_action;
+
     //tool bar
     QToolBar* m_tool_bar;
     QComboBox* m_module_panel;
@@ -89,8 +99,9 @@ private:
     VolumeSettingWidget* m_volume_setting_widget;
     VolumeRenderSettingWidget* m_volume_render_setting_widget;
 
-    QScrollArea* m_setting_scroll_area_widget;
-    QDockWidget* m_setting_scroll_area_dock_widget;
+
+
+    QDockWidget* m_setting_dock_widget;
 
 
 
