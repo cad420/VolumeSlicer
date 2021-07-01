@@ -56,7 +56,8 @@ public:
     //just volume render: volume and slice mix render
     virtual void render() noexcept =0;
 
-    //render the slice and save result to member slicer which had set
+    //!render the slice and save result to member slicer which had set
+    //!this result is not for GetFrame, it equal to sample but use OpenGL not CUDA
     virtual void RenderSlice() noexcept =0;
 
     virtual auto GetFrame() noexcept ->Frame =0;

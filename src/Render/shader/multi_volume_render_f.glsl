@@ -19,6 +19,7 @@ uniform float space_y;
 uniform float space_z;
 
 uniform vec3 volume_board;
+uniform bool slice_visible;
 
 float step=0.003f;
 
@@ -35,21 +36,41 @@ void main() {
     vec3 start2slice=slice_pos-start_pos;
     vec3 start2end=end_pos-start_pos;
     vec3 ray_direction=normalize(start2end);
-//        frag_color=vec4(end_pos/2.56f,1.f);
-//        return;
+//    if(slice_shadow==1){
+//        frag_color=vec4(1.f,0.f,0.f,1.f);
+//    }
+//    else if(slice_shadow==0){
+//        frag_color=vec4(0.f,1.f,0.f,1.f);
+//    }
+//    else{
+//        frag_color=vec4(0.f,0.f,1.f,1.f);
+//    }
+//    return;
+
     float distance=dot(ray_direction,start2end);
+//    frag_color=vec4(distance*10,0.f,0.f,1.f);
+//    return;
+    if(int(distance-0.00001f)==0){
+        frag_color=vec4(1.f,1.f,1.f,1.f);
+        return;
+    }
+
     float old_distance=distance;
     float dist=dot(ray_direction,start2slice);
 
-    if(slice_shadow==1){
-        if(dist<0.f){
-            frag_color=vec4(imageLoad(SliceColor,ivec2(gl_FragCoord.xy)).xyz,1.f);
-            return;
-        }
-        else if(dist<distance){
-            distance=dist;
+    if(slice_visible){
+        if(slice_shadow==1){
+            if(dist<0.f){
+                frag_color=vec4(imageLoad(SliceColor,ivec2(gl_FragCoord.xy)).xyz,1.f);
+
+                return;
+            }
+            else if(dist<distance){
+                distance=dist;
+            }
         }
     }
+
 
     int steps=int(distance/step);
     vec4 color=vec4(0.0f);
@@ -68,13 +89,20 @@ void main() {
         }
         simple_pos+=ray_direction*step;
     }
+    if(slice_visible){
+        if(color.a==0.f && dist<old_distance && slice_shadow==1){
+            frag_color=vec4(imageLoad(SliceColor,ivec2(gl_FragCoord.xy)).xyz,1.f);
+//            frag_color=vec4(1.f,1.f,1.f,1.f);
+            return;
+        }
+        if(slice_shadow==0){
+            color=(1-color.a)*vec4(1.0f,1.0f,1.0f,1.0f)+color*color.a;
+        }
 
-    if(color.a==0.f && dist<old_distance && slice_shadow==1){
-        frag_color=vec4(imageLoad(SliceColor,ivec2(gl_FragCoord.xy)).xyz,1.f);
-        return;
     }
-    if(slice_shadow==0)
+    else{
         color=(1-color.a)*vec4(1.0f,1.0f,1.0f,1.0f)+color*color.a;
+    }
     frag_color=color;
 }
 

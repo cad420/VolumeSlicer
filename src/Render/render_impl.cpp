@@ -163,6 +163,7 @@ void MultiVolumeRender::bindShaderUniform() {
 
     multi_volume_render_shader->setVec3("volume_board",volume_board_x,volume_board_y,volume_board_z);
 
+    multi_volume_render_shader->setBool("slice_visible",slice_visible);
 
     slice_render_shader->use();
     slice_render_shader->setInt("volume_data",2);
@@ -195,15 +196,15 @@ void MultiVolumeRender::render() noexcept {
 
     //2. render volume and slice
     glBindFramebuffer(GL_FRAMEBUFFER,0);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     volume_render_pos_shader->use();
     volume_render_pos_shader->setMat4("MVPMatrix",mvp);
 
     glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glBindVertexArray(volume_visible_board_vao);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -218,13 +219,27 @@ void MultiVolumeRender::render() noexcept {
 
     slice_render_shader->use();
     slice_render_shader->setMat4("MVPMatrix",mvp);
-    glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
+
 //    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     static GLenum drawBuffers[ 2 ] = { GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-    glDrawBuffers(2,drawBuffers);
+    if(!volume_visible){
+        drawBuffers[0]=GL_COLOR_ATTACHMENT0;
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+    }
+    else{
+        drawBuffers[0]=GL_COLOR_ATTACHMENT2;
+        glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
+
+    }
+
 //    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    glBindVertexArray(slice_vao);
-    glDrawArrays(GL_TRIANGLES,0,6);
+
+    if(slice_visible){
+        glDrawBuffers(2,drawBuffers);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glBindVertexArray(slice_vao);
+        glDrawArrays(GL_TRIANGLES,0,6);
+    }
 
 //    glBindVertexArray(volume_visible_board_vao);
 //        glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
@@ -232,13 +247,19 @@ void MultiVolumeRender::render() noexcept {
 //    glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
 //    glEnable(GL_DEPTH_TEST);
 //    glPolygonMode(GL_FRONT_AND_BACK,GL_TRIANGLES);
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    multi_volume_render_shader->use();
-    glBindVertexArray(screen_quad_vao);
-    glDrawArrays(GL_TRIANGLES,0,6);
+    if(volume_visible){
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        multi_volume_render_shader->use();
+        glBindVertexArray(screen_quad_vao);
+        glDrawArrays(GL_TRIANGLES,0,6);
+    }
 
-
+//    if(!volume_visible && !slice_visible){
+//        glBindFramebuffer(GL_FRAMEBUFFER,0);
+//        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//    }
     glFinish();
 
     GL_CHECK
