@@ -46,20 +46,20 @@ void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     std::cout<<__FUNCTION__ <<std::endl;
     QPainter p(this);
 
-//    multi_renderer->render();
-//    auto frame=multi_renderer->GetFrame();
-    Frame frame;
-    frame.width=slicer->GetImageW();
-    frame.height=slicer->GetImageH();
-    frame.channels=1;
-    frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
-//    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
-    bool complete;
-    START_CPU_TIMER
-    complete=comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
-    END_CPU_TIMER
+    multi_renderer->render();
+    auto frame=multi_renderer->GetFrame();
+//    Frame frame;
+//    frame.width=slicer->GetImageW();
+//    frame.height=slicer->GetImageH();
+//    frame.channels=1;
+//    frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
+////    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+//    bool complete;
+//    START_CPU_TIMER
+//    complete=comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+//    END_CPU_TIMER
     const uchar* data=frame.data.data();
-    QImage image(data,frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
+    QImage image(data,frame.width,frame.height,QImage::Format::Format_RGBA8888,nullptr,nullptr);
 //    QImage image(QString(ICONS_PATH)+"open.png");
 
     auto pix=QPixmap::fromImage(image.mirrored(false,true));
@@ -127,14 +127,14 @@ void VolumeSlicerMainWindow::initTest() {
     multi_renderer=CreateRenderer(1200,900);
     multi_renderer->SetVolume(raw_volume);
     Slice slice;
-    slice.origin={9765.f,8434.f,13698.f,1.f};
+    slice.origin={128.f,129.f,128.f,1.f};
     slice.right={1.f,0.f,0.f,0.f};
-    slice.up={0.f,0.f,-1.f,0.f};
-    slice.normal={0.f,1.f,0.f,0.f};
-    slice.n_pixels_width=1200;
-    slice.n_pixels_height=900;
-    slice.voxel_per_pixel_height=2.f;
-    slice.voxel_per_pixel_width=2.f;
+    slice.up={0.f,1.f,-1.f,0.f};
+    slice.normal={0.f,1.f,1.f,0.f};
+    slice.n_pixels_width=100;
+    slice.n_pixels_height=100;
+    slice.voxel_per_pixel_height=1.f;
+    slice.voxel_per_pixel_width=1.f;
     slicer=Slicer::CreateSlicer(slice);
     multi_renderer->SetSlicer(slicer);
     TransferFunc tf;
