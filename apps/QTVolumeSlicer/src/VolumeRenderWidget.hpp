@@ -19,16 +19,20 @@ class VolumeRenderWidget: public QWidget{
     Q_OBJECT
 public:
     explicit VolumeRenderWidget(QWidget* parent= nullptr);
-
+    void setSlicer(const std::shared_ptr<Slicer>&);
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-
+public Q_SLOTS:
+    void redraw();
+private:
+    void initTest();
 private:
     std::shared_ptr<Slicer> slicer;
+    std::shared_ptr<Slicer> dummy_slicer;
     std::shared_ptr<RawVolume> raw_volume;
     //!can render slice and volume mixed
     std::unique_ptr<RawVolumeRenderer> multi_volume_renderer;

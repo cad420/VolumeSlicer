@@ -67,7 +67,7 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     const float slice_space=0.01f;
     glm::vec3 space={comp_volume->GetVolumeSpaceX(),comp_volume->GetVolumeSpaceY(),comp_volume->GetVolumeSpaceZ()};
     auto old_origin=origin;
-    origin = origin * slice_space / space;
+    origin = origin;
     right= right*(slice.n_pixels_width*slice.voxel_per_pixel_width)*slice_space/space /2.f;
     up= up* (slice.n_pixels_height*slice.voxel_per_pixel_height)*slice_space/space /2.f;
     normal=glm::normalize(normal);//for preload

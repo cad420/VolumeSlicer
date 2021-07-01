@@ -34,8 +34,8 @@ VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
     resize(1920,1080);
     createActions();
     createMenu();
-//    createWidgets();
-//    createToolBar();
+    createWidgets();
+    createToolBar();
     initTest();
 }
 void VolumeSlicerMainWindow::open(const std::string &file_name) {
@@ -168,31 +168,35 @@ void VolumeSlicerMainWindow::createWidgets() {
 
     splitDockWidget(m_setting_dock_widget,m_slice_render_dock_widget,Qt::Horizontal);
 
+
+    m_volume_render_widget->setSlicer(m_slice_render_widget->getSlicer());
+    connect(m_slice_render_widget,&SliceRenderWidget::sliceModified,m_volume_render_widget,
+            &VolumeRenderWidget::redraw);
 }
 
 void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
     std::cout<<__FUNCTION__ <<std::endl;
-    QPainter p(this);
-
-//    multi_renderer->render();
-//    auto frame=multi_renderer->GetFrame();
-    Frame frame;
-    frame.width=slicer->GetImageW();
-    frame.height=slicer->GetImageH();
-    frame.channels=1;
-    frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
-//    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
-    bool complete;
-    START_CPU_TIMER
-    complete=comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
-    END_CPU_TIMER
-    const uchar* data=frame.data.data();
-    QImage image(data,frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
-//    QImage image(QString(ICONS_PATH)+"open.png");
-
-    auto pix=QPixmap::fromImage(image.mirrored(false,true));
-    auto w=pix.width();
-    p.drawPixmap(0,0,pix);
+//    QPainter p(this);
+//
+////    multi_renderer->render();
+////    auto frame=multi_renderer->GetFrame();
+//    Frame frame;
+//    frame.width=slicer->GetImageW();
+//    frame.height=slicer->GetImageH();
+//    frame.channels=1;
+//    frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
+////    volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+//    bool complete;
+//    START_CPU_TIMER
+//    complete=comp_volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+//    END_CPU_TIMER
+//    const uchar* data=frame.data.data();
+//    QImage image(data,frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
+////    QImage image(QString(ICONS_PATH)+"open.png");
+//
+//    auto pix=QPixmap::fromImage(image.mirrored(false,true));
+//    auto w=pix.width();
+//    p.drawPixmap(0,0,pix);
 
 }
 void VolumeSlicerMainWindow::drawVolume() {
@@ -251,19 +255,19 @@ void VolumeSlicerMainWindow::keyPressEvent(QKeyEvent *event) {
 }
 void VolumeSlicerMainWindow::initTest() {
 //    std::cout<<__FUNCTION__ <<std::endl;
-    raw_volume=RawVolume::Load("C:\\Users\\wyz\\projects\\VolumeSlicer\\test_data\\aneurism_256_256_256_uint8.raw",VoxelType::UInt8,{256,256,256},{0.01f,0.01f,0.01f});
+//    raw_volume=RawVolume::Load("C:\\Users\\wyz\\projects\\VolumeSlicer\\test_data\\aneurism_256_256_256_uint8.raw",VoxelType::UInt8,{256,256,256},{0.01f,0.01f,0.01f});
 //    multi_renderer=CreateRenderer(1200,900);
 //    multi_renderer->SetVolume(raw_volume);
-    Slice slice;
-    slice.origin={9765.f,8434.f,13698.f,1.f};
-    slice.right={1.f,0.f,0.f,0.f};
-    slice.up={0.f,0.f,-1.f,0.f};
-    slice.normal={0.f,1.f,0.f,0.f};
-    slice.n_pixels_width=1200;
-    slice.n_pixels_height=900;
-    slice.voxel_per_pixel_height=2.f;
-    slice.voxel_per_pixel_width=2.f;
-    slicer=Slicer::CreateSlicer(slice);
+//    Slice slice;
+//    slice.origin={9765.f,8434.f,13698.f,1.f};
+//    slice.right={1.f,0.f,0.f,0.f};
+//    slice.up={0.f,0.f,-1.f,0.f};
+//    slice.normal={0.f,1.f,0.f,0.f};
+//    slice.n_pixels_width=1200;
+//    slice.n_pixels_height=900;
+//    slice.voxel_per_pixel_height=2.f;
+//    slice.voxel_per_pixel_width=2.f;
+//    slicer=Slicer::CreateSlicer(slice);
 //    multi_renderer->SetSlicer(slicer);
 //    TransferFunc tf;
 //    tf.points.emplace_back(0,std::array<double,4>{0.0,0.0,0.0,0.0});
@@ -284,15 +288,15 @@ void VolumeSlicerMainWindow::initTest() {
 //    volume_sampler=VolumeSampler::CreateVolumeSampler(raw_volume);
 
 
-    this->comp_volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
-    auto block_length=comp_volume->GetBlockLength();
-    std::cout<<"block length: "<<block_length[0]<<" "<<block_length[1]<<std::endl;
-    auto block_dim=comp_volume->GetBlockDim(0);
-    std::cout<<"block dim: "<<block_dim[0]<<" "<<block_dim[1]<<" "<<block_dim[2]<<std::endl;
-
-    comp_volume_sampler=VolumeSampler::CreateVolumeSampler(comp_volume);
-    comp_volume->SetSpaceX(0.01f);
-    comp_volume->SetSpaceY(0.01f);
-    comp_volume->SetSpaceZ(0.03f);
+//    this->comp_volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
+//    auto block_length=comp_volume->GetBlockLength();
+//    std::cout<<"block length: "<<block_length[0]<<" "<<block_length[1]<<std::endl;
+//    auto block_dim=comp_volume->GetBlockDim(0);
+//    std::cout<<"block dim: "<<block_dim[0]<<" "<<block_dim[1]<<" "<<block_dim[2]<<std::endl;
+//
+//    comp_volume_sampler=VolumeSampler::CreateVolumeSampler(comp_volume);
+//    comp_volume->SetSpaceX(0.01f);
+//    comp_volume->SetSpaceY(0.01f);
+//    comp_volume->SetSpaceZ(0.03f);
 }
 

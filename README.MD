@@ -88,6 +88,13 @@ data:
 所以程序有时候启动运行成功 有时候失败   
 ``` 
     
+## Slice Render 和 Volume Slice Render
+    两者之间不能共用一个slicer 因为两者的度量单位不一样
+    后者采用降采样的raw格式
+    主要修改slice的坐标以及 n_voxel_per_pixel
+    
+## Slice Zoom
+    可以采样一个降采样后的raw数据 或者取lod最大的数据采样
     
     
     

@@ -68,7 +68,7 @@ __global__ void CUDACompVolumeSample(uint8_t* image){
     float3 virtual_sample_pos;
     virtual_sample_pos=compSampleParameter.origin+(image_x-compSampleParameter.image_w/2)*compSampleParameter.voxels_per_pixel.x*compSampleParameter.right
             +(image_y-compSampleParameter.image_h/2)*compSampleParameter.voxels_per_pixel.y*compSampleParameter.down;
-    virtual_sample_pos=virtual_sample_pos*0.01f/compSampleParameter.space;
+//    virtual_sample_pos=virtual_sample_pos*0.01f/compSampleParameter.space;
 
     image[image_idx]=VirtualSample(virtual_sample_pos)*255;
 //    image[image_idx]=128;
