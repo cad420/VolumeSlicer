@@ -46,7 +46,7 @@ __device__ float VirtualSample(float3 sample_pos){
 
 //    return 0.5f;
     if(physical_block_flag==0){
-        return 0.f;
+        return 1.f;
     }
 
     float3 physical_sample_pos=make_float3(physical_block_index.x,physical_block_index.y,physical_block_index.z)
@@ -65,9 +65,10 @@ __global__ void CUDACompVolumeSample(uint8_t* image){
     uint64_t image_idx=(uint64_t)image_y*compSampleParameter.image_w+image_x;
 
     //todo
+    float3 t=make_float3(1,1,3);
     float3 virtual_sample_pos;
-    virtual_sample_pos=compSampleParameter.origin+(image_x-compSampleParameter.image_w/2)*compSampleParameter.voxels_per_pixel.x*compSampleParameter.right
-            +(image_y-compSampleParameter.image_h/2)*compSampleParameter.voxels_per_pixel.y*compSampleParameter.down;
+    virtual_sample_pos=compSampleParameter.origin+((image_x-compSampleParameter.image_w/2)*compSampleParameter.voxels_per_pixel.x*compSampleParameter.right
+            +(image_y-compSampleParameter.image_h/2)*compSampleParameter.voxels_per_pixel.y*compSampleParameter.down)/t;
 //    virtual_sample_pos=virtual_sample_pos*0.01f/compSampleParameter.space;
 
     image[image_idx]=VirtualSample(virtual_sample_pos)*255;
@@ -336,7 +337,7 @@ void CUDACompVolumeSampler::Sample(uint8_t *data, Slice slice, float space_x, fl
     CUDA_RUNTIME_CHECK
 
     CUDA_RUNTIME_API_CALL(cudaMemcpy(data,cu_sample_result,(size_t)w*h,cudaMemcpyDeviceToHost));
-    spdlog::info("Finish CUDA comp volume sample.");
+//    spdlog::info("Finish CUDA comp volume sample.");
 }
 
 void CUDACompVolumeSampler::SetBlockInfo(uint32_t block_length,uint32_t padding) {

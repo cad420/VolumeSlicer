@@ -175,7 +175,7 @@ void VolumeSlicerMainWindow::createWidgets() {
 }
 
 void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
-    std::cout<<__FUNCTION__ <<std::endl;
+//    std::cout<<__FUNCTION__ <<std::endl;
 //    QPainter p(this);
 //
 ////    multi_renderer->render();
@@ -226,6 +226,7 @@ void VolumeSlicerMainWindow::wheelEvent(QWheelEvent *event) {
 }
 void VolumeSlicerMainWindow::mousePressEvent(QMouseEvent *event) {
 
+    std::cout<<__FUNCTION__<<std::endl;
 //    left_mouse_button_pressed=true;
 //    last_pos=event->pos();
 //    event->accept();
@@ -244,6 +245,7 @@ void VolumeSlicerMainWindow::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void VolumeSlicerMainWindow::mouseReleaseEvent(QMouseEvent *event) {
+    std::cout<<__FUNCTION__<<std::endl;
 //    left_mouse_button_pressed=false;
 //    event->accept();
 //    repaint();
@@ -252,6 +254,8 @@ void VolumeSlicerMainWindow::keyPressEvent(QKeyEvent *event) {
 
 //    event->accept();
 //    repaint();
+    std::cout<<__FUNCTION__<<std::endl;
+
 }
 void VolumeSlicerMainWindow::initTest() {
 //    std::cout<<__FUNCTION__ <<std::endl;

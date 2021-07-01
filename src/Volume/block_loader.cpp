@@ -77,20 +77,20 @@ void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
                     packet_reader->GetPacket(idx,packet);
                     VolumeBlock block;
                     block.index=idx;
-                    spdlog::info("in AppendTask {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
+//                    spdlog::info("in AppendTask {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
 
-                    spdlog::info("before cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
+//                    spdlog::info("before cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
                     block.block_data=cu_mem_pool->GetCUDAMem();
-                    spdlog::info("after cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
-                    spdlog::info("start uncompress");
+//                    spdlog::info("after cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
+//                    spdlog::info("start uncompress");
 //                    START_CPU_TIMER
                     assert(block.block_data->GetDataPtr());
                     workers[worker_id].uncompress(block.block_data->GetDataPtr(),block_size_bytes,packet);
 //                    END_CPU_TIMER
-                    spdlog::info("finish uncompress");
+//                    spdlog::info("finish uncompress");
                     block.valid=true;
                     products.push_back(block);
-                    spdlog::info("products size: {0}.",products.size());
+//                    spdlog::info("products size: {0}.",products.size());
                     workers[worker_id].setStatus(false);
 //                    spdlog::info("finish one job");
                 },i,idx);

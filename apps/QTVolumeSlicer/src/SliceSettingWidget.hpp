@@ -19,7 +19,7 @@ public:
 
 private:
     QScrollArea* m_slice_setting_scroll_area;
-
+    SliceRenderWidget* slice_render_widget;
 
 };
 

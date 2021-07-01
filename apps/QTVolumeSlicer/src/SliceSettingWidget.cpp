@@ -2,13 +2,19 @@
 // Created by wyz on 2021/6/28.
 //
 #include "SliceSettingWidget.hpp"
+#include "SliceRenderWidget.hpp"
+#include <iostream>
+
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QScrollArea>
 #include <QLabel>
 #include <QtWidgets>
-SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *parent) {
+
+SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *parent)
+:slice_render_widget(widget)
+{
 
     auto widget_layout=new QVBoxLayout;
     auto groupbox_layout=new QVBoxLayout;
@@ -59,7 +65,18 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     auto lr_label=new QLabel("LR");
     auto lr_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
     auto lr_spin_box=new QDoubleSpinBox();
+    lr_spin_box->setMinimum(-180.0);
+    lr_spin_box->setMaximum(180.0);
     auto lr_layout=new QHBoxLayout;
+    connect(lr_horizontal_slider,&QSlider::valueChanged,[lr_spin_box,this](int value){
+
+        double v=value/100.0*360.0-180.0;
+//        std::cout<<v<<std::endl;
+        lr_spin_box->setValue(v);
+        slice_render_widget->redraw();
+    });
+
+
     lr_layout->addWidget(lr_label);
     lr_layout->addWidget(lr_horizontal_slider);
     lr_layout->addWidget(lr_spin_box);

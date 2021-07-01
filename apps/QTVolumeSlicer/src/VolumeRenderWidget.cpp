@@ -83,7 +83,7 @@ void VolumeRenderWidget::initTest() {
     camera.n=0.01f;
     camera.f=10.f;
     multi_volume_renderer->SetCamera(camera);
-    multi_volume_renderer->SetVisible(true,true);
+    multi_volume_renderer->SetVisible(false,true);
 
 }
 

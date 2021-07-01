@@ -25,8 +25,12 @@ public:
 
 public:
     void initTest();
+
 Q_SIGNALS:
     void sliceModified();
+
+public :
+    void redraw();
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -41,6 +45,7 @@ private:
     std::unique_ptr<VolumeSampler> volume_sampler;
 
     bool left_mouse_button_pressed;
+    bool right_mouse_button_pressed;
     QPoint last_pos;
 
 };

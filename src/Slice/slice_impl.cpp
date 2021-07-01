@@ -46,7 +46,7 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
     glm::vec3 _right={slice.right[0],slice.right[1],slice.right[2]};
     _right=glm::normalize(_right);
     float d1=glm::dot(_normal,_up);
-    float d2=glm::dot(_normal,right);
+    float d2=glm::dot(_normal,_right);
     float d3=glm::dot(_up,_right);
     if(d1>FLOAT_ZERO || d2>FLOAT_ZERO || d3>FLOAT_ZERO){
         spdlog::error("normal right up are not all dot equal zero.");
@@ -76,7 +76,7 @@ void SlicerImpl::StretchInXY(float scaleX, float scaleY) {
 }
 
 void SlicerImpl::RotateByX(float degree) {
-    glm::mat4 trans;
+    glm::mat4 trans(1.0);
     trans=glm::rotate(trans,degree,this->right);
     this->normal=trans*glm::vec4(this->normal,0.f);
     this->up=trans*glm::vec4(this->up,0.f);
@@ -84,7 +84,7 @@ void SlicerImpl::RotateByX(float degree) {
 }
 
 void SlicerImpl::RotateByY(float degree) {
-    glm::mat4 trans;
+    glm::mat4 trans(1.0);
     trans=glm::rotate(trans,degree,this->up);
     this->normal=trans*glm::vec4(this->normal,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
@@ -92,7 +92,7 @@ void SlicerImpl::RotateByY(float degree) {
 }
 
 void SlicerImpl::RotateByZ(float degree) {
-    glm::mat4 trans;
+    glm::mat4 trans(1.0);
     trans=glm::rotate(trans,degree,this->normal);
     this->up=trans*glm::vec4(this->up,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
