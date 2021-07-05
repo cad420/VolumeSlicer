@@ -56,12 +56,12 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
 }
 
 void SlicerImpl::MoveByNormal(float dist) {
-    this->origin+=dist*this->normal;
+    this->origin+=(dist*this->normal)/glm::vec3(1,1,3);
     SetStatus(true);
 }
 
 void SlicerImpl::MoveInPlane(float offsetX, float offsetY) {
-    this->origin+=offsetX*this->right+offsetY*this->up;
+    this->origin+=(offsetX*this->right+offsetY*this->up)/glm::vec3(1,1,3);
     SetStatus(true);
 }
 
@@ -135,23 +135,23 @@ uint8_t *SlicerImpl::GetImageData() {
     return image.data();
 }
 
-    bool SlicerImpl::IsModified() const {
-        return is_modified;
-    }
+bool SlicerImpl::IsModified() const {
+    return is_modified;
+}
 
-    void SlicerImpl::SetStatus(bool modified) {
-        this->is_modified=modified;
-    }
+void SlicerImpl::SetStatus(bool modified) {
+    this->is_modified=modified;
+}
 
 
-    std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
-    try{
-        return std::make_unique<SlicerImpl>(slice);
-    }
-    catch (const std::exception& err) {
-        spdlog::error("CreateSlicer constructor error: {0}",err.what());
-        return std::unique_ptr<SlicerImpl>(nullptr);
-    }
+std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
+try{
+    return std::make_unique<SlicerImpl>(slice);
+}
+catch (const std::exception& err) {
+    spdlog::error("CreateSlicer constructor error: {0}",err.what());
+    return std::unique_ptr<SlicerImpl>(nullptr);
+}
 }
 
 VS_END

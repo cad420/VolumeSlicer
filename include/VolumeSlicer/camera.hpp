@@ -15,7 +15,7 @@ VS_START
 class Camera{
 public:
     std::array<float,3> pos;
-    std::array<float,3> front;//normalized direction
+    std::array<float,3> look_at;//point pos
     std::array<float,3> up;//normalized direction
     float zoom;
     float n,f;

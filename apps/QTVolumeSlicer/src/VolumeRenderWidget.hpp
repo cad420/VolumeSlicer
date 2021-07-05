@@ -9,8 +9,11 @@
 #include <VolumeSlicer/volume.hpp>
 #include <VolumeSlicer/render.hpp>
 #include <VolumeSlicer/slice.hpp>
-
 using namespace vs;
+
+namespace control{
+    class TrackBallCamera;
+}
 
 /**
  * only raw volume render
@@ -36,6 +39,8 @@ private:
     std::shared_ptr<RawVolume> raw_volume;
     //!can render slice and volume mixed
     std::unique_ptr<RawVolumeRenderer> multi_volume_renderer;
+    std::unique_ptr<control::TrackBallCamera> trackball_camera;
+    std::unique_ptr<vs::Camera> base_camera;
 };
 
 

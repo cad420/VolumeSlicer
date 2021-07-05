@@ -59,10 +59,11 @@ void SliceRenderWidget::wheelEvent(QWheelEvent *event) {
         }
     }
     else{
+        auto lod=slicer->GetSlice().voxel_per_pixel_width;
         if(angle_delta.y()>0)
-            slicer->MoveByNormal(1.f);
+            slicer->MoveByNormal(lod);
         else
-            slicer->MoveByNormal(-1.f);
+            slicer->MoveByNormal(-lod);
     }
     event->accept();
     repaint();
@@ -103,7 +104,7 @@ void SliceRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void SliceRenderWidget::keyPressEvent(QKeyEvent *event) {
-//    std::cout<<__FUNCTION__ <<std::endl;
+    std::cout<<__FUNCTION__ <<" "<<event->key()<<std::endl;
     switch (event->key()) {
         case 'A':slicer->RotateByX(1.0/180.0*3.141592627);
         std::cout<<"a press"<<std::endl;
@@ -113,6 +114,19 @@ void SliceRenderWidget::keyPressEvent(QKeyEvent *event) {
         case 'S':slicer->RotateByY(-1.0/180.0*3.141592627);break;
         case 'Q':slicer->RotateByZ(1.0/180.0*3.141592627);break;
         case 'E':slicer->RotateByZ(-1.0/180.0*3.141592627);break;
+        case Qt::Key_Left:;
+        case Qt::Key_Down:{
+            auto lod=slicer->GetSlice().voxel_per_pixel_width;
+            slicer->MoveByNormal(-lod);
+            break;
+        }
+        case Qt::Key_Right:;
+        case Qt::Key_Up:{
+            auto lod=slicer->GetSlice().voxel_per_pixel_width;
+            slicer->MoveByNormal(lod);
+            break;
+        }
+
     }
     event->accept();
     repaint();

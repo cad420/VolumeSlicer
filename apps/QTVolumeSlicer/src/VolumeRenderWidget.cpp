@@ -9,6 +9,7 @@
 #include <VolumeSlicer/volume_sampler.hpp>
 #include <QPainter>
 #include <QMouseEvent>
+#include "camera.hpp"
 VolumeRenderWidget::VolumeRenderWidget(QWidget *parent) {
     initTest();
 
@@ -16,7 +17,7 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent) {
 
 void VolumeRenderWidget::paintEvent(QPaintEvent *event) {
     QPainter p(this);
-
+    multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->render();
     auto frame=multi_volume_renderer->GetFrame();
     QImage image(frame.data.data(),frame.width,frame.height,QImage::Format::Format_RGBA8888,nullptr,nullptr);
@@ -25,27 +26,47 @@ void VolumeRenderWidget::paintEvent(QPaintEvent *event) {
 }
 
 void VolumeRenderWidget::mouseMoveEvent(QMouseEvent *event) {
-
+    trackball_camera->processMouseMove(event->pos().x(),event->pos().y());
+    auto pos=trackball_camera->getCameraPos();
+    auto lookat=trackball_camera->getCameraLookAt();
+    auto up=trackball_camera->getCameraUp();
+    this->base_camera->pos={pos.x,pos.y,pos.z};
+    this->base_camera->up={up.x,up.y,up.z};
+    this->base_camera->look_at={lookat.x,lookat.y,lookat.z};
     event->accept();
-
+    repaint();
 }
 
 void VolumeRenderWidget::wheelEvent(QWheelEvent *event) {
-
+    setFocus();
+    trackball_camera->processMouseScroll(event->angleDelta().y());
+    auto pos=trackball_camera->getCameraPos();
+    auto lookat=trackball_camera->getCameraLookAt();
+    auto up=trackball_camera->getCameraUp();
+    this->base_camera->pos={pos.x,pos.y,pos.z};
+    this->base_camera->up={up.x,up.y,up.z};
+    this->base_camera->look_at={lookat.x,lookat.y,lookat.z};
     event->accept();
-
+    repaint();
 }
 
 void VolumeRenderWidget::mousePressEvent(QMouseEvent *event) {
-
+    setFocus();
+    trackball_camera->processMouseButton(control::CameraDefinedMouseButton::Left,
+                                         true,
+                                         event->position().x(),
+                                         event->position().y());
     event->accept();
     repaint();
 }
 
 void VolumeRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
-
+    trackball_camera->processMouseButton(control::CameraDefinedMouseButton::Left,
+                                         false,
+                                         event->position().x(),
+                                         event->position().y());
     event->accept();
-
+    repaint();
 }
 
 void VolumeRenderWidget::initTest() {
@@ -75,15 +96,19 @@ void VolumeRenderWidget::initTest() {
     tf.points.emplace_back(255,std::array<double,4>{0.0,0.0,0.0,0.0});
     multi_volume_renderer->SetTransferFunction(std::move(tf));
 
-    Camera camera;
-    camera.pos={1.68f,2.28f,8.f};
-    camera.up={0.f,1.f,0.f};
-    camera.front={0.f,0.f,-1.f};
-    camera.zoom=60.f;
-    camera.n=0.01f;
-    camera.f=10.f;
-    multi_volume_renderer->SetCamera(camera);
+    base_camera=std::make_unique<vs::Camera>();
+    base_camera->pos={1.83f,2.315f,2.415f+6.f};
+    base_camera->up={0.f,1.f,0.f};
+    base_camera->look_at={1.83f,2.315f,2.415f};
+    base_camera->zoom=60.f;
+    base_camera->n=0.01f;
+    base_camera->f=20.f;
+    multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->SetVisible(false,true);
+    this->trackball_camera=std::make_unique<control::TrackBallCamera>(
+                3.f,500,500,
+                glm::vec3{1.83f,2.315f,2.415f}
+            );
 
 }
 

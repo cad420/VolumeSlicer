@@ -26,4 +26,5 @@ target_link_libraries(QTVolumeSlicerApp PRIVATE
         Qt6::Gui
         Qt6::Widgets
         VS_CORE
+        glm::glm
         )
