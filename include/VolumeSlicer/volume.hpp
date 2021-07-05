@@ -147,6 +147,10 @@ public:
 
     //get comp volume's block length and padding,min_lod,max_lod
     virtual auto GetBlockLength() const ->std::array<uint32_t,4> =0;
+
+    //todo
+    //return if request and block_queue are all empty
+    virtual bool GetStatus() =0;
 };
 
 using CompVolume=Volume<VolumeType::Comp>;

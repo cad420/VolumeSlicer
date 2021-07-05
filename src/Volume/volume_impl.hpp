@@ -64,6 +64,7 @@ public:
 
     auto GetBlockLength() const ->std::array<uint32_t,4> override;
 
+    bool GetStatus() override;
 private:
     bool FindInRequestBlock(const std::array<uint32_t,4>& idx);
 

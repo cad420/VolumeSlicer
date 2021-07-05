@@ -79,7 +79,7 @@ std::unique_ptr<CompVolume> Volume<VolumeType::Comp>::Load(const char *file_name
     return std::make_unique<CompVolumeImpl>(file_name);
 }
 
-VolumeImpl<VolumeType::Comp>::VolumeImpl(const char *file_name)
+CompVolumeImpl::VolumeImpl(const char *file_name)
 :pause(false),stop(false)
 {
     this->block_queue.setSize(16);
@@ -144,6 +144,7 @@ void VolumeImpl<VolumeType::Comp>::ClearBlockInQueue(const std::vector<std::arra
         if(std::find(targets.begin(),targets.end(),item.index)==targets.end()){
             assert(item.valid && item.block_data);
             item.block_data->Release();
+            spdlog::critical("clear block in queue {0} {1} {2} {3}.",item.index[0],item.index[1],item.index[2],item.index[3]);
         }
         else{
             block_queue.push_back(item);
@@ -165,7 +166,10 @@ int VolumeImpl<VolumeType::Comp>::GetBlockQueueSize() {
 
 
 Volume<VolumeType::Comp>::VolumeBlock VolumeImpl<VolumeType::Comp>::GetBlock(const std::array<uint32_t, 4> &idx) noexcept {
+//    spdlog::info("block_queue size:{0}.",block_queue.size());
+//    spdlog::info("request_queue size:{0}.",request_queue.size());
     if(block_queue.find(idx)){
+
         return block_queue.get(idx);
     }
     else{
@@ -188,12 +192,12 @@ void VolumeImpl<VolumeType::Comp>::Loading() {
 //                paused=true;
                 cv.wait(lk,[&](){
                     if(pause){
-                        spdlog::critical( "pause in loading");
+//                        spdlog::critical( "pause in loading");
                         paused=true;
                         return false;
                     }
                     else{
-                        spdlog::critical( "not pause in loading");
+//                        spdlog::critical( "not pause in loading");
                         return true;
                     }
                 });
@@ -222,16 +226,16 @@ void VolumeImpl<VolumeType::Comp>::StartLoadBlock() noexcept {
 }
 
 void VolumeImpl<VolumeType::Comp>::PauseLoadBlock() noexcept {
-    spdlog::info("start pause.");
+//    spdlog::info("start pause.");
     pause=true;
 //    cv.notify_all();
-    spdlog::info("start iterator.");
+//    spdlog::info("start iterator.");
     while(!paused){
         _sleep(1);
         if(!paused)
             spdlog::error("waiting for pause! {0}",pause);
     }
-    spdlog::info("finish pause.");
+//    spdlog::info("finish pause.");
     if(!paused){
         spdlog::critical("not paused!!!!!!!");
     }
@@ -244,9 +248,11 @@ void VolumeImpl<VolumeType::Comp>::AddBlocks() {
     while(!block_loader->IsEmpty()){
 //        spdlog::info("start AddBlocks not empty.");
         auto block=block_loader->GetBlock();
+        if(!block.valid)
+            continue;
 //        //!assert get valid block if not empty but may get invalid in multi-thread
-        assert(block.valid && block.block_data);
-//        spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
+        assert(block.valid && block.block_data->GetDataPtr());
+        spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
 
         block_queue.push_back(block);
 
@@ -263,7 +269,7 @@ auto VolumeImpl<VolumeType::Comp>::FetchRequest() -> std::array<uint32_t, 4> {
 
         auto req=request_queue.front();
         request_queue.pop_front();
-        spdlog::info("fetch request {0} {1} {2} {3}. Remain: {4}.",req[0],req[1],req[2],req[3],request_queue.size());
+//        spdlog::info("fetch request {0} {1} {2} {3}. Remain: {4}.",req[0],req[1],req[2],req[3],request_queue.size());
         return req;
     }
 }
@@ -287,7 +293,13 @@ VolumeImpl<VolumeType::Comp>::~VolumeImpl() {
 
 }
 
-
+    bool VolumeImpl<VolumeType::Comp>::GetStatus() {
+        std::unique_lock<std::mutex> lk(mtx);
+        if(this->request_queue.empty() && this->block_queue.empty() && this->block_loader->IsAllAvailable() && this->block_loader->IsEmpty())
+            return true;
+        else
+            return false;
+    }
 
 
 VS_END
