@@ -4,7 +4,9 @@ VS_START
 __constant__ CompSampleParameter compSampleParameter;
 __constant__ BlockParameter blockParameter;
 //__constant__ variable's size should be known when compile
+uint4* h_mappingTable=nullptr;
 uint4* d_mappingTable=nullptr;
+size_t mappingTableSize=0;
 __constant__ uint4* mappingTable;
 __constant__ uint lodMappingTableOffset[10];//!max lod is 9 and offset is for uint4 not uint
 __constant__ cudaTextureObject_t cacheVolumes[10];//max texture num is 10
@@ -45,7 +47,11 @@ __device__ float VirtualSample(float3 sample_pos){
     uint physical_block_flag=(physical_block_index.w>>16)&(0x0000ffff);
 
 //    return 0.5f;
-    if(physical_block_flag==0){
+    if(physical_block_flag!=1){
+        mappingTable[flat_virtual_block_index].x=virtual_block_index.x;
+        mappingTable[flat_virtual_block_index].y=virtual_block_index.y;
+        mappingTable[flat_virtual_block_index].z=virtual_block_index.z;
+        mappingTable[flat_virtual_block_index].w=((uint32_t)(compSampleParameter.lod)) | (0x00100000);
         return 1.f;
     }
 
@@ -88,6 +94,8 @@ void SetCUDATextureObject(cudaTextureObject_t* textures,size_t size){
 
 //size is element num for data
 void CreateCUDAMappingTable(uint32_t * data,size_t size){
+    mappingTableSize=size/4;
+    h_mappingTable=(uint4*)malloc(size*sizeof(uint32_t));
     CUDA_RUNTIME_API_CALL(cudaMalloc(&d_mappingTable,size*sizeof(uint32_t)));
     CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(mappingTable,&d_mappingTable,sizeof(uint4*)));
     CUDA_RUNTIME_API_CALL(cudaMemcpy(d_mappingTable,data,size*sizeof(uint32_t),cudaMemcpyHostToDevice));
@@ -102,8 +110,26 @@ void UpdateCUDAMappingTable(uint32_t * data,size_t size){
 void SetCUDAMappingTableOffset(uint32_t* data,size_t size){
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(lodMappingTableOffset,data,size*sizeof(uint32_t)));
 }
-
-//only create uint8_t 3D CUDA Texture
+std::vector<std::array<uint32_t, 4>> GetCUDAUnUploadBlocks(){
+    CUDA_RUNTIME_API_CALL(cudaMemcpy(h_mappingTable,d_mappingTable,mappingTableSize*sizeof(uint4),cudaMemcpyDeviceToHost));
+    std::vector<std::array<uint32_t,4>> blocks;
+    for(size_t i=0;i<mappingTableSize;i++){
+        if(((h_mappingTable[i].w>>20)&0x1)==1){
+                        spdlog::critical("{0} {1} {2} {3} {4:x}.",i,h_mappingTable[i].x,
+                         h_mappingTable[i].y,h_mappingTable[i].z,h_mappingTable[i].w);
+            blocks.push_back({h_mappingTable[i].x,
+                                 h_mappingTable[i].y,
+                                 h_mappingTable[i].z,
+                                 h_mappingTable[i].w&0x0000ffff});
+        }
+//        else if(h_mappingTable[i].w!=0){
+//            spdlog::info("{0} {1} {2} {3} {4}.",i,h_mappingTable[i].x,
+//                         h_mappingTable[i].y,h_mappingTable[i].z,h_mappingTable[i].w);
+//        }
+    }
+    return blocks;
+}
+    //only create uint8_t 3D CUDA Texture
 void CreateCUDATexture3D(cudaExtent textureSize, cudaArray **ppCudaArray, cudaTextureObject_t *pCudaTextureObject){
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uint8_t>();
     CUDA_RUNTIME_API_CALL(cudaMalloc3DArray(ppCudaArray, &channelDesc, textureSize));
@@ -185,10 +211,7 @@ bool CUDACompVolumeSampler::IsCachedBlock(const std::array<uint32_t, 4> &target)
 bool CUDACompVolumeSampler::SetCachedBlockValid(const std::array<uint32_t, 4> &target) {
 //    spdlog::info("start set cached block valid" );
     for(auto& it:block_table){
-        if(it.block_index[0]==target[0]
-           &&    it.block_index[1]==target[1]
-           && it.block_index[2]==target[2]
-           && it.block_index[3]==target[3]
+        if(it.block_index==target
         && it.cached){
             it.valid=true;
             //!if find then should update mapping_table
@@ -345,7 +368,9 @@ void CUDACompVolumeSampler::SetBlockInfo(uint32_t block_length,uint32_t padding)
     this->padding=padding;
 }
 
-
+std::vector<std::array<uint32_t, 4>> CUDACompVolumeSampler::GetUnUploadBlocks() {
+    return GetCUDAUnUploadBlocks();
+}
 
 
 VS_END

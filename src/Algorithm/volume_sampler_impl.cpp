@@ -161,23 +161,42 @@ VolumeSamplerImpl<CompVolume>::~VolumeSamplerImpl() {
 void VolumeSamplerImpl<CompVolume>::sendRequests() {
 //    spdlog::info("{0}",__FUNCTION__);
     comp_volume->PauseLoadBlock();//not necessary
+
+    /**
+     * not used if ClearBlockInQueue use current_intersect_blocks
+     * fix bug if use new_need_blocks because it would clear new need blocks last time which are not new_need_blocks now
+    if(comp_volume->GetStatus()){
+        auto un_upload_blocks=cuda_comp_volume_sampler->GetUnUploadBlocks();
+        for(auto& it:un_upload_blocks){
+            spdlog::critical("{0} {1} {2} {3}.",it[0],it[1],it[2],it[3]);
+
+            if(current_intersect_blocks.find(it)!=current_intersect_blocks.end()){
+                spdlog::critical("insert!!!");
+                new_need_blocks.insert(it);
+            }
+        }
+    }
+     */
 //    spdlog::info("end of pause");
-    if(!new_need_blocks.empty()){
+    if(!current_intersect_blocks.empty()){
         std::vector<std::array<uint32_t,4>> targets;
-        targets.reserve(new_need_blocks.size());
-        for(auto&it:new_need_blocks)
+        targets.reserve(current_intersect_blocks.size());
+        for(auto&it:current_intersect_blocks)
             targets.push_back(it.index);
+        //may clear new need last time if use new_need_blocks
         comp_volume->ClearBlockInQueue(targets);
 //        comp_volume->ClearBlockQueue();
     }
 //    spdlog::info("end of clear");
     for(auto & it:new_need_blocks){
+        spdlog::info("send {0} {1} {2} {3}.",it.index[0],it.index[1],it.index[2],it.index[3]);
         comp_volume->SetRequestBlock(it.index);
     }
     new_need_blocks.clear();
 //    spdlog::info("end of set request");
     for(auto& it:no_need_blocks){
         comp_volume->EraseBlockInRequest(it.index);
+        spdlog::info("erase {0} {1} {2} {3}.",it.index[0],it.index[1],it.index[2],it.index[3]);
     }
     no_need_blocks.clear();
 //    spdlog::info("end of erase");
@@ -260,6 +279,7 @@ void VolumeSamplerImpl<CompVolume>::calcIntersectBlocks(const OBB &obb) {
             new_need_blocks.insert(it);
         }
     }
+
     spdlog::info("current new need num: {0}",new_need_blocks.size());
 
     for(auto& it:current_intersect_blocks){

@@ -78,6 +78,8 @@ public:
 
     void CreateMappingTable(const std::map<uint32_t,std::array<uint32_t,3>>&);
 
+    //todo
+    std::vector<std::array<uint32_t,4>> GetUnUploadBlocks();
 private:
     struct BlockTableItem{
         std::array<uint32_t,4> block_index;

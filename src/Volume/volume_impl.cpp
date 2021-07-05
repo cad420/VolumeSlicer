@@ -144,6 +144,7 @@ void VolumeImpl<VolumeType::Comp>::ClearBlockInQueue(const std::vector<std::arra
         if(std::find(targets.begin(),targets.end(),item.index)==targets.end()){
             assert(item.valid && item.block_data);
             item.block_data->Release();
+            spdlog::critical("clear block in queue {0} {1} {2} {3}.",item.index[0],item.index[1],item.index[2],item.index[3]);
         }
         else{
             block_queue.push_back(item);
@@ -165,8 +166,8 @@ int VolumeImpl<VolumeType::Comp>::GetBlockQueueSize() {
 
 
 Volume<VolumeType::Comp>::VolumeBlock VolumeImpl<VolumeType::Comp>::GetBlock(const std::array<uint32_t, 4> &idx) noexcept {
-    spdlog::info("block_queue size:{0}.",block_queue.size());
-    spdlog::info("request_queue size:{0}.",request_queue.size());
+//    spdlog::info("block_queue size:{0}.",block_queue.size());
+//    spdlog::info("request_queue size:{0}.",request_queue.size());
     if(block_queue.find(idx)){
 
         return block_queue.get(idx);
@@ -251,7 +252,7 @@ void VolumeImpl<VolumeType::Comp>::AddBlocks() {
             continue;
 //        //!assert get valid block if not empty but may get invalid in multi-thread
         assert(block.valid && block.block_data->GetDataPtr());
-//        spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
+        spdlog::info("add block {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
 
         block_queue.push_back(block);
 
@@ -292,7 +293,13 @@ VolumeImpl<VolumeType::Comp>::~VolumeImpl() {
 
 }
 
-
+    bool VolumeImpl<VolumeType::Comp>::GetStatus() {
+        std::unique_lock<std::mutex> lk(mtx);
+        if(this->request_queue.empty() && this->block_queue.empty() && this->block_loader->IsAllAvailable() && this->block_loader->IsEmpty())
+            return true;
+        else
+            return false;
+    }
 
 
 VS_END

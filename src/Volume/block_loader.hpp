@@ -28,6 +28,8 @@ public:
     bool IsEmpty();
 
     auto GetBlock()->CompVolume::VolumeBlock;
+
+    bool IsAllAvailable();
 public:
     auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> ;
 

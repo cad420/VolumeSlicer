@@ -77,7 +77,7 @@ void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
                     packet_reader->GetPacket(idx,packet);
                     VolumeBlock block;
                     block.index=idx;
-//                    spdlog::info("in AppendTask {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
+                    spdlog::info("in AppendTask {0} {1} {2} {3}.",block.index[0],block.index[1],block.index[2],block.index[3]);
 
 //                    spdlog::info("before cu_mem_pool valid cu_mem num: {0}.",cu_mem_pool->GetValidCUDAMemNum());
                     block.block_data=cu_mem_pool->GetCUDAMem();
@@ -134,6 +134,10 @@ auto BlockLoader::GetBlockDim(int lod) const -> std::array<uint32_t, 3> {
 
 auto BlockLoader::GetBlockLength() const -> std::array<uint32_t, 4> {
     return packet_reader->GetBlockLength();
+}
+
+bool BlockLoader::IsAllAvailable() {
+    return GetAvailableNum()==worker_num;
 }
 
 
