@@ -247,6 +247,7 @@ void CUDACompVolumeSampler::createBlockTable() {
 }
 
 void CUDACompVolumeSampler::CreateMappingTable(const std::map<uint32_t, std::array<uint32_t, 3>> &lod_block_dim) {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     this->lod_block_dim=lod_block_dim;
     lod_mapping_table_offset[lod_block_dim.begin()->first]=0;
     this->min_lod=0xffffffff;
@@ -269,18 +270,22 @@ void CUDACompVolumeSampler::CreateMappingTable(const std::map<uint32_t, std::arr
 }
 
 void CUDACompVolumeSampler::uploadMappingTable() {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     UpdateCUDAMappingTable(mapping_table.data(),mapping_table.size());
 }
 
 void CUDACompVolumeSampler::UploadCompSampleParameter(const CompSampleParameter &sampleParameter) {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     SetCUDASampleParameter(sampleParameter);
 }
 
 void CUDACompVolumeSampler::UploadBlockParameter(const BlockParameter & blockParameter) {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     SetCUDABlockParameter(blockParameter);
 }
 
 void CUDACompVolumeSampler::SetCUDATextures(uint32_t tex_num, uint32_t tex_x, uint32_t tex_y, uint32_t tex_z) {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     auto tex_size=make_cudaExtent(tex_x,tex_y,tex_z);
     this->cu_array_num=tex_num;
     this->cu_array_size={tex_x,tex_y,tex_z};
@@ -294,9 +299,11 @@ void CUDACompVolumeSampler::SetCUDATextures(uint32_t tex_num, uint32_t tex_x, ui
     createBlockTable();
 }
 void CUDACompVolumeSampler::uploadCUDATextureObject() {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     SetCUDATextureObject(cache_volumes.data(),cache_volumes.size());
 }
 void CUDACompVolumeSampler::UploadCUDATexture3D(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size) {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     std::array<uint32_t,4> pos;
     bool cached=getTexturePos(index,pos);
     if(!cached){
@@ -341,7 +348,7 @@ void CUDACompVolumeSampler::updateMappingTable(const std::array<uint32_t, 4> &in
 }
 
 void CUDACompVolumeSampler::Sample(uint8_t *data, Slice slice, float space_x, float space_y, float space_z) {
-//    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     int w=slice.n_pixels_width;
     int h=slice.n_pixels_height;
     if(w!=old_w || h!=old_h){
