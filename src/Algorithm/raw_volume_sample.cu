@@ -81,7 +81,8 @@ void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float
     sample_parameter.right=make_float3(slice.right[0],slice.right[1],slice.right[2]);
     sample_parameter.down=make_float3(-slice.up[0],-slice.up[1],-slice.up[2]);
     sample_parameter.voxels_per_pixel=make_float2(slice.voxel_per_pixel_width,slice.voxel_per_pixel_height);
-    sample_parameter.volume_board=make_float3(volume_x*space_x,volume_y*space_y,volume_z*space_z);
+    sample_parameter.volume_board=make_float3(volume_x,volume_y,volume_z);
+    sample_parameter.space=make_float3(space_x,space_y,space_z);
     CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(sampleParameter,&sample_parameter,sizeof(RawSampleParameter)));
 
     dim3 threads_per_block={16,16};
@@ -101,12 +102,13 @@ __global__ void CUDARawVolumeSample(uint8_t *image, cudaTextureObject_t volume_d
     if(image_x>=sampleParameter.image_w || image_y>=sampleParameter.image_h) return;
     uint64_t image_idx=(uint64_t)image_y*sampleParameter.image_w+image_x;
 
-    float3 virtual_sample_pos=sampleParameter.origin+(image_x-(int)sampleParameter.image_w/2)*sampleParameter.voxels_per_pixel.x*sampleParameter.right
-                                                    +(image_y-(int)sampleParameter.image_h/2)*sampleParameter.voxels_per_pixel.y*sampleParameter.down;
+    float3 virtual_sample_pos=sampleParameter.origin+((image_x-(int)sampleParameter.image_w/2)*sampleParameter.voxels_per_pixel.x*sampleParameter.right
+                                                    +(image_y-(int)sampleParameter.image_h/2)*sampleParameter.voxels_per_pixel.y*sampleParameter.down)
+                                                     *0.01f/sampleParameter.space   ;
 
 
 
-    float3 physical_sample_pos=virtual_sample_pos*0.01f / sampleParameter.volume_board;
+    float3 physical_sample_pos=virtual_sample_pos/ sampleParameter.volume_board;
 
 
     image[image_idx]=tex3D<float>(volume_data,physical_sample_pos.x,physical_sample_pos.y,physical_sample_pos.z)*255;

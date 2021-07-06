@@ -8,6 +8,7 @@ struct RawSampleParameter{
     uint32_t image_w;
     uint32_t image_h;
     float3 volume_board;//dim*space
+    float3 space;
     float2 voxels_per_pixel;
     float3 origin;
     float3 right;
