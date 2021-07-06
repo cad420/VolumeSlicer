@@ -14,6 +14,7 @@ __global__ void CUDARawVolumeSample(uint8_t* image,//output result
 
 
 void CUDARawVolumeSampler::SetVolumeData(uint8_t *data, uint32_t dim_x, uint32_t dim_y, uint32_t dim_z) {
+    CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     assert(data && dim_x && dim_y && dim_z);
     this->volume_x=dim_x;
     this->volume_y=dim_y;
