@@ -143,7 +143,7 @@ void SliceRenderWidget::initTest() {
     slice.right={1.f,0.f,0.f,0.f};
     slice.up={0.f,0.f,-1.f,0.f};
     slice.normal={0.f,1.f,0.f,0.f};
-    slice.n_pixels_width=1200;
+    slice.n_pixels_width=900;
     slice.n_pixels_height=900;
     slice.voxel_per_pixel_height=2.f;
     slice.voxel_per_pixel_width=2.f;

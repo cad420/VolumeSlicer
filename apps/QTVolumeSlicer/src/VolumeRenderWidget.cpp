@@ -128,3 +128,7 @@ void VolumeRenderWidget::redraw() {
     setSlicer(this->slicer);
     repaint();
 }
+
+auto VolumeRenderWidget::getRawVolume() -> const std::shared_ptr<RawVolume> & {
+    return this->raw_volume;
+}

@@ -8,12 +8,20 @@
 #include<QtWidgets/QWidget>
 
 #include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/volume_sampler.hpp>
 using namespace vs;
 
 class SliceZoomWidget: public QWidget{
     Q_OBJECT
 public:
     explicit SliceZoomWidget(QWidget* parent= nullptr);
+    void setSlicer(const std::shared_ptr<Slicer>& slicer);
+    void setRawVolume(const std::shared_ptr<RawVolume>& raw_volume);
+private:
+    void initSlicer();
+    void drawSliceLine( QImage& image);
+public Q_SLOTS:
+    void redraw();
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -24,6 +32,8 @@ protected:
 private:
     std::shared_ptr<Slicer> slicer;
     std::shared_ptr<Slicer> max_zoom_slicer;
+    std::unique_ptr<VolumeSampler> raw_volume_sampler;
+
 };
 
 #endif //VOLUMESLICER_SLICEZOOMWIDGET_HPP

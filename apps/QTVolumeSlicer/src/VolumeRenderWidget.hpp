@@ -23,6 +23,7 @@ class VolumeRenderWidget: public QWidget{
 public:
     explicit VolumeRenderWidget(QWidget* parent= nullptr);
     void setSlicer(const std::shared_ptr<Slicer>&);
+    auto getRawVolume()->const std::shared_ptr<RawVolume>&;
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
