@@ -18,6 +18,9 @@ list(
         VolumeSettingWidget.cpp
         VolumeRenderSettingWidget.cpp
         SliceZoomWidget.cpp
+        TransferFunctionWidget.cpp
+        TFCanvas.cpp
+        DoubleSlider.cpp
 )
 add_executable(QTVolumeSlicerApp ${QTVolumeSlicerApp_SRCS})
 

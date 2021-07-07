@@ -22,7 +22,7 @@ void VolumeRenderWidget::paintEvent(QPaintEvent *event) {
     auto frame=multi_volume_renderer->GetFrame();
     QImage image(frame.data.data(),frame.width,frame.height,QImage::Format_RGBA8888,nullptr,nullptr);
 
-    std::cout<<"image "<<image.width()<<" "<<image.height()<<std::endl;
+//    std::cout<<"image "<<image.width()<<" "<<image.height()<<std::endl;
 //    p.drawPixmap(0,0,QPixmap::fromImage(image.mirrored(false,true)));
     image.mirror(false,true);
 
@@ -108,7 +108,7 @@ void VolumeRenderWidget::initTest() {
     base_camera->n=0.01f;
     base_camera->f=20.f;
     multi_volume_renderer->SetCamera(*base_camera);
-    multi_volume_renderer->SetVisible(false,true);
+    multi_volume_renderer->SetVisible(true,true);
     this->trackball_camera=std::make_unique<control::TrackBallCamera>(
                 3.f,slice.n_pixels_width,slice.n_pixels_height,
                 glm::vec3{1.83f,2.315f,2.415f}
@@ -124,7 +124,7 @@ void VolumeRenderWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
     slice.voxel_per_pixel_height/=64.f;
     this->dummy_slicer=Slicer::CreateSlicer(slice);
     multi_volume_renderer->SetSlicer(dummy_slicer);
-    multi_volume_renderer->SetVisible(true,true);
+
 
 }
 
@@ -135,4 +135,9 @@ void VolumeRenderWidget::redraw() {
 
 auto VolumeRenderWidget::getRawVolume() -> const std::shared_ptr<RawVolume> & {
     return this->raw_volume;
+}
+
+void VolumeRenderWidget::setVisible(bool volume, bool slice) {
+    multi_volume_renderer->SetVisible(volume,slice);
+    redraw();
 }

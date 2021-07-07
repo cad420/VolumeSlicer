@@ -15,6 +15,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent) {
 }
 
 void SliceRenderWidget::paintEvent(QPaintEvent *event) {
+    std::cout<<"slice paint event"<<std::endl;
 //    std::cout<<__FUNCTION__ <<std::endl;
     QPainter p(this);
     Frame frame;

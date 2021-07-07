@@ -15,6 +15,8 @@ namespace control{
     class TrackBallCamera;
 }
 
+
+
 /**
  * only raw volume render
  */
@@ -32,6 +34,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 public Q_SLOTS:
     void redraw();
+    void setVisible(bool volume,bool slice);
 private:
     void initTest();
 private:
@@ -42,6 +45,8 @@ private:
     std::unique_ptr<RawVolumeRenderer> multi_volume_renderer;
     std::unique_ptr<control::TrackBallCamera> trackball_camera;
     std::unique_ptr<vs::Camera> base_camera;
+
+
 };
 
 

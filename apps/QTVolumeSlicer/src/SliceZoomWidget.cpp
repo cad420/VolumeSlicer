@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <VolumeSlicer/frame.hpp>
 #include <iostream>
+#include <QImage>
 #include <glm/glm.hpp>
 SliceZoomWidget::SliceZoomWidget(QWidget *parent) {
     initSlicer();
@@ -29,19 +30,19 @@ void SliceZoomWidget::paintEvent(QPaintEvent *event) {
 }
 
 void SliceZoomWidget::mouseMoveEvent(QMouseEvent *event) {
-    QWidget::mouseMoveEvent(event);
+    event->accept();
 }
 
 void SliceZoomWidget::wheelEvent(QWheelEvent *event) {
-    QWidget::wheelEvent(event);
+    event->accept();
 }
 
 void SliceZoomWidget::mousePressEvent(QMouseEvent *event) {
-    QWidget::mousePressEvent(event);
+    event->accept();
 }
 
 void SliceZoomWidget::mouseReleaseEvent(QMouseEvent *event) {
-    QWidget::mouseReleaseEvent(event);
+    event->accept();
 }
 
 void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
@@ -59,7 +60,7 @@ void SliceZoomWidget::drawSliceLine( QImage& image) {
     auto slice=slicer->GetSlice();
     assert(slice.voxel_per_pixel_height==slice.voxel_per_pixel_width);
     float p=slice.voxel_per_pixel_height/64.f;
-    std::cout<<p<<std::endl;
+    std::cout<<image.width()<<" "<<image.height()<<std::endl;
     auto max_zoom_slice=max_zoom_slicer->GetSlice();
 //    glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
 //    glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
@@ -71,13 +72,13 @@ void SliceZoomWidget::drawSliceLine( QImage& image) {
     uint32_t max_p_y=max_zoom_slice.n_pixels_height/2+slice.n_pixels_height/2*p;
     if(min_p_x>=0 && max_p_x<max_zoom_slice.n_pixels_width)
         for(auto i=min_p_x;i<=max_p_x;i++){
-            image.setPixelColor(i,min_p_y,QColor(255,0,0));
-            image.setPixelColor(i,max_p_y,QColor(255,0,0));
+            image.setPixelColor(i,min_p_y,QColor(255,0,0,255));
+            image.setPixelColor(i,max_p_y,QColor(255,0,0,255));
         }
     if(min_p_y>=0 && max_p_y<max_zoom_slice.n_pixels_height)
         for(auto i=min_p_y;i<=max_p_y;i++){
-            image.setPixelColor(min_p_x,i,QColor(255,0,0));
-            image.setPixelColor(max_p_x,i,QColor(255,0,0));
+            image.setPixelColor(min_p_x,i,QColor(255,0,0,255));
+            image.setPixelColor(max_p_x,i,QColor(255,0,0,255));
         }
 }
 void SliceZoomWidget::redraw() {

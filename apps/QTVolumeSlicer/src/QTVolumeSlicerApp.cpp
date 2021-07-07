@@ -106,7 +106,7 @@ void VolumeSlicerMainWindow::createToolBar() {
             setModulePanel(m_volume_render_setting_widget);
         }
     });
-
+    emit m_module_panel->currentTextChanged("Volume");
     m_tool_bar->addWidget(m_module_panel);
 
 
@@ -126,6 +126,7 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_slice_render_dock_widget->setWidget(m_slice_render_widget);
     m_slice_render_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
     m_slice_render_dock_widget->setMinimumSize(900,900);
+
     addDockWidget(Qt::LeftDockWidgetArea,m_slice_render_dock_widget);
     m_view_menu->addAction(m_slice_render_dock_widget->toggleViewAction());
 
@@ -153,8 +154,9 @@ void VolumeSlicerMainWindow::createWidgets() {
 
     m_slice_setting_widget=new SliceSettingWidget(m_slice_render_widget,this);
     m_volume_render_setting_widget=new VolumeRenderSettingWidget(m_volume_render_widget,this);
-    m_volume_setting_widget=new VolumeSettingWidget(this);
-
+    m_volume_setting_widget=new VolumeSettingWidget(m_slice_render_widget,
+                                                    m_volume_render_widget,
+                                                    this);
 
 
 
@@ -162,8 +164,8 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Panned"),this);
 
     m_setting_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea);
-    m_setting_dock_widget->setMinimumSize(500,1080);
-    m_setting_dock_widget->setMaximumSize(500,1080);
+    m_setting_dock_widget->setMinimumSize(500,900);
+    m_setting_dock_widget->setMaximumSize(500,1200);
     m_view_menu->addAction(m_setting_dock_widget->toggleViewAction());
     addDockWidget(Qt::LeftDockWidgetArea,m_setting_dock_widget);
 
@@ -210,24 +212,24 @@ void VolumeSlicerMainWindow::drawVolume() {
 
 void VolumeSlicerMainWindow::wheelEvent(QWheelEvent *event) {
 
-    auto angle_delta=event->angleDelta();
-    if((QApplication::keyboardModifiers() == Qt::ControlModifier)){
-        spdlog::info("{0}",__FUNCTION__ );
-        if(angle_delta.y()>0){
-            slicer->StretchInXY(1.1f,1.1f);
-        }
-        else{
-            slicer->StretchInXY(0.9f,0.9f);
-        }
-    }
-    else{
-        if(angle_delta.y()>0)
-            slicer->MoveByNormal(1.f);
-        else
-            slicer->MoveByNormal(-1.f);
-    }
-    event->accept();
-    repaint();
+//    auto angle_delta=event->angleDelta();
+//    if((QApplication::keyboardModifiers() == Qt::ControlModifier)){
+//        spdlog::info("{0}",__FUNCTION__ );
+//        if(angle_delta.y()>0){
+//            slicer->StretchInXY(1.1f,1.1f);
+//        }
+//        else{
+//            slicer->StretchInXY(0.9f,0.9f);
+//        }
+//    }
+//    else{
+//        if(angle_delta.y()>0)
+//            slicer->MoveByNormal(1.f);
+//        else
+//            slicer->MoveByNormal(-1.f);
+//    }
+//    event->accept();
+//    repaint();
 }
 void VolumeSlicerMainWindow::mousePressEvent(QMouseEvent *event) {
 

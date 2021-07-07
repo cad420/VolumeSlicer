@@ -14,8 +14,8 @@ VS_START
 class TFPoint{
 public:
     TFPoint(uint8_t key,std::array<double,4> value):key(key),value(value){}
-    uint8_t key;
-    std::array<double,4> value;
+    uint8_t key;//0-255
+    std::array<double,4> value;//normalize 0.0-1.0
 };
 
 class TransferFunc{
