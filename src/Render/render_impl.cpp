@@ -113,7 +113,7 @@ void MultiVolumeRender::SetVisibleZ(float z0, float z1) noexcept {
 
 void MultiVolumeRender::SetSlicer(std::shared_ptr<Slicer> slicer) noexcept {
     this->slicer=slicer;
-    this->slice_visible=true;
+//    this->slice_visible=true;
     setSlice();
 }
 
