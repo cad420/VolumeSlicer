@@ -133,8 +133,8 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_volume_render_dock_widget=new QDockWidget(QStringLiteral("Volume View"));
     m_volume_render_dock_widget->setWidget(m_volume_render_widget);
     m_volume_render_dock_widget->setAllowedAreas( Qt::RightDockWidgetArea | Qt::TopDockWidgetArea);
-
-    m_volume_render_dock_widget->setMaximumSize(500,500);
+    m_volume_render_dock_widget->setMinimumSize(400,400);
+    m_volume_render_dock_widget->setMaximumSize(400,400);
     addDockWidget(Qt::RightDockWidgetArea,m_volume_render_dock_widget);
     m_view_menu->addAction(m_volume_render_dock_widget->toggleViewAction());
 
@@ -144,8 +144,8 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_slice_zoom_dock_widget=new QDockWidget(QStringLiteral("Slice Zoom"));
     m_slice_zoom_dock_widget->setWidget(m_slice_zoom_widget);
     m_slice_zoom_dock_widget->setAllowedAreas( Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea );
-    m_slice_zoom_dock_widget->setMaximumSize(500,500);
-    m_slice_zoom_dock_widget->setMinimumSize(500,500);
+    m_slice_zoom_dock_widget->setMaximumSize(400,400);
+    m_slice_zoom_dock_widget->setMinimumSize(400,400);
     addDockWidget(Qt::RightDockWidgetArea,m_slice_zoom_dock_widget);
     m_view_menu->addAction(m_slice_zoom_dock_widget->toggleViewAction());
 
@@ -162,7 +162,7 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Panned"),this);
 
     m_setting_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea);
-    m_setting_dock_widget->setMinimumSize(400,900);
+    m_setting_dock_widget->setMinimumSize(500,1080);
     m_setting_dock_widget->setMaximumSize(500,1080);
     m_view_menu->addAction(m_setting_dock_widget->toggleViewAction());
     addDockWidget(Qt::LeftDockWidgetArea,m_setting_dock_widget);

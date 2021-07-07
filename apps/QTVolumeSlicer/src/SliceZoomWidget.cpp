@@ -51,8 +51,8 @@ void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
     std::cout<<slice.origin[0]<<" "<<slice.origin[1]<<" "<< slice.origin[2]<<std::endl;
     slice.voxel_per_pixel_width=1;
     slice.voxel_per_pixel_height=1;
-    slice.n_pixels_height=500;
-    slice.n_pixels_width=500;
+    slice.n_pixels_height=400;
+    slice.n_pixels_width=400;
     this->max_zoom_slicer=Slicer::CreateSlicer(slice);
 }
 void SliceZoomWidget::drawSliceLine( QImage& image) {

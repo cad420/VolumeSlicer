@@ -20,9 +20,13 @@ void VolumeRenderWidget::paintEvent(QPaintEvent *event) {
     multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->render();
     auto frame=multi_volume_renderer->GetFrame();
-    QImage image(frame.data.data(),frame.width,frame.height,QImage::Format::Format_RGBA8888,nullptr,nullptr);
-    p.drawPixmap(0,0,QPixmap::fromImage(image.mirrored(false,true)));
+    QImage image(frame.data.data(),frame.width,frame.height,QImage::Format_RGBA8888,nullptr,nullptr);
 
+    std::cout<<"image "<<image.width()<<" "<<image.height()<<std::endl;
+//    p.drawPixmap(0,0,QPixmap::fromImage(image.mirrored(false,true)));
+    image.mirror(false,true);
+
+    p.drawImage(0,0,image);
 }
 
 void VolumeRenderWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -75,8 +79,8 @@ void VolumeRenderWidget::initTest() {
     slice.right={1.f,0.f,0.f,0.f};
     slice.up={0.f,1.f,-1.f,0.f};
     slice.normal={0.f,1.f,1.f,0.f};
-    slice.n_pixels_width=500;
-    slice.n_pixels_height=500;
+    slice.n_pixels_width=400;
+    slice.n_pixels_height=400;
     slice.voxel_per_pixel_height=1.f;
     slice.voxel_per_pixel_width=1.f;
     slicer=Slicer::CreateSlicer(slice);
@@ -84,7 +88,7 @@ void VolumeRenderWidget::initTest() {
                                VoxelType::UInt8,
                                {366,463,161},
                                {0.01f,0.01f,0.03f});
-    multi_volume_renderer=CreateRenderer(500,500);
+    multi_volume_renderer=CreateRenderer(slice.n_pixels_width,slice.n_pixels_height);
     multi_volume_renderer->SetVolume(raw_volume);
 //    multi_volume_renderer->SetSlicer(slicer);
 
@@ -106,7 +110,7 @@ void VolumeRenderWidget::initTest() {
     multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->SetVisible(false,true);
     this->trackball_camera=std::make_unique<control::TrackBallCamera>(
-                3.f,500,500,
+                3.f,slice.n_pixels_width,slice.n_pixels_height,
                 glm::vec3{1.83f,2.315f,2.415f}
             );
 
