@@ -13,10 +13,10 @@
 #include <QtWidgets>
 
 SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *parent)
-:slice_render_widget(widget)
+: m_slice_render_widget(widget)
 {
-
     auto widget_layout=new QVBoxLayout;
+
     auto groupbox_layout=new QVBoxLayout;
 
     auto slice_args=new QGroupBox("Slice Setting");
@@ -73,7 +73,7 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
         double v=value/100.0*360.0-180.0;
 //        std::cout<<v<<std::endl;
         lr_spin_box->setValue(v);
-        slice_render_widget->redraw();
+        m_slice_render_widget->redraw();
     });
 
 
@@ -104,5 +104,8 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->setStretchFactor(ud_layout,1);
 
     widget_layout->addWidget(slice_args);
+//    m_slice_setting_scroll_area=new QScrollArea(this);
+//    m_slice_setting_scroll_area->setWidget(slice_args);
+//    widget_layout->addWidget(m_slice_setting_scroll_area);
     this->setLayout(widget_layout);
 }
