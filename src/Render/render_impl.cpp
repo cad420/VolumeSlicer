@@ -223,7 +223,7 @@ void MultiVolumeRender::render() noexcept {
 //    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     static GLenum drawBuffers[ 2 ] = { GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     if(!volume_visible){
-        drawBuffers[0]=GL_COLOR_ATTACHMENT0;
+//        drawBuffers[0]=GL_COLOR_ATTACHMENT0;
         glBindFramebuffer(GL_FRAMEBUFFER,0);
     }
     else{
@@ -235,7 +235,8 @@ void MultiVolumeRender::render() noexcept {
 //    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     if(slice_visible){
-        glDrawBuffers(2,drawBuffers);
+        if(volume_visible)
+            glDrawBuffers(2,drawBuffers);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         glBindVertexArray(slice_vao);
         glDrawArrays(GL_TRIANGLES,0,6);
@@ -501,14 +502,18 @@ void MultiVolumeRender::setSlice() {
         glm::vec3 origin= {slice.origin[0],slice.origin[1],slice.origin[2]};
         glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
         glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
-        auto lu=origin+up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
-        auto lb=origin-up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
-        auto ru=origin+up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
-        auto rb=origin-up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f;
+        auto lu=origin+
+                (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
+        auto lb=origin-
+                (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
+        auto ru=origin+
+                (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
+        auto rb=origin-
+                (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
+                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
         glm::vec3 space={space_x,space_y,space_z};
         lu=lu * space;
         lb=lb * space;
