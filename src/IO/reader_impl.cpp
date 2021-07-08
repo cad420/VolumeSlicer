@@ -36,7 +36,21 @@ void ReaderImpl::GetPacket(const std::array<uint32_t, 4> &idx, std::vector<std::
         spdlog::error("GetPacket: out of range.");
         return;
     }
-    readers.at(idx[3])->read_packet({idx[0],idx[1],idx[2]},packet);
+    auto data_ptr=packet_cache.get_value_ptr(idx);
+    if(data_ptr==nullptr){
+        readers.at(idx[3])->read_packet({idx[0],idx[1],idx[2]},packet);
+        std::vector<std::vector<uint8_t>> tmp=packet;
+        packet_cache.emplace_back(idx,std::move(tmp));
+    }
+    else{
+        packet=*data_ptr;
+        spdlog::critical("find cached packet!!!");
+    }
+    spdlog::info("load factor for packet cache is: {0:f}",packet_cache.get_load_factor());
+    if(packet_cache.get_load_factor()==1){
+        spdlog::critical("cache is full!!!");
+    }
+//    readers.at(idx[3])->read_packet({idx[0],idx[1],idx[2]},packet);
 }
 
 void ReaderImpl::AddLodData(int lod, const char *path) {
@@ -105,7 +119,7 @@ auto ReaderImpl::GetFrameShape() const -> std::array<uint32_t, 2> {
 
 
 ReaderImpl::ReaderImpl()
-:min_lod(0x0fffffff),max_lod(0)
+:min_lod(0x0fffffff),max_lod(0),packet_cache(500)
 {
 
 }

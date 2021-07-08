@@ -8,8 +8,15 @@
 #include<VolumeSlicer/reader.hpp>
 #include<VoxelCompression/voxel_compress/VoxelCmpDS.h>
 #include<array>
+#include <VolumeSlicer/LRU.hpp>
 VS_START
 
+struct MyArrayHash{
+    std::size_t operator()(const std::array<uint32_t,4>& a) const{
+        size_t mask=0xffff;
+        return ((a[0]&mask)<<48)|((a[1]&mask)<<32)|((a[2]&mask)<<16)|(a[3]&mask);
+    }
+};
 class ReaderImpl: public Reader{
 public:
     ReaderImpl();
@@ -28,6 +35,7 @@ public:
 private:
     std::unordered_map<int,std::unique_ptr<sv::Reader> > readers;
     int min_lod,max_lod;
+    LRUCache<std::array<uint32_t,4>,std::vector<std::vector<uint8_t>>,MyArrayHash> packet_cache;
 };
 
 VS_END
