@@ -70,7 +70,7 @@ QWidget(parent)
     raw_volume_group_box->setLayout(raw_volume_layout);
     {
         auto volume_name_layout=new QHBoxLayout();
-        auto volume_name_label=new QLabel("Comp Volume File");
+        auto volume_name_label=new QLabel("Raw Volume File");
         auto volume_name_line_edit=new QLineEdit();
         volume_name_line_edit->setReadOnly(true);
         auto volume_name_button=new QPushButton(QIcon(
