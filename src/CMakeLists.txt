@@ -38,10 +38,10 @@ target_link_libraries(VS_CORE
         PUBLIC
 
         spdlog::spdlog
-
+        glm::glm
         PRIVATE
 
-        glm::glm
+
         ${CUDA_CUDA_LIBRARY}
         voxel_uncompress
         ${OPENGL_LIBRARIES}

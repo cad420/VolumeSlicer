@@ -9,3 +9,5 @@ add_subdirectory(src)
 add_subdirectory(test)
 
 add_subdirectory(apps/QTVolumeSlicer)
+
+add_subdirectory(apps/MPIVolumeSlicer)
