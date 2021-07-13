@@ -36,6 +36,7 @@ private:
     std::unordered_map<int,std::unique_ptr<sv::Reader> > readers;
     int min_lod,max_lod;
     LRUCache<std::array<uint32_t,4>,std::vector<std::vector<uint8_t>>,MyArrayHash> packet_cache;
+    std::mutex mtx;
 };
 
 VS_END

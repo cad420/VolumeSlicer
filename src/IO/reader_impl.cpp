@@ -32,6 +32,7 @@ std::unique_ptr<Reader> Reader::CreateReader(const char* file_name) {
 
 
 void ReaderImpl::GetPacket(const std::array<uint32_t, 4> &idx, std::vector<std::vector<uint8_t>> &packet) {
+    std::unique_lock<std::mutex> lk(mtx);
     if(idx[3]<min_lod || idx[3]>max_lod){
         spdlog::error("GetPacket: out of range.");
         return;
