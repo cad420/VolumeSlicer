@@ -16,8 +16,11 @@ aux_source_directory(${IMGUI_ROOT} IMGUI_SRC)
 add_library(imgui STATIC ${IMGUI_SRC}
         ${IMGUI_ROOT}/examples/imgui_impl_sdl.cpp
         ${IMGUI_ROOT}/examples/imgui_impl_opengl3.cpp)
-target_include_directories(imgui PUBLIC ${IMGUI_ROOT}
+target_include_directories(imgui
+        PUBLIC
+        ${IMGUI_ROOT}
         ${IMGUI_ROOT}/examples
+        PRIVATE
         ${CMAKE_BINARY_DIR}/_deps/sdl2-src/include
         ${PROJECT_SOURCE_DIR}/third_party/glad/include
         )

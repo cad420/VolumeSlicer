@@ -66,7 +66,7 @@
 #define GL_CHECK
 #endif
 VolumeSliceGUI::VolumeSliceGUI()
-:window_w(1200),window_h(900),volume_space_x(0.01f),volume_space_y(0.01f),volume_space_z(0.03f)
+:window_w(1920),window_h(1080),volume_space_x(0.01f),volume_space_y(0.01f),volume_space_z(0.03f)
 {
     initSDL();
     initGLResource();
@@ -83,7 +83,14 @@ VolumeSliceGUI::~VolumeSliceGUI() {
     SDL_EXPR(SDL_DestroyWindow(sdl_window));
     SDL_EXPR(SDL_Quit());
 }
+void VolumeSliceGUI::init(const char *config_file) {
+    //1. window manager
+    this->window_manager=std::make_unique<WindowManager>(config_file);
+    //2. init SDL
 
+    //3. init OpenGL resource
+
+}
 void VolumeSliceGUI::initSDL() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
@@ -379,3 +386,5 @@ void VolumeSliceGUI::createGLTexture() {
 
     GL_CHECK
 }
+
+

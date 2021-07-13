@@ -24,6 +24,7 @@ class VolumeSliceGUI final{
 public:
     VolumeSliceGUI();
     ~VolumeSliceGUI();
+    void init(const char* config_file);
     void show();
 
     void set_comp_volume(const char*);
