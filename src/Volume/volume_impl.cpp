@@ -85,6 +85,11 @@ CompVolumeImpl::VolumeImpl(const char *file_name)
     this->block_queue.setSize(16);
     this->block_loader=std::make_unique<BlockLoader>(file_name);
     this->Loading();
+    auto dim=block_loader->GetBlockDim(0);
+    auto block_length=block_loader->GetBlockLength();
+    this->n_voxels_x=dim[0]*(block_length[0]-block_length[1]*2);
+    this->n_voxels_y=dim[1]*(block_length[0]-block_length[1]*2);
+    this->n_voxels_z=dim[2]*(block_length[0]-block_length[1]*2);
 }
 
 void VolumeImpl<VolumeType::Comp>::ClearRequestBlock() noexcept {
