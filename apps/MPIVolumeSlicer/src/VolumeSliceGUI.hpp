@@ -58,6 +58,8 @@ private:
     float volume_space_x,volume_space_y,volume_space_z;
 
     std::unique_ptr<WindowManager> window_manager;
+    std::shared_ptr<Slicer> world_slicer;
+    Slice world_slice;
 
     uint32_t screen_quad_vao,screen_quad_vbo;
 

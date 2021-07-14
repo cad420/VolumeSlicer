@@ -13,8 +13,7 @@ int MPIVolumeSliceAPP::run(int argc, char **argv) noexcept{
 
     try{
         VolumeSliceGUI gui;
-        gui.init("slice_config.json");
-        gui.set_comp_volume("E:\\MouseNeuronData/mouse_file_config.json");
+        gui.init("slicer_config.json");
         gui.show();
     }
     catch (const std::exception& err) {

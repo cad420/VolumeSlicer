@@ -66,10 +66,10 @@
 #define GL_CHECK
 #endif
 VolumeSliceGUI::VolumeSliceGUI()
-:window_w(1920),window_h(1080),volume_space_x(0.01f),volume_space_y(0.01f),volume_space_z(0.03f)
+:window_w(0),window_h(0),volume_space_x(0.f),volume_space_y(0.f),volume_space_z(0.f)
 {
-    initSDL();
-    initGLResource();
+
+
 }
 
 VolumeSliceGUI::~VolumeSliceGUI() {
@@ -86,9 +86,16 @@ VolumeSliceGUI::~VolumeSliceGUI() {
 void VolumeSliceGUI::init(const char *config_file) {
     //1. window manager
     this->window_manager=std::make_unique<WindowManager>(config_file);
+    this->window_w=window_manager->GetNodeWindowWidth();
+    this->window_h=window_manager->GetNodeWindowHeight();
+    window_manager->GetWorldVolumeSpace(volume_space_x,volume_space_y,volume_space_z);
     //2. init SDL
-
+    initSDL();
     //3. init OpenGL resource
+    initGLResource();
+    //4. set comp volume
+    set_comp_volume(window_manager->GetNodeResourcePath().c_str());
+    //5. set raw volume
 
 }
 void VolumeSliceGUI::initSDL() {
@@ -104,7 +111,8 @@ void VolumeSliceGUI::initSDL() {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE,8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_EXPR(sdl_window = SDL_CreateWindow("VolumeSlicer", 100, 100, window_w, window_h, SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI));
+    SDL_EXPR(sdl_window = SDL_CreateWindow("VolumeSlicer", window_manager->GetNodeScreenOffsetX(),window_manager->GetNodeScreenOffsetY() ,
+                                           window_manager->GetNodeWindowWidth(), window_manager->GetNodeWindowHeight(), SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI));
     SDL_EXPR(sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED));
     gl_context=SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window,gl_context);
@@ -115,6 +123,8 @@ void VolumeSliceGUI::initSDL() {
     }
     glEnable(GL_DEPTH_TEST);
     SDL_CHECK
+
+    //init imgui for sdl2 and opengl3
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -127,6 +137,21 @@ void VolumeSliceGUI::initSDL() {
     }
 }
 
+void operator+=(std::array<float,4>& a1,const std::array<float,4>& a2){
+    a1[0]+=a2[0];
+    a1[1]+=a2[1];
+    a1[2]+=a2[2];
+    a1[3]+=a2[3];
+}
+std::array<float,4> operator*(const std::array<float,4>& a,float t){
+    return {a[0]*t,a[1]*t,a[2]*t,a[3]*t};
+}
+std::array<float,4> operator-(const std::array<float,4>& a1,const std::array<float,4>& a2){
+    return {a1[0]-a2[0],a1[1]-a2[1],a1[2]-a2[2],a1[3]-a2[3]};
+}
+std::array<float,4> operator*(const std::array<float,4>& a1,const std::array<float,4>& a2){
+    return {a1[0]*a2[0],a1[1]*a2[1],a1[2]*a2[2],a1[3]*a2[3]};
+}
 void VolumeSliceGUI::show() {
     spdlog::set_level(spdlog::level::err);
     bool exit=false;
@@ -134,6 +159,7 @@ void VolumeSliceGUI::show() {
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
         static bool scaling=false;
+        static bool focus=false;
         static bool left_mouse_button_pressed;
         static constexpr float one_degree=1.0/180.0*3.141592627;
         while(SDL_PollEvent(&event)){
@@ -142,26 +168,33 @@ void VolumeSliceGUI::show() {
                     exit=true;
                     break;
                 }
+                case SDL_WINDOWEVENT:{
+                    switch (event.window.event) {
+                        case SDL_WINDOWEVENT_FOCUS_GAINED:focus=true;break;
+                        case SDL_WINDOWEVENT_FOCUS_LOST:focus=false;break;
+                    }
+                    break;
+                }
                 case SDL_KEYDOWN:{
                     switch (event.key.keysym.sym) {
                         case SDLK_ESCAPE:{exit=true;break;}
                         case SDLK_LCTRL:{scaling=true;break;}
-                        case SDLK_a:{slicer->RotateByX(one_degree);break;}
-                        case SDLK_d:{slicer->RotateByX(-one_degree);break;}
-                        case SDLK_w:{slicer->RotateByY(one_degree);break;}
-                        case SDLK_s:{slicer->RotateByY(-one_degree);break;}
-                        case SDLK_q:{slicer->RotateByZ(one_degree);break;}
-                        case SDLK_e:{slicer->RotateByZ(-one_degree);break;}
+                        case SDLK_a:{world_slicer->RotateByX(one_degree);break;}
+                        case SDLK_d:{world_slicer->RotateByX(-one_degree);break;}
+                        case SDLK_w:{world_slicer->RotateByY(one_degree);break;}
+                        case SDLK_s:{world_slicer->RotateByY(-one_degree);break;}
+                        case SDLK_q:{world_slicer->RotateByZ(one_degree);break;}
+                        case SDLK_e:{world_slicer->RotateByZ(-one_degree);break;}
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
-                            auto lod=slicer->GetSlice().voxel_per_pixel_width;
-                            slicer->MoveByNormal(-lod);
+                            auto lod=world_slicer->GetSlice().voxel_per_pixel_width;
+                            world_slicer->MoveByNormal(-lod);
                             break;
                         }
                         case SDLK_RIGHT:
                         case SDLK_UP:{
-                            auto lod=slicer->GetSlice().voxel_per_pixel_width;
-                            slicer->MoveByNormal(lod);
+                            auto lod=world_slicer->GetSlice().voxel_per_pixel_width;
+                            world_slicer->MoveByNormal(lod);
                             break;
                         }
                     }
@@ -177,30 +210,33 @@ void VolumeSliceGUI::show() {
                     break;
                 }
                 case SDL_MOUSEWHEEL:{
+                    if(!focus) break;
                     if(scaling){
                         if(event.wheel.y>0){
-                            slicer->StretchInXY(1.1f,1.1f);
+                            world_slicer->StretchInXY(1.1f,1.1f);
                         }
                         else{
-                            slicer->StretchInXY(0.9f,0.9f);
+                            world_slicer->StretchInXY(0.9f,0.9f);
                         }
                     }
                     else{
-                        auto lod=slicer->GetSlice().voxel_per_pixel_width;
+                        auto lod=world_slicer->GetSlice().voxel_per_pixel_width;
                         if(event.wheel.y>0)
-                            slicer->MoveByNormal(lod);
+                            world_slicer->MoveByNormal(lod);
                         else
-                            slicer->MoveByNormal(-lod);
+                            world_slicer->MoveByNormal(-lod);
                     }
                     break;
                 }
                 case SDL_MOUSEBUTTONDOWN:{
+
                     if(event.button.button==1){
                         left_mouse_button_pressed=true;
                     }
                     break;
                 }
                 case SDL_MOUSEBUTTONUP:{
+
                     if(event.button.button==1){
                         left_mouse_button_pressed=false;
                     }
@@ -208,20 +244,37 @@ void VolumeSliceGUI::show() {
                 }
                 case SDL_MOUSEMOTION:{
                     if(left_mouse_button_pressed){
-                        slicer->MoveInPlane(-event.motion.xrel,-event.motion.yrel);
+                        world_slicer->MoveInPlane(-event.motion.xrel,-event.motion.yrel);
                     }
                     break;
                 }
             }
+        }//end of SDL_PollEvent
+
+        if(window_manager->GetWindowRank()==0){
+            world_slice=world_slicer->GetSlice();
         }
+//        std::cout<<"before bcast"<<std::endl;
+        MPI_Bcast(&world_slice,20,MPI_FLOAT,0,MPI_COMM_WORLD);
+//        MPI_Barrier(MPI_COMM_WORLD);
+//        std::cout<<"node "<<window_manager->GetWindowRank()<<std::endl;
+//        std::cout<<world_slice.voxel_per_pixel_width<<" "<<world_slice.voxel_per_pixel_height<<std::endl;
+        auto slice=world_slice;
+        slice.n_pixels_width=window_manager->GetNodeWindowWidth();
+        slice.n_pixels_height=window_manager->GetNodeWindowHeight();
+        float center_x=window_manager->GetWindowColNum()*1.f/2-0.5f;
+        float center_y=window_manager->GetWindowRowNum()*1.f/2-0.5f;
+        std::array<float,4> t={0.01f/volume_space_x,0.01f/volume_space_y,0.01f/volume_space_z};
+        slice.origin+=
+                (slice.right * ((window_manager->GetWorldRankOffsetX()-center_x)*slice.n_pixels_width*slice.voxel_per_pixel_width)
+                -slice.up*((window_manager->GetWorldRankOffsetY()-center_y)*slice.n_pixels_height*slice.voxel_per_pixel_height))*t;
+
+        slicer->SetSlice(slice);
     };
-    constexpr uint32_t frame_time=1000/20;
+    constexpr uint32_t frame_time=1000/50;
     uint32_t last_frame_time=SDL_GetTicks();
 
-    SDL_Texture *texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, window_w, window_h);
-    SDL_CHECK
-    std::vector<uint8_t> image;
-    image.resize(window_w*window_h*sizeof(uint32_t),0);
+
     GL_CHECK
     while(!exit){
         process_event();
@@ -255,24 +308,19 @@ void VolumeSliceGUI::set_comp_volume(const char *file) {
     comp_volume->SetSpaceY(volume_space_y);
     comp_volume->SetSpaceZ(volume_space_z);
     Slice slice;
-//    slice.n_pixels_width=window_w;
-//    slice.n_pixels_height=window_h;
-//    slice.voxel_per_pixel_height=slice.voxel_per_pixel_width=2;
-//    slice.origin={comp_volume->GetVolumeDimX()/2.f,
-//                  comp_volume->GetVolumeDimY()/2.f,
-//                  comp_volume->GetVolumeDimZ()/2.f};
-//    slice.normal={0.f,0.f,1.f,0.f};
-//    slice.right={1.f,0.f,0.f,0.f};
-//    slice.up={0.f,1.f,0.f,0.f};
-    slice.origin={9765.f,8434.f,4500.f,1.f};
+    slice.n_pixels_width=window_manager->GetWorldWindowWidth();
+    slice.n_pixels_height=window_manager->GetWorldWindowHeight();
+    slice.voxel_per_pixel_height=slice.voxel_per_pixel_width=2.f;
+    slice.origin={comp_volume->GetVolumeDimX()/2.f,
+                  comp_volume->GetVolumeDimY()/2.f,
+                  comp_volume->GetVolumeDimZ()/2.f};
+    slice.normal={0.f,0.f,1.f,0.f};
     slice.right={1.f,0.f,0.f,0.f};
-    slice.up={0.f,0.f,-1.f,0.f};
-    slice.normal={0.f,1.f,0.f,0.f};
-    slice.n_pixels_width=window_w;
-    slice.n_pixels_height=window_h;
-    slice.voxel_per_pixel_height=2.f;
-    slice.voxel_per_pixel_width=2.f;
+    slice.up={0.f,1.f,0.f,0.f};
+
+    this->world_slicer=Slicer::CreateSlicer(slice);
     this->slicer=Slicer::CreateSlicer(slice);
+
     comp_sample_frame.width=window_w;
     comp_sample_frame.height=window_h;
     comp_sample_frame.channels=1;
