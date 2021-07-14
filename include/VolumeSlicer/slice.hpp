@@ -41,6 +41,8 @@ public:
 
     static std::unique_ptr<Slicer> CreateSlicer(const Slice& slice) noexcept;
 
+    virtual void SetSlice(const Slice& slice) =0;
+
     virtual bool IsModified() const =0;
 
     virtual void SetStatus(bool modified) =0;

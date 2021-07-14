@@ -17,6 +17,8 @@ class SlicerImpl: public Slicer{
 public:
     explicit SlicerImpl(const Slice&);
 
+    void SetSlice(const Slice& slice) override;
+
     bool IsModified() const override;
 
     void SetStatus(bool modified) override;

@@ -12,6 +12,11 @@ VS_START
 
 
 SlicerImpl::SlicerImpl(const Slice &slice){
+    SlicerImpl::SetSlice(slice);
+    spdlog::info("Successfully create slicer.");
+}
+
+void SlicerImpl::SetSlice(const Slice &slice) {
     if(!IsValidSlice(slice)){
         throw std::invalid_argument("illegal slice");
     }
@@ -26,7 +31,6 @@ SlicerImpl::SlicerImpl(const Slice &slice){
 
     this->image.resize((size_t)this->n_pixels_width*this->n_pixels_height,0);
     SetStatus(true);
-    spdlog::info("Successfully create slicer.");
 }
 
 bool SlicerImpl::IsValidSlice(const Slice &slice) const {
@@ -142,6 +146,7 @@ bool SlicerImpl::IsModified() const {
 void SlicerImpl::SetStatus(bool modified) {
     this->is_modified=modified;
 }
+
 
 
 std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
