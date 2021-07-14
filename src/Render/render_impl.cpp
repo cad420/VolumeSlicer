@@ -182,13 +182,13 @@ void MultiVolumeRender::bindTextureUnit() {
 }
 
 void MultiVolumeRender::render() noexcept {
-    spdlog::info("{0}",__FUNCTION__ );
+//    spdlog::info("{0}",__FUNCTION__ );
     setSlice();
     bindTextureUnit();
     bindShaderUniform();
     GL_CHECK
     glm::mat4 view=glm::lookAt(glm::vec3{camera.pos[0],camera.pos[1],camera.pos[2]},
-                               glm::vec3{camera.pos[0]+camera.front[0],camera.pos[1]+camera.front[1],camera.pos[2]+camera.front[2]},
+                               glm::vec3{camera.look_at[0],camera.look_at[1],camera.look_at[2]},
                                glm::vec3{camera.up[0],camera.up[1],camera.up[2]});
     glm::mat4 projection=glm::perspective(glm::radians(camera.zoom),(float)window_width/window_height,camera.n,camera.f);
     glm::mat4 mvp=projection*view;
@@ -201,6 +201,7 @@ void MultiVolumeRender::render() noexcept {
 
     volume_render_pos_shader->use();
     volume_render_pos_shader->setMat4("MVPMatrix",mvp);
+    volume_render_pos_shader->setBool("render_board",false);
 
     glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -255,7 +256,6 @@ void MultiVolumeRender::render() noexcept {
         glBindVertexArray(screen_quad_vao);
         glDrawArrays(GL_TRIANGLES,0,6);
     }
-
 //    if(!volume_visible && !slice_visible){
 //        glBindFramebuffer(GL_FRAMEBUFFER,0);
 //        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -519,10 +519,10 @@ void MultiVolumeRender::setSlice() {
         lb=lb * space;
         ru=ru * space;
         rb=rb * space;
-        spdlog::info("lu {0} {1} {2}",lu.x,lu.y,lu.z);
-        spdlog::info("lb {0} {1} {2}",lb.x,lb.y,lb.z);
-        spdlog::info("ru {0} {1} {2}",ru.x,ru.y,ru.z);
-        spdlog::info("rb {0} {1} {2}",rb.x,rb.y,rb.z);
+//        spdlog::info("lu {0} {1} {2}",lu.x,lu.y,lu.z);
+//        spdlog::info("lb {0} {1} {2}",lb.x,lb.y,lb.z);
+//        spdlog::info("ru {0} {1} {2}",ru.x,ru.y,ru.z);
+//        spdlog::info("rb {0} {1} {2}",rb.x,rb.y,rb.z);
         slice_vertices={
                 lu.x,lu.y,lu.z,
                 lb.x,lb.y,lb.z,
@@ -544,14 +544,14 @@ void MultiVolumeRender::setSlice() {
         glEnableVertexAttribArray(0);
         glBindVertexArray(0);
         GL_CHECK
-        spdlog::info("init slice vertices");
+//        spdlog::info("init slice vertices");
     }
     else{
         if(slicer->IsModified()){
             calcSliceV();
             glNamedBufferSubData(slice_vbo,0,sizeof(slice_vertices),slice_vertices.data());
             GL_CHECK
-            spdlog::info("update slice vertices");
+//            spdlog::info("update slice vertices");
         }
     }
 }

@@ -23,7 +23,7 @@ uniform bool slice_visible;
 
 float step=0.003f;
 
-
+vec3 g_ray_dir;
 vec3 phongShading(vec3 samplePos,vec3 diffuseColor);
 void main() {
 //    frag_color=vec4(1.f,1.f,0.f,1.f);
@@ -36,6 +36,7 @@ void main() {
     vec3 start2slice=slice_pos-start_pos;
     vec3 start2end=end_pos-start_pos;
     vec3 ray_direction=normalize(start2end);
+    g_ray_dir=ray_direction;
 //    if(slice_shadow==1){
 //        frag_color=vec4(1.f,0.f,0.f,1.f);
 //    }
@@ -164,10 +165,10 @@ vec3 phongShading(vec3 samplePos,vec3 diffuseColor)
 
     N=-normalize(N);
 
-    vec3 L=-light_direction;
+    vec3 L=-g_ray_dir;
     vec3 R=L;//-ray_direction;
-//    if(dot(N,L)<0.f)
-//        N=-N;
+    if(dot(N,L)<0.f)
+        N=-N;
 
     vec3 ambient=ka*diffuseColor.rgb;
     vec3 specular=ks*pow(max(dot(N,(L+R)/2.0),0.0),shininess)*vec3(1.0f);

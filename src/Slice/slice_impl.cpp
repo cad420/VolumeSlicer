@@ -12,6 +12,11 @@ VS_START
 
 
 SlicerImpl::SlicerImpl(const Slice &slice){
+    SlicerImpl::SetSlice(slice);
+    spdlog::info("Successfully create slicer.");
+}
+
+void SlicerImpl::SetSlice(const Slice &slice) {
     if(!IsValidSlice(slice)){
         throw std::invalid_argument("illegal slice");
     }
@@ -26,7 +31,6 @@ SlicerImpl::SlicerImpl(const Slice &slice){
 
     this->image.resize((size_t)this->n_pixels_width*this->n_pixels_height,0);
     SetStatus(true);
-    spdlog::info("Successfully create slicer.");
 }
 
 bool SlicerImpl::IsValidSlice(const Slice &slice) const {
@@ -46,7 +50,7 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
     glm::vec3 _right={slice.right[0],slice.right[1],slice.right[2]};
     _right=glm::normalize(_right);
     float d1=glm::dot(_normal,_up);
-    float d2=glm::dot(_normal,right);
+    float d2=glm::dot(_normal,_right);
     float d3=glm::dot(_up,_right);
     if(d1>FLOAT_ZERO || d2>FLOAT_ZERO || d3>FLOAT_ZERO){
         spdlog::error("normal right up are not all dot equal zero.");
@@ -56,12 +60,12 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
 }
 
 void SlicerImpl::MoveByNormal(float dist) {
-    this->origin+=dist*this->normal;
+    this->origin+=(dist*this->normal)/glm::vec3(1,1,3);
     SetStatus(true);
 }
 
 void SlicerImpl::MoveInPlane(float offsetX, float offsetY) {
-    this->origin+=offsetX*this->right+offsetY*this->up;
+    this->origin+=(offsetX*this->right+offsetY*this->up)/glm::vec3(1,1,3);
     SetStatus(true);
 }
 
@@ -76,7 +80,7 @@ void SlicerImpl::StretchInXY(float scaleX, float scaleY) {
 }
 
 void SlicerImpl::RotateByX(float degree) {
-    glm::mat4 trans;
+    glm::mat4 trans(1.0);
     trans=glm::rotate(trans,degree,this->right);
     this->normal=trans*glm::vec4(this->normal,0.f);
     this->up=trans*glm::vec4(this->up,0.f);
@@ -84,7 +88,7 @@ void SlicerImpl::RotateByX(float degree) {
 }
 
 void SlicerImpl::RotateByY(float degree) {
-    glm::mat4 trans;
+    glm::mat4 trans(1.0);
     trans=glm::rotate(trans,degree,this->up);
     this->normal=trans*glm::vec4(this->normal,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
@@ -92,7 +96,7 @@ void SlicerImpl::RotateByY(float degree) {
 }
 
 void SlicerImpl::RotateByZ(float degree) {
-    glm::mat4 trans;
+    glm::mat4 trans(1.0);
     trans=glm::rotate(trans,degree,this->normal);
     this->up=trans*glm::vec4(this->up,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
@@ -135,23 +139,24 @@ uint8_t *SlicerImpl::GetImageData() {
     return image.data();
 }
 
-    bool SlicerImpl::IsModified() const {
-        return is_modified;
-    }
+bool SlicerImpl::IsModified() const {
+    return is_modified;
+}
 
-    void SlicerImpl::SetStatus(bool modified) {
-        this->is_modified=modified;
-    }
+void SlicerImpl::SetStatus(bool modified) {
+    this->is_modified=modified;
+}
 
 
-    std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
-    try{
-        return std::make_unique<SlicerImpl>(slice);
-    }
-    catch (const std::exception& err) {
-        spdlog::error("CreateSlicer constructor error: {0}",err.what());
-        return std::unique_ptr<SlicerImpl>(nullptr);
-    }
+
+std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
+try{
+    return std::make_unique<SlicerImpl>(slice);
+}
+catch (const std::exception& err) {
+    spdlog::error("CreateSlicer constructor error: {0}",err.what());
+    return std::unique_ptr<SlicerImpl>(nullptr);
+}
 }
 
 VS_END

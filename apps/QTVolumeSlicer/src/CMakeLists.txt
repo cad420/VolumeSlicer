@@ -13,6 +13,14 @@ list(
         main.cpp
         QTVolumeSlicerApp.cpp
         VolumeRenderWidget.cpp
+        SliceRenderWidget.cpp
+        SliceSettingWidget.cpp
+        VolumeSettingWidget.cpp
+        VolumeRenderSettingWidget.cpp
+        SliceZoomWidget.cpp
+        TransferFunctionWidget.cpp
+        TFCanvas.cpp
+        DoubleSlider.cpp
 )
 add_executable(QTVolumeSlicerApp ${QTVolumeSlicerApp_SRCS})
 
@@ -21,4 +29,5 @@ target_link_libraries(QTVolumeSlicerApp PRIVATE
         Qt6::Gui
         Qt6::Widgets
         VS_CORE
+        glm::glm
         )
