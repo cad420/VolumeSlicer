@@ -131,6 +131,9 @@ public:
     //return block num in queue which can get
     virtual int GetBlockQueueSize() =0;
 
+    //set maximum number of blocks which have uncompressed in the block queue
+    virtual void SetBlockQueueSize(size_t) =0;
+
     //pause loading meanings block queue will not increase
     virtual void PauseLoadBlock() noexcept = 0;
 
@@ -141,6 +144,9 @@ public:
     //VolumeBlock::valid is false meanings not get supposed block and cant's use
     //if returned VolumeBlock's data used, should call Release
     virtual VolumeBlock GetBlock(const std::array<uint32_t,4>&) noexcept =0;
+
+    //get block in the front of block queue, if queue is empty will return invalid block
+    virtual VolumeBlock GetBlock() noexcept = 0;
 
     //get lod volume's dim: dim-xyz+padding
     virtual auto GetBlockDim(int lod) const ->std::array<uint32_t,3>  =0;

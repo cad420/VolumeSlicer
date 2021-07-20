@@ -54,11 +54,15 @@ public:
 
     int GetBlockQueueSize() override;
 
+    void SetBlockQueueSize(size_t size) override;
+
     void PauseLoadBlock() noexcept override;
 
     void StartLoadBlock() noexcept override;
 
     VolumeBlock GetBlock(const std::array<uint32_t,4>&) noexcept override;
+
+    VolumeBlock GetBlock() noexcept override;
 
     auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> override;
 

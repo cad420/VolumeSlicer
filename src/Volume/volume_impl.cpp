@@ -174,14 +174,23 @@ Volume<VolumeType::Comp>::VolumeBlock VolumeImpl<VolumeType::Comp>::GetBlock(con
 //    spdlog::info("block_queue size:{0}.",block_queue.size());
 //    spdlog::info("request_queue size:{0}.",request_queue.size());
     if(block_queue.find(idx)){
-
         return block_queue.get(idx);
     }
     else{
         return Volume<VolumeType::Comp>::VolumeBlock();
     }
 }
+VolumeBlock VolumeImpl<VolumeType::Comp>::GetBlock() noexcept {
+    if(block_queue.empty()){
+        return Volume<VolumeType::Comp>::VolumeBlock();
+    }
+    else{
+        auto block=block_queue.front();
+        block_queue.pop_front();
+        return block;
+    }
 
+}
 void VolumeImpl<VolumeType::Comp>::Loading() {
     task=std::thread([&](){
         while(true){
@@ -305,6 +314,12 @@ VolumeImpl<VolumeType::Comp>::~VolumeImpl() {
         else
             return false;
     }
+
+    void VolumeImpl<VolumeType::Comp>::SetBlockQueueSize(size_t size) {
+        this->block_queue.setSize(size);
+    }
+
+
 
 
 VS_END
