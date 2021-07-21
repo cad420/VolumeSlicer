@@ -2,6 +2,7 @@
 
 #include<VolumeSlicer/helper.hpp>
 #include<VolumeSlicer/slice.hpp>
+#include<VolumeSlicer/cuda_context.hpp>
 #include<list>
 #include<map>
 VS_START
@@ -38,16 +39,7 @@ public:
     CUDACompVolumeSampler()
     :old_h(0),old_w(0),cu_sample_result(nullptr)
     {
-        CUDA_DRIVER_API_CALL(cuInit(0));
-        int cu_device_cnt=0;
-        CUdevice cu_device;
-        int using_gpu=0;
-        char using_device_name[80];
-        CUDA_DRIVER_API_CALL(cuDeviceGetCount(&cu_device_cnt));
-        CUDA_DRIVER_API_CALL(cuDeviceGet(&cu_device,using_gpu));
-        CUDA_DRIVER_API_CALL(cuDeviceGetName(using_device_name,sizeof(using_device_name),cu_device));
-        this->cu_ctx=nullptr;
-        CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
+        this->cu_ctx=GetCUDACtx();
     }
     void SetCUDACtx(){
         CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));

@@ -1,5 +1,6 @@
 #include "Algorithm/comp_volume_sample.cuh"
 #include "Algorithm/helper_math.h"
+#include "Common/cuda_utils.hpp"
 VS_START
 __constant__ CompSampleParameter compSampleParameter;
 __constant__ BlockParameter blockParameter;
@@ -11,13 +12,6 @@ __constant__ uint4* mappingTable;
 __constant__ uint lodMappingTableOffset[10];//!max lod is 9 and offset is for uint4 not uint
 __constant__ cudaTextureObject_t cacheVolumes[10];//max texture num is 10
 
-__device__ int PowII(int x,int y){
-    int res=1;
-    for(int i=0;i<y;i++){
-        res*=x;
-    }
-    return res;
-}
 
 //sample_pos must in voxel world-coord
 __device__ float VirtualSample(float3 sample_pos){
@@ -129,48 +123,7 @@ std::vector<std::array<uint32_t, 4>> GetCUDAUnUploadBlocks(){
     }
     return blocks;
 }
-    //only create uint8_t 3D CUDA Texture
-void CreateCUDATexture3D(cudaExtent textureSize, cudaArray **ppCudaArray, cudaTextureObject_t *pCudaTextureObject){
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uint8_t>();
-    CUDA_RUNTIME_API_CALL(cudaMalloc3DArray(ppCudaArray, &channelDesc, textureSize));
-    cudaResourceDesc            texRes;
-    memset(&texRes, 0, sizeof(cudaResourceDesc));
-    texRes.resType            = cudaResourceTypeArray;
-    texRes.res.array.array    = *ppCudaArray;
-    cudaTextureDesc             texDesc;
-    memset(&texDesc, 0, sizeof(cudaTextureDesc));
-    texDesc.normalizedCoords = true; // access with normalized texture coordinates
-    texDesc.filterMode       = cudaFilterModeLinear; // linear interpolation
-    texDesc.borderColor[0]=0.f;
-    texDesc.borderColor[1]=0.f;
-    texDesc.borderColor[2]=0.f;
-    texDesc.borderColor[3]=0.f;
-    texDesc.addressMode[0]=cudaAddressModeBorder;
-    texDesc.addressMode[1]=cudaAddressModeBorder;
-    texDesc.addressMode[2]=cudaAddressModeBorder;
-    texDesc.readMode = cudaReadModeNormalizedFloat;
-    CUDA_RUNTIME_API_CALL(cudaCreateTextureObject(pCudaTextureObject, &texRes, &texDesc, NULL));
 
-}
-
-//offset if count by byte
-void UpdateCUDATexture3D(uint8_t* data,cudaArray* pCudaArray,uint32_t block_length,uint32_t x_offset,uint32_t y_offset,uint32_t z_offset){
-    CUDA_MEMCPY3D m={0};
-    m.srcMemoryType=CU_MEMORYTYPE_DEVICE;
-    m.srcDevice=(CUdeviceptr)data;
-
-    m.dstMemoryType=CU_MEMORYTYPE_ARRAY;
-    m.dstArray=(CUarray)pCudaArray;
-    m.dstXInBytes=x_offset;
-    m.dstY=y_offset;
-    m.dstZ=z_offset;
-
-    m.WidthInBytes=block_length;
-    m.Height=block_length;
-    m.Depth=block_length;
-
-    CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
-}
 
 /*************************************************************************************************************
  *
@@ -226,6 +179,7 @@ void CUDACompVolumeSampler::SetBlockInvalid(const std::array<uint32_t, 4> &targe
     for(auto& it:block_table){
         if(it.block_index==target){
             it.valid=false;
+            return ;
         }
     }
 }
