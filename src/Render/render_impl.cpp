@@ -4,6 +4,8 @@
 
 #include<random>
 #include<glm/gtc/matrix_transform.hpp>
+#include <VolumeSlicer/render.hpp>
+
 #include"Common/gl_helper.hpp"
 #include"Render/render_impl.hpp"
 #include"Render/transfer_function_impl.hpp"
@@ -558,3 +560,4 @@ void MultiVolumeRender::setSlice() {
 
 
 VS_END
+

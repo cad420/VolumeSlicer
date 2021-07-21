@@ -9,7 +9,7 @@
 #include<VolumeSlicer/define.hpp>
 #include<array>
 #include<cassert>
-#include "render.hpp"
+
 
 VS_START
 /**
@@ -39,7 +39,7 @@ public:
 
 
 
-    template<class T>
+template<class T>
 class Image{
 public:
     Image()=default;

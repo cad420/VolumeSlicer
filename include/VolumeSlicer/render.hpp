@@ -6,12 +6,11 @@
 #define VOLUMESLICER_RENDER_HPP
 
 #include<VolumeSlicer/volume.hpp>
-
+#include<VolumeSlicer/camera.hpp>
+#include<VolumeSlicer/frame.hpp>
+#include<VolumeSlicer/transfer_function.hpp>
 VS_START
 
-class Camera;
-class TransferFunc;
-class Frame;
 
 template<class T,class enable= void>
 class Renderer;
@@ -60,7 +59,7 @@ public:
     //!this result is not for GetFrame, it equal to sample but use OpenGL not CUDA
     virtual void RenderSlice() noexcept =0;
 
-    virtual auto GetFrame() noexcept ->Frame =0;
+    virtual auto GetFrame() noexcept -> Frame =0;
 
     virtual void resize(int w,int h) noexcept =0;
 
@@ -72,6 +71,41 @@ public:
 using RawVolumeRenderer=Renderer<RawVolume>;
 
 std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
+
+
+class VS_EXPORT CompVolumeRenderer{
+public:
+    virtual void SetVolume(std::shared_ptr<CompVolume> comp_volume) = 0;
+
+    virtual void SetCamera(Camera camera) = 0;
+
+    virtual void SetTransferFunction(TransferFunc tf) = 0;
+
+    virtual void render() = 0;
+
+    virtual auto GetFrame()-> Image<uint32_t>  = 0;
+
+    virtual void resize(int w,int h) = 0;
+
+    virtual void clear() = 0;
+};
+
+class VS_EXPORT CUDACompVolumeRenderer: public CompVolumeRenderer{
+public:
+    static std::unique_ptr<CUDACompVolumeRenderer> Create(int w,int h,CUcontext ctx=nullptr);
+};
+
+class VS_EXPORT OpenGLCompVolumeRenderer: public CompVolumeRenderer{
+public:
+
+};
+
+/**
+ * suitable for off-screen render
+ */
+class VS_EXPORT CPUCompVolumeRenderer: public CompVolumeRenderer{
+
+};
 
 VS_END
 
