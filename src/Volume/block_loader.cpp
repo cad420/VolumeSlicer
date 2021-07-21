@@ -39,6 +39,7 @@ BlockLoader::BlockLoader(const char *file_path)
     uncmp_opts.width=frame_shape[0];
     uncmp_opts.height=frame_shape[1];
     uncmp_opts.use_device_frame_buffer=true;
+    uncmp_opts.cu_ctx=GetCUDACtx();
     for(int i=0;i<worker_num;i++)
         workers.emplace_back(uncmp_opts);
 

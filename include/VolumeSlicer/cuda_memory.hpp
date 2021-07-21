@@ -11,7 +11,7 @@
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
 #include<VolumeSlicer/alloc.hpp>
-
+#include<VolumeSlicer/cuda_context.hpp>
 VS_START
 
 template<class T,class Alloc=CUDAMemAllocator<T>>
@@ -19,16 +19,8 @@ class VS_EXPORT CUDAMem{
 public:
     //size is byte size
     CUDAMem(size_t size):alloc(Alloc()),device_ptr(nullptr),size(size),occupied(false){
-        CUDA_DRIVER_API_CALL(cuInit(0));
-        int cu_device_cnt=0;
-        CUdevice cu_device;
-        int using_gpu=0;
-        char using_device_name[80];
-        CUDA_DRIVER_API_CALL(cuDeviceGetCount(&cu_device_cnt));
-        CUDA_DRIVER_API_CALL(cuDeviceGet(&cu_device,using_gpu));
-        CUDA_DRIVER_API_CALL(cuDeviceGetName(using_device_name,sizeof(using_device_name),cu_device));
-        this->cu_ctx=nullptr;
-        CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
+
+        this->cu_ctx=GetCUDACtx();
 
         alloc.alloc(&device_ptr,size);
     }

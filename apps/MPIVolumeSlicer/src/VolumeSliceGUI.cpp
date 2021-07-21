@@ -89,6 +89,7 @@ void VolumeSliceGUI::init(const char *config_file) {
     this->window_w=window_manager->GetNodeWindowWidth();
     this->window_h=window_manager->GetNodeWindowHeight();
     window_manager->GetWorldVolumeSpace(volume_space_x,volume_space_y,volume_space_z);
+    SetCUDACtx(0);
     //2. init SDL
     initSDL();
     //3. init OpenGL resource
