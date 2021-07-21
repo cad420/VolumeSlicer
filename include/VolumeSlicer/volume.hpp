@@ -58,6 +58,13 @@ protected:
     float space_z;
 };
 
+template<typename T>
+struct VolumeData{
+    uint32_t volume_x,volume_y,volume_z;
+    std::vector<T> data;
+    VoxelType voxel_type;
+};
+
 template<VolumeType type>
 class Volume;
 
