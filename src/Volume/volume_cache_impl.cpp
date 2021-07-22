@@ -15,6 +15,7 @@ CUDAVolumeBlockCacheImpl::CUDAVolumeBlockCacheImpl(CUcontext ctx) {
     else{
         this->cu_context=ctx;
     }
+    spdlog::info("Create CUDAVolumeBlockCache.");
 }
 
 void CUDAVolumeBlockCacheImpl::SetCacheBlockLength(uint32_t block_length) {
@@ -31,6 +32,7 @@ void CUDAVolumeBlockCacheImpl::SetCacheCapacity(uint32_t num, uint32_t x, uint32
         CreateCUDATexture3D(make_cudaExtent(x,y,z),&cu_arrays[i],&cu_textures[i]);
     }
     this->createBlockCacheTable();
+    spdlog::info("SetCacheCapacity, num:{0} x:{1} y:{2} z:{3}.",num,x,y,z);
 }
 
 void CUDAVolumeBlockCacheImpl::CreateMappingTable(const std::map<uint32_t, std::array<uint32_t, 3>> &lod_block_dim) {
@@ -188,6 +190,13 @@ bool CUDAVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &targe
     }
     throw std::runtime_error("Can't find empty pos in CUDA Textures");
 }
+
+    auto CUDAVolumeBlockCacheImpl::GetCacheShape() -> std::array<uint32_t, 4> {
+        return std::array<uint32_t, 4>{cu_array_num,
+                                       cu_array_shape[0],
+                                       cu_array_shape[1],
+                                       cu_array_shape[2]};
+    }
 
 
 VS_END
