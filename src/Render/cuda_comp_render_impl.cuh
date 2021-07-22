@@ -10,11 +10,11 @@ namespace CUDARenderer{
         float3 view_pos;
         int w,h;
         float fov;
-        float step;
+        float step;//0.0001
         float3 view_direction;
         float3 up;
         float3 right;
-        float3 space;
+        float3 space;//0.00032 0.00032 0.001 um
     };
 
 //not changed while start rendering
@@ -23,9 +23,9 @@ namespace CUDARenderer{
         int block_length;
         int padding;
         int no_padding_block_length;
+        int4 texture_shape;
         int3 block_dim;//lod 0
-        int3 texture_shape;
-        int3 volume_board;
+        int3 volume_board;//47*508 59*508 21*508
     };
 
     struct LightParameter{
@@ -36,9 +36,9 @@ namespace CUDARenderer{
         float4 bg_color;
     };
 
-    void UploadTransferFunc(float* data,size_t size);
+    void UploadTransferFunc(float* data,size_t size=256);
 
-    void UploadPreIntTransferFunc(float* data,size_t size);
+    void UploadPreIntTransferFunc(float* data,size_t size=65536);
 
     void SetCUDATextureObject(cudaTextureObject_t* textures,size_t size);
 
@@ -48,7 +48,9 @@ namespace CUDARenderer{
 
     void UploadLightParameter(const LightParameter&);
 
-    void CUDARender(uint32_t* image);
+    void CUDACalcBlock(uint32_t* missed_blocks,size_t size,uint32_t w,uint32_t h);
+
+    void CUDARender(uint32_t w,uint32_t h,uint32_t* image);
 }
 
 

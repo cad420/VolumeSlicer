@@ -5,6 +5,7 @@
 #ifndef VOLUMESLICER_VOLUME_HPP
 #define VOLUMESLICER_VOLUME_HPP
 
+#include <map>
 #include<type_traits>
 #include<VolumeSlicer/slice.hpp>
 #include<VolumeSlicer/cuda_memory.hpp>
@@ -157,6 +158,8 @@ public:
 
     //get lod volume's dim: dim-xyz+padding
     virtual auto GetBlockDim(int lod) const ->std::array<uint32_t,3>  =0;
+
+    virtual auto GetBlockDim() const -> const std::map<uint32_t,std::array<uint32_t,3>>& = 0;
 
     //get comp volume's block length and padding,min_lod,max_lod
     virtual auto GetBlockLength() const ->std::array<uint32_t,4> =0;

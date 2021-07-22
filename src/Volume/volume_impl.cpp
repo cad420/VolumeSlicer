@@ -319,7 +319,15 @@ VolumeImpl<VolumeType::Comp>::~VolumeImpl() {
         this->block_queue.setSize(size);
     }
 
-
+    auto VolumeImpl<VolumeType::Comp>::GetBlockDim() const -> const std::map<uint32_t, std::array<uint32_t, 3>> & {
+        static std::map<uint32_t,std::array<uint32_t,3>> block_dim;
+        uint32_t min_lod=GetBlockLength()[2];
+        uint32_t max_lod=GetBlockLength()[3];
+        for(auto i=min_lod;i<=max_lod;i++){
+            block_dim[i]=GetBlockDim(i);
+        }
+        return block_dim;
+    }
 
 
 VS_END

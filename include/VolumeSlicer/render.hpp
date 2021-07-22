@@ -83,7 +83,7 @@ public:
 
     virtual void render() = 0;
 
-    virtual auto GetFrame()-> Image<uint32_t>  = 0;
+    virtual auto GetFrame()-> const Image<uint32_t>&  = 0;
 
     virtual void resize(int w,int h) = 0;
 
