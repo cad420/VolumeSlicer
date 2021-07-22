@@ -1035,6 +1035,10 @@ inline __host__ __device__ float4 operator/(float b, float4 a)
 {
     return make_float4(b / a.x, b / a.y, b / a.z, b / a.w);
 }
+inline __host__ __device__ int3 operator / (int3 b, int a)
+{
+    return make_int3(b.x/a,b.y/a,b.z/a);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // min
