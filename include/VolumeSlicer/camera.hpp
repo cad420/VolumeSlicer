@@ -17,6 +17,7 @@ public:
     std::array<float,3> pos;
     std::array<float,3> look_at;//point pos
     std::array<float,3> up;//normalized direction
+    std::array<float,3> right;
     float zoom;
     float n,f;
 };
