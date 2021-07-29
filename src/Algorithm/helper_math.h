@@ -140,7 +140,9 @@ inline __host__ __device__ float3 make_float3(uint3 a)
 {
     return make_float3(float(a.x), float(a.y), float(a.z));
 }
-
+inline __host__ __device__ float3 make_float3(int4 a){
+    return make_float3(float(a.x),float(a.y),float(a.z));
+}
 inline __host__ __device__ int3 make_int3(int s)
 {
     return make_int3(s, s, s);
@@ -356,6 +358,7 @@ inline __host__ __device__ void operator+=(float3 &a, float3 b)
     a.y += b.y;
     a.z += b.z;
 }
+
 inline __host__ __device__ float3 operator+(float3 a, float b)
 {
     return make_float3(a.x + b, a.y + b, a.z + b);
@@ -1452,6 +1455,10 @@ inline __device__ __host__ float4 smoothstep(float4 a, float4 b, float4 x)
 {
     float4 y = clamp((x - a) / (b - a), 0.0f, 1.0f);
     return (y*y*(make_float4(3.0f) - (make_float4(2.0f)*y)));
+}
+inline __device__ __host__ float radians(float a)
+{
+    return a* 3.14159265358979323846f/180.f;
 }
 
 #endif

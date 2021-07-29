@@ -71,23 +71,50 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
 
     this->cuda_volume_block_cache=CUDAVolumeBlockCache::Create();
     this->cuda_volume_block_cache->SetCacheBlockLength(comp_volume->GetBlockLength()[0]);
-    this->cuda_volume_block_cache->SetCacheCapacity(6,2048,1024,1024);
+    this->cuda_volume_block_cache->SetCacheCapacity(10,1024,1024,1024);
     this->cuda_volume_block_cache->CreateMappingTable(this->comp_volume->GetBlockDim());
-    this->missed_blocks_pool.resize(this->cuda_volume_block_cache->GetMappingTable().size(),0);
+    //  /4 represent for block not for uint32_t
+    this->missed_blocks_pool.resize(this->cuda_volume_block_cache->GetMappingTable().size()/4,0);
+    uint32_t max_lod = 0,min_lod=0xffffffff;
+    {
+        auto &mapping_table = this->cuda_volume_block_cache->GetMappingTable();
+        CUDARenderer::UploadMappingTable(mapping_table.data(), mapping_table.size());
+        auto &lod_mapping_table_offset = this->cuda_volume_block_cache->GetLodMappingTableOffset();
+
+        for (auto &it :lod_mapping_table_offset) {
+            if (it.first > max_lod) max_lod = it.first;
+            if (it.first < min_lod) min_lod = it.first;
+        }
+        max_lod--;
+        std::vector<uint32_t> offset;//for one block not for uint32_t
+        offset.resize(max_lod+1, 0);
+        for (auto &it :lod_mapping_table_offset) {
+            if(it.first<=max_lod)
+                offset.at(it.first) = it.second/4;
+        }
+        CUDARenderer::UploadLodMappingTableOffset(offset.data(), offset.size());
+        block_offset=std::move(offset);
+    }
+
 
     CUDARenderer::CompVolumeParameter compVolumeParameter;
     auto block_length=comp_volume->GetBlockLength();
+    compVolumeParameter.min_lod=min_lod;
+    compVolumeParameter.max_lod=max_lod;
     compVolumeParameter.block_length=block_length[0];
     compVolumeParameter.padding=block_length[1];
     compVolumeParameter.no_padding_block_length=block_length[0]-2*block_length[1];
     auto block_dim=comp_volume->GetBlockDim(0);
     compVolumeParameter.block_dim=make_int3(block_dim[0],block_dim[1],block_dim[2]);
-    compVolumeParameter.texture_shape=make_int4(3,2048,1024,1024);
-    compVolumeParameter.volume_board=make_int3(comp_volume->GetVolumeDimX()*comp_volume->GetVolumeSpaceX() * compVolumeParameter.no_padding_block_length,
-                                               comp_volume->GetVolumeDimY()*comp_volume->GetVolumeSpaceY() * compVolumeParameter.no_padding_block_length,
-                                               comp_volume->GetVolumeDimZ()*comp_volume->GetVolumeSpaceZ() * compVolumeParameter.no_padding_block_length
+    compVolumeParameter.texture_shape=make_int4(1024,1024,1024,10);
+    compVolumeParameter.volume_board=make_int3(comp_volume->GetVolumeDimX()*comp_volume->GetVolumeSpaceX() ,
+                                               comp_volume->GetVolumeDimY()*comp_volume->GetVolumeSpaceY() ,
+                                               comp_volume->GetVolumeDimZ()*comp_volume->GetVolumeSpaceZ()
                                                );
     CUDARenderer::UploadCompVolumeParameter(compVolumeParameter);
+
+    auto texes=this->cuda_volume_block_cache->GetCUDATextureObjects();
+    CUDARenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
 
 void CUDACompVolumeRendererImpl::SetCamera(Camera camera) {
@@ -103,7 +130,7 @@ void CUDACompVolumeRendererImpl::SetTransferFunction(TransferFunc tf) {
     CUDARenderer::LightParameter lightParameter;
     lightParameter.bg_color=make_float4(0.f,0.f,0.f,0.f);
     lightParameter.ka=0.5f;
-    lightParameter.kd=0.7f;
+    lightParameter.kd=0.8f;
     lightParameter.ks=0.5f;
     lightParameter.shininess=64.f;
     CUDARenderer::UploadLightParameter(lightParameter);
@@ -116,8 +143,8 @@ void CUDACompVolumeRendererImpl::render() {
     CUDARenderer::CUDACompRenderParameter cudaCompRenderParameter;
     cudaCompRenderParameter.w=window_w;
     cudaCompRenderParameter.h=window_h;
-    cudaCompRenderParameter.fov=45.f;
-    cudaCompRenderParameter.step=0.00016f;
+    cudaCompRenderParameter.fov=camera.zoom;
+    cudaCompRenderParameter.step=0.00032f;
     cudaCompRenderParameter.view_pos=make_float3(camera.pos[0],camera.pos[1],camera.pos[2]);
     cudaCompRenderParameter.view_direction=normalize(make_float3(camera.look_at[0]-camera.pos[0],
                                                        camera.look_at[1]-camera.pos[1],
@@ -129,21 +156,122 @@ void CUDACompVolumeRendererImpl::render() {
                                               comp_volume->GetVolumeSpaceZ());
     CUDARenderer::UploadCUDACompRenderParameter(cudaCompRenderParameter);
 
-    START_CUDA_RUNTIME_TIMER
-    CUDARenderer::CUDACalcBlock(missed_blocks_pool.data(),missed_blocks_pool.size(),window_w,window_h);
-    STOP_CUDA_RUNTIME_TIMER
 
-    int cnt=0;
-    for(auto i=0;i<missed_blocks_pool.size();i++){
-        if(missed_blocks_pool[i]!=0){
-//            std::cout<<i<<" "<<missed_blocks_pool[i]<<std::endl;
+//    START_CUDA_RUNTIME_TIMER
+
+    CUDARenderer::CUDACalcBlock(missed_blocks_pool.data(),missed_blocks_pool.size(),window_w,window_h);
+
+//    STOP_CUDA_RUNTIME_TIMER
+
+//    START_CPU_TIMER
+    calcMissedBlocks();
+
+    filterMissedBlocks();
+
+    sendRequests();
+
+    fetchBlocks();
+//    END_CPU_TIMER
+
+    auto& m=this->cuda_volume_block_cache->GetMappingTable();
+    CUDARenderer::UploadMappingTable(m.data(),m.size());
+
+//    START_CUDA_RUNTIME_TIMER
+    CUDARenderer::CUDARender(window_w,window_h,image.data.data());
+//    STOP_CUDA_RUNTIME_TIMER
+
+}
+
+void CUDACompVolumeRendererImpl::calcMissedBlocks() {
+    std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> cur_missed_blocks;
+    for(uint32_t lod=0;lod<block_offset.size();lod++){
+        auto lod_block_dim=comp_volume->GetBlockDim(lod);
+        int cnt=0;
+        for(size_t idx=block_offset[lod];idx< (lod+1<block_offset.size()?block_offset[lod+1]:missed_blocks_pool.size());idx++){
             cnt++;
+            if(!missed_blocks_pool[idx]) continue;
+//            std::cout<<"idx "<<idx<<std::endl;
+            size_t index=idx-block_offset[lod];
+            uint32_t z=index/lod_block_dim[0]/lod_block_dim[1];
+            uint32_t y=(index-z*lod_block_dim[0]*lod_block_dim[1])/lod_block_dim[0];
+            uint32_t x=(index%(lod_block_dim[0]*lod_block_dim[1]))%lod_block_dim[0];
+            cur_missed_blocks.insert({x,y,z,lod});
+        }
+//        std::cout<<"second cnt "<<cnt<<std::endl;
+    }
+//    std::cout<<"cur missed blocks num: "<<cur_missed_blocks.size()<<std::endl;
+//    for(auto&it:cur_missed_blocks){
+//        std::cout<<"("<<it[0]<<" "<<it[1]<<" "<<it[2]<<" "<<it[3]<<")\t";
+//    }
+//    std::cout<<std::endl;
+
+    for(auto&it:cur_missed_blocks){
+        if(missed_blocks.find(it)==missed_blocks.end()){
+            new_missed_blocks.insert(it);
         }
     }
-    std::cout<<"cnt: "<<cnt<<std::endl;
+//    spdlog::info("new need num: {0}.",new_missed_blocks.size());
+    for(auto&it :missed_blocks){
+        if(cur_missed_blocks.find(it)==cur_missed_blocks.end()){
+            no_missed_blocks.insert(it);
+        }
+    }
+//    spdlog::info("no need num: {0}.",no_missed_blocks.size());
+    this->missed_blocks=std::move(cur_missed_blocks);
+}
+void CUDACompVolumeRendererImpl::filterMissedBlocks() {
+    if(!new_missed_blocks.empty()){
+        std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> tmp;
+        for(auto& it:new_missed_blocks){
+            bool cached=this->cuda_volume_block_cache->SetCachedBlockValid(it);
+            if(cached){
 
-    CUDARenderer::CUDARender(window_w,window_h,image.data.data());
+            }
+            else{
+                tmp.insert(it);
+            }
+        }
+        new_missed_blocks=std::move(tmp);
+    }
 
+    if(!no_missed_blocks.empty()){
+        for(auto& it:no_missed_blocks){
+            this->cuda_volume_block_cache->SetBlockInvalid(it);
+        }
+    }
+}
+
+void CUDACompVolumeRendererImpl::sendRequests() {
+    this->comp_volume->PauseLoadBlock();
+    {
+        if(!missed_blocks.empty()){
+            std::vector<std::array<uint32_t,4>> targets;
+            targets.reserve(missed_blocks.size());
+            for(auto&it:missed_blocks)
+                targets.push_back(it);
+            comp_volume->ClearBlockInQueue(targets);
+        }
+        for(auto&it:new_missed_blocks){
+            comp_volume->SetRequestBlock(it);
+        }
+        new_missed_blocks.clear();
+        for(auto&it :no_missed_blocks){
+            comp_volume->EraseBlockInRequest(it);
+        }
+        no_missed_blocks.clear();
+    }
+    this->comp_volume->StartLoadBlock();
+}
+
+void CUDACompVolumeRendererImpl::fetchBlocks() {
+    for(auto& it:missed_blocks){
+        auto block=comp_volume->GetBlock(it);
+        if(block.valid){
+            assert(block.block_data->GetDataPtr());
+            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+            block.Release();
+        }
+    }
 }
 
 auto CUDACompVolumeRendererImpl::GetFrame() -> const Image<uint32_t>& {
@@ -164,6 +292,8 @@ void CUDACompVolumeRendererImpl::resize(int w, int h) {
 void CUDACompVolumeRendererImpl::clear() {
 
 }
+
+
 
 
 VS_END

@@ -36,6 +36,10 @@ namespace CUDARenderer{
         float4 bg_color;
     };
 
+    void UploadMappingTable(const uint32_t* data,size_t size);
+
+    void UploadLodMappingTableOffset(const uint32_t* data,size_t size);
+
     void UploadTransferFunc(float* data,size_t size=256);
 
     void UploadPreIntTransferFunc(float* data,size_t size=65536);

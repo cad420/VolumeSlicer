@@ -79,8 +79,8 @@ void LargeVolumeVisGUI::show() {
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
         //camera pos according to volume dim count in voxel
-        static control::FPSCamera fpsCamera({10.f,10.f,25.f});
-
+        static control::FPSCamera fpsCamera({4.5f,7.5f,10.f});
+        static bool right_mouse_press;
         while(SDL_PollEvent(&event)){
             switch(event.type){
                 case SDL_QUIT:{
@@ -98,12 +98,12 @@ void LargeVolumeVisGUI::show() {
                     switch (event.key.keysym.sym) {
                         case SDLK_ESCAPE:{exit=true;break;}
                         case SDLK_LCTRL:{;break;}
-                        case SDLK_a:{;break;}
-                        case SDLK_d:{;break;}
-                        case SDLK_w:{;break;}
-                        case SDLK_s:{;break;}
-                        case SDLK_q:{;break;}
-                        case SDLK_e:{;break;}
+                        case SDLK_a:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Left,0.0001);break;}
+                        case SDLK_d:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Right,0.0001);break;}
+                        case SDLK_w:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Forward,0.0001);break;}
+                        case SDLK_s:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Backward,0.0001);break;}
+                        case SDLK_q:{ fpsCamera.processKeyEvent(control::CameraDefinedKey::Up,0.0001);break;}
+                        case SDLK_e:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Bottom,0.0001);break;}
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
 
@@ -128,25 +128,35 @@ void LargeVolumeVisGUI::show() {
                     break;
                 }
                 case SDL_MOUSEWHEEL:{
-
+                    if(event.wheel.y>0){
+                        fpsCamera.processMouseScroll(1.f);
+                    }
+                    else{
+                        fpsCamera.processMouseScroll(-1.f);
+                    }
                     break;
                 }
                 case SDL_MOUSEBUTTONDOWN:{
 
                     if(event.button.button==1){
-
+                        right_mouse_press=true;
+                        fpsCamera.processMouseButton(control::CameraDefinedMouseButton::Left,true,event.button.x,event.button.y);
                     }
                     break;
                 }
                 case SDL_MOUSEBUTTONUP:{
 
                     if(event.button.button==1){
+                        right_mouse_press=false;
+                        fpsCamera.processMouseButton(control::CameraDefinedMouseButton::Left,false,event.button.x,event.button.y);
 
                     }
                     break;
                 }
                 case SDL_MOUSEMOTION:{
-
+                    if(right_mouse_press){
+                        fpsCamera.processMouseMove(event.button.x,event.button.y);
+                    }
                     break;
                 }
             }
@@ -267,6 +277,14 @@ void LargeVolumeVisGUI::initRendererResource() {
 
     this->cuda_comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w,window_h);
     this->cuda_comp_volume_renderer->SetVolume(comp_volume);
+
+    TransferFunc tf;
+    tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
+    tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.9});
+    tf.points.emplace_back(64,std::array<double,4>{1.0,0.75,0.7,0.9});
+    tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.5,0.9});
+    tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,0.8,1.0});
+    this->cuda_comp_volume_renderer->SetTransferFunction(std::move(tf));
 }
 
 

@@ -20,6 +20,14 @@ public:
 
 class TransferFunc{
 public:
+    TransferFunc()=default;
+    TransferFunc(TransferFunc&& tf){
+        *this = std::move(tf);
+    }
+    TransferFunc& operator=(TransferFunc&& tf){
+        this->points=std::move(tf.points);
+        return *this;
+    }
     std::vector<TFPoint> points;
 };
 

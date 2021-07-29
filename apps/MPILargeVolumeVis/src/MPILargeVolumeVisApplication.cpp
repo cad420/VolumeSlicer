@@ -14,7 +14,8 @@ int MPILargeVolumeVisApp::run(int argc, char **argv) {
         gui.show();
     }
     catch (const std::exception& err) {
-        std::cout<<err.what()<<std::endl;
+//        std::cout<<__FILE__<<" "<<__LINE__<<" :"<<err.what()<<std::endl;
+        spdlog::error("{0}:{1}",__FUNCTION__ ,err.what());
     }
     return 0;
 }

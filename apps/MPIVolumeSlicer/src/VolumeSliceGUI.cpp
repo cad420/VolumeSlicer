@@ -154,7 +154,7 @@ std::array<float,4> operator*(const std::array<float,4>& a1,const std::array<flo
     return {a1[0]*a2[0],a1[1]*a2[1],a1[2]*a2[2],a1[3]*a2[3]};
 }
 void VolumeSliceGUI::show() {
-    spdlog::set_level(spdlog::level::err);
+    spdlog::set_level(spdlog::level::info);
     bool exit=false;
     auto process_event=[&exit,this](){
         static SDL_Event event;

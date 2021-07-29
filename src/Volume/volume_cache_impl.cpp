@@ -36,6 +36,7 @@ void CUDAVolumeBlockCacheImpl::SetCacheCapacity(uint32_t num, uint32_t x, uint32
 }
 
 void CUDAVolumeBlockCacheImpl::CreateMappingTable(const std::map<uint32_t, std::array<uint32_t, 3>> &lod_block_dim) {
+    this->lod_block_dim=lod_block_dim;
     this->lod_mapping_table_offset[lod_block_dim.begin()->first]=0;
     this->min_lod=0xffffffff;
     this->max_lod=0;
@@ -56,7 +57,9 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
     bool cached=getCachedPos(index,pos);
     if(!cached){
         UpdateCUDATexture3D(data,cu_arrays[pos[3]],block_length,block_length*pos[0],block_length*pos[1],block_length*pos[2]);
-
+        spdlog::info("Upload block({0},{1},{2},{3}) to CUDA Array({4},{5},{6},{7})",
+                     index[0],index[1],index[2],index[3],
+                     pos[0],pos[1],pos[2],pos[3]);
     }
     else{
         spdlog::info("UploadVolumeBlock which has already been cached.");
@@ -155,16 +158,22 @@ auto CUDAVolumeBlockCacheImpl::GetLodMappingTableOffset() -> const std::map<uint
 
 void CUDAVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4> &index,
                                                   const std::array<uint32_t, 4> &pos, bool valid){
-    size_t flat_idx=((size_t)index[2]*lod_block_dim.at(index[3])[0]*lod_block_dim.at(index[3])[1]
-                     +index[1]*lod_block_dim.at(index[3])[0]
-                     +index[0])*4+lod_mapping_table_offset.at(index[3]);
-    mapping_table.at(flat_idx+0)=pos[0];
-    mapping_table.at(flat_idx+1)=pos[1];
-    mapping_table.at(flat_idx+2)=pos[2];
-    if(valid)
-        mapping_table.at(flat_idx+3)=pos[3]|(0x00010000);
-    else
-        mapping_table.at(flat_idx+3)&=0x0000ffff;
+    try{
+        size_t flat_idx=((size_t)index[2]*lod_block_dim.at(index[3])[0]*lod_block_dim.at(index[3])[1]
+                         +index[1]*lod_block_dim.at(index[3])[0]
+                         +index[0])*4+lod_mapping_table_offset.at(index[3]);
+
+        mapping_table.at(flat_idx+0)=pos[0];
+        mapping_table.at(flat_idx+1)=pos[1];
+        mapping_table.at(flat_idx+2)=pos[2];
+        if(valid)
+            mapping_table.at(flat_idx+3)=pos[3]|(0x00010000);
+        else
+            mapping_table.at(flat_idx+3)&=0x0000ffff;
+    }
+    catch (const std::exception& err) {
+        spdlog::error("{0}:{1}",__FUNCTION__ ,err.what());
+    }
 }
 
 bool CUDAVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &target, std::array<uint32_t, 4> &pos) {

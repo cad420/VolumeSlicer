@@ -64,12 +64,13 @@ inline void CreateCUDATexture3D(cudaExtent textureSize, cudaArray **ppCudaArray,
 }
 
 inline void UpdateCUDATexture1D(uint8_t* data,cudaArray* pCudaArray,uint32_t x_length,uint32_t x_offset){
-    CUDA_DRIVER_API_CALL(cuMemcpyDtoA((CUarray)pCudaArray,x_offset,(CUdevice)data,x_length));
+//    CUDA_DRIVER_API_CALL(cuMemcpyHtoA((CUarray)pCudaArray,x_offset,data,x_length));
+    CUDA_RUNTIME_API_CALL(cudaMemcpyToArray(pCudaArray,x_offset,0,data,x_length,cudaMemcpyHostToDevice));
 }
 inline void UpdateCUDATexture2D(uint8_t* data,cudaArray* pCudaArray,uint32_t x_length,uint32_t y_length,uint32_t x_offset,uint32_t y_offset){
     CUDA_MEMCPY2D m={0};
-    m.srcMemoryType=CU_MEMORYTYPE_DEVICE;
-    m.srcDevice=(CUdeviceptr)data;
+    m.srcMemoryType=CU_MEMORYTYPE_HOST;
+    m.srcHost=data;
 
     m.dstMemoryType=CU_MEMORYTYPE_ARRAY;
     m.dstArray=(CUarray)pCudaArray;

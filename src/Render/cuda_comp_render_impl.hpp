@@ -28,7 +28,13 @@ public:
     void clear() override;
 
 private:
+    void calcMissedBlocks();
 
+    void filterMissedBlocks();
+
+    void sendRequests();
+
+    void fetchBlocks();
 
 private:
     int window_w,window_h;
@@ -40,6 +46,8 @@ private:
 
     std::vector<uint32_t> missed_blocks_pool;
     std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> missed_blocks;
+    std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> new_missed_blocks,no_missed_blocks;
+    std::vector<uint32_t> block_offset;
 };
 
 
