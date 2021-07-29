@@ -150,6 +150,7 @@ void SliceRenderWidget::initTest() {
     slice.voxel_per_pixel_width=2.f;
     slicer=Slicer::CreateSlicer(slice);
 
+    SetCUDACtx(0);
     volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
     volume_sampler=VolumeSampler::CreateVolumeSampler(volume);
     volume->SetSpaceX(0.01f);
