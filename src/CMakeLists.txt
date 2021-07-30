@@ -16,6 +16,12 @@ list(
         Render/render_impl.cpp
         Render/cuda_comp_render_impl.cu
         Render/cuda_comp_render_impl.cpp
+        Render/opengl_comp_render_impl.cpp
+        Render/cpu_comp_render_impl.cpp
+        Render/cuda_raw_render_impl.cpp
+        Render/cuda_raw_render_impl.cu
+        Render/opengl_raw_render_impl.cpp
+        Render/cpu_raw_render_impl.cpp
         IO/reader_impl.cpp
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
