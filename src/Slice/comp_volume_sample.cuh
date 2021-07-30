@@ -1,10 +1,10 @@
 #pragma once
 
-#include<VolumeSlicer/helper.hpp>
-#include<VolumeSlicer/slice.hpp>
-#include<VolumeSlicer/cuda_context.hpp>
-#include<list>
-#include<map>
+#include <VolumeSlicer/helper.hpp>
+#include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/cuda_context.hpp>
+#include <list>
+#include <map>
 VS_START
 
 struct CompSampleParameter{

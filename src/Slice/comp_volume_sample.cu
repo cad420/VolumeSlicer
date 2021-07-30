@@ -1,4 +1,4 @@
-#include "Algorithm/comp_volume_sample.cuh"
+#include "comp_volume_sample.cuh"
 #include "Algorithm/helper_math.h"
 #include "Common/cuda_utils.hpp"
 VS_START

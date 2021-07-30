@@ -1,9 +1,9 @@
 //
 // Created by wyz on 2021/6/11.
 //
-#include"Algorithm/volume_sampler_impl.hpp"
-#include"Algorithm/raw_volume_sample.cuh"
-#include"Algorithm/comp_volume_sample.cuh"
+#include"volume_sampler_impl.hpp"
+#include"raw_volume_sample.cuh"
+#include"comp_volume_sample.cuh"
 VS_START
 
 /**************************************************************************************************

@@ -10,9 +10,9 @@ list(
         Volume/volume_impl.cpp
         Volume/block_loader.cpp
         Volume/volume_cache_impl.cpp
-        Algorithm/volume_sampler_impl.cpp
-        Algorithm/raw_volume_sample.cu
-        Algorithm/comp_volume_sample.cu
+        Slice/volume_sampler_impl.cpp
+        Slice/raw_volume_sample.cu
+        Slice/comp_volume_sample.cu
         Render/render_impl.cpp
         Render/cuda_comp_render_impl.cu
         Render/cuda_comp_render_impl.cpp

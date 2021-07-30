@@ -17,7 +17,7 @@ public:
 
     void SetCamera(Camera camera) override;
 
-    void SetTransferFunction(TransferFunc tf) override;
+    void SetTransferFunc(TransferFunc tf) override;
 
     void render() override;
 

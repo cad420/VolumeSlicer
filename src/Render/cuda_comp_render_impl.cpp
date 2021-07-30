@@ -121,7 +121,7 @@ void CUDACompVolumeRendererImpl::SetCamera(Camera camera) {
     this->camera=camera;
 }
 
-void CUDACompVolumeRendererImpl::SetTransferFunction(TransferFunc tf) {
+void CUDACompVolumeRendererImpl::SetTransferFunc(TransferFunc tf) {
     TransferFuncImpl tf_impl(tf);
     CUDARenderer::UploadTransferFunc(tf_impl.getTransferFunction().data());
     CUDARenderer::UploadPreIntTransferFunc(tf_impl.getPreIntTransferFunc().data());

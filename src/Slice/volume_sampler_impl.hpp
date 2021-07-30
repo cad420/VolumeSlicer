@@ -5,11 +5,11 @@
 #ifndef VOLUMESLICER_VOLUME_SAMPLER_IMPL_HPP
 #define VOLUMESLICER_VOLUME_SAMPLER_IMPL_HPP
 
-#include<VolumeSlicer/volume_sampler.hpp>
-#include<unordered_map>
+#include <VolumeSlicer/volume_sampler.hpp>
+#include <unordered_map>
 #include <map>
-#include<unordered_set>
-#include"Common/boundingbox.hpp"
+#include <unordered_set>
+#include "Common/boundingbox.hpp"
 VS_START
 
 template<class T>

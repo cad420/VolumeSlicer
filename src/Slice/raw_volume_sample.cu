@@ -1,4 +1,4 @@
-#include"Algorithm/raw_volume_sample.cuh"
+#include"raw_volume_sample.cuh"
 #include"Algorithm/helper_math.h"
 VS_START
 
