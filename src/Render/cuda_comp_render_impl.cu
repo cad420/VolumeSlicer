@@ -148,7 +148,6 @@ namespace {
         physical_sample_pos/=make_float3(compVolumeParameter.texture_shape);
         scalar=tex3D<float>(cacheVolumes[tex_id],physical_sample_pos.x,
                             physical_sample_pos.y,physical_sample_pos.z);
-        if(tex_id>10) return 2;
 
         return 1;
     }
@@ -249,7 +248,6 @@ namespace {
         int lod_steps=0;
         float3 lod_sample_pos=start_pos;
         float last_scalar=0.f;
-        bool mode_change=false;
         int cur_lod;
         while(steps++<10000){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
@@ -259,8 +257,7 @@ namespace {
                 break;
             }
 
-            if(!mode_change)
-                cur_lod=evaluateLod(length(ray_pos-start_pos));
+            cur_lod=evaluateLod(length(ray_pos-start_pos));
 
             if(cur_lod>last_lod){
                 cur_step*=2;
@@ -277,10 +274,7 @@ namespace {
 
             if (flag > 0)
             {
-                if(flag==2){
-                    color={0.f,0.f,1.f,1.f};
-                    break;
-                }
+
 //            sample_scalar=0.32f;
                 if (sample_scalar > 0.3f) {
 
@@ -303,8 +297,8 @@ namespace {
             {
 //                mode_change=true;
 //                cur_lod++;
-                color = {0.f, 0.f, 0.f, 1.f};
-                break;
+//                color = {0.f, 0.f, 0.f, 1.f};
+//                break;
             }
             ray_pos = lod_sample_pos+ (steps-lod_steps)*ray_direction * cur_step;
         }
