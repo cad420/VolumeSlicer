@@ -66,6 +66,7 @@ void LargeVolumeVisGUI::init(const char * config_file) {
     this->window_manager=std::make_unique<WindowManager>(config_file);
     this->window_w=window_manager->GetNodeWindowWidth();
     this->window_h=window_manager->GetNodeWindowHeight();
+
     SetCUDACtx(0);
 
     initSDL();
@@ -172,7 +173,7 @@ void LargeVolumeVisGUI::show() {
         camera.look_at={camera_look_at.x,camera_look_at.y,camera_look_at.z};
         camera.right={camera_right.x,camera_right.y,camera_right.z};
         camera.zoom=camera_zoom;
-        cuda_comp_volume_renderer->SetCamera(camera);
+        comp_volume_renderer->SetCamera(camera);
     };
     SDL_EXPR(sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED));
     SDL_Rect rect{0,0,(int)window_w,(int)window_h};
@@ -185,10 +186,10 @@ void LargeVolumeVisGUI::show() {
         process_event();
 
 
-        cuda_comp_volume_renderer->render();
+        comp_volume_renderer->render();
 
 
-        SDL_UpdateTexture(texture, NULL, cuda_comp_volume_renderer->GetFrame().data.data(), window_w * 4);
+        SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w * 4);
         SDL_RenderClear(sdl_renderer);
         SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
         SDL_RenderPresent(sdl_renderer);
@@ -275,8 +276,8 @@ void LargeVolumeVisGUI::initRendererResource() {
     this->comp_volume->SetSpaceY(0.00032f);
     this->comp_volume->SetSpaceZ(0.001f);
 
-    this->cuda_comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w,window_h);
-    this->cuda_comp_volume_renderer->SetVolume(comp_volume);
+    this->comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w, window_h);
+    this->comp_volume_renderer->SetVolume(comp_volume);
 
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
@@ -284,7 +285,7 @@ void LargeVolumeVisGUI::initRendererResource() {
     tf.points.emplace_back(64,std::array<double,4>{1.0,0.75,0.7,0.9});
     tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.5,0.9});
     tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,0.8,1.0});
-    this->cuda_comp_volume_renderer->SetTransferFunction(std::move(tf));
+    this->comp_volume_renderer->SetTransferFunc(std::move(tf));
 }
 
 

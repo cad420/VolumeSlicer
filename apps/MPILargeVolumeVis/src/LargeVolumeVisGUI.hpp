@@ -42,7 +42,7 @@ private:
     std::unique_ptr<WindowManager> window_manager;
 
     std::shared_ptr<CompVolume> comp_volume;
-    std::unique_ptr<CUDACompVolumeRenderer> cuda_comp_volume_renderer;
+    std::unique_ptr<ICompVolumeRenderer> comp_volume_renderer;
 
 };
 
