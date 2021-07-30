@@ -72,39 +72,81 @@ using RawVolumeRenderer=Renderer<RawVolume>;
 
 std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
 
-
-class VS_EXPORT CompVolumeRenderer{
+class VS_EXPORT IVolumeRenderer{
 public:
-    virtual void SetVolume(std::shared_ptr<CompVolume> comp_volume) = 0;
-
     virtual void SetCamera(Camera camera) = 0;
 
-    virtual void SetTransferFunction(TransferFunc tf) = 0;
+    virtual void SetTransferFunc(TransferFunc tf) = 0;
 
     virtual void render() = 0;
 
-    virtual auto GetFrame()-> const Image<uint32_t>&  = 0;
+    virtual auto GetFrame()-> const Image<uint32_t>& = 0;
 
     virtual void resize(int w,int h) = 0;
 
     virtual void clear() = 0;
 };
+class VS_EXPORT IRawVolumeRenderer: public IVolumeRenderer{
+public:
+    virtual void SetVolume(std::shared_ptr<RawVolume> raw_volume) = 0;
 
-class VS_EXPORT CUDACompVolumeRenderer: public CompVolumeRenderer{
+    void SetCamera(Camera camera) override = 0;
+
+    void SetTransferFunc(TransferFunc tf) override = 0;
+
+    void render() override = 0;
+
+    auto GetFrame()  -> const Image<uint32_t>&  override = 0;
+
+    void resize(int w,int h) override = 0;
+
+    void clear() override = 0;
+};
+class VS_EXPORT CUDARawVolumeRenderer: public IRawVolumeRenderer{
+public:
+    static std::unique_ptr<CUDARawVolumeRenderer> Create(int w,int h,CUcontext ctx=nullptr);
+};
+class VS_EXPORT OpenGLRawVolumeRenderer: public IRawVolumeRenderer{
+public:
+    static std::unique_ptr<OpenGLRawVolumeRenderer> Create(int w,int h);
+};
+class VS_EXPORT CPURawVolumeRenderer: public IRawVolumeRenderer{
+public:
+    static std::unique_ptr<CPURawVolumeRenderer> Create(int w,int h);
+};
+
+class VS_EXPORT ICompVolumeRenderer: public IVolumeRenderer{
+public:
+    virtual void SetVolume(std::shared_ptr<CompVolume> comp_volume) = 0;
+
+    void SetCamera(Camera camera) override = 0;
+
+    void SetTransferFunc(TransferFunc tf) override = 0;
+
+    void render() override = 0;
+
+    auto GetFrame()  -> const Image<uint32_t>&  override = 0;
+
+    void resize(int w,int h) override = 0;
+
+    void clear() override = 0;
+};
+
+class VS_EXPORT CUDACompVolumeRenderer: public ICompVolumeRenderer{
 public:
     static std::unique_ptr<CUDACompVolumeRenderer> Create(int w,int h,CUcontext ctx=nullptr);
 };
 
-class VS_EXPORT OpenGLCompVolumeRenderer: public CompVolumeRenderer{
+class VS_EXPORT OpenGLCompVolumeRenderer: public ICompVolumeRenderer{
 public:
-
+    static std::unique_ptr<OpenGLCompVolumeRenderer> Create(int w,int h);
 };
 
 /**
  * suitable for off-screen render
  */
-class VS_EXPORT CPUCompVolumeRenderer: public CompVolumeRenderer{
-
+class VS_EXPORT CPUCompVolumeRenderer: public ICompVolumeRenderer{
+    static std::unique_ptr<CPUCompVolumeRenderer> Create(int w,int h);
 };
 
 VS_END
