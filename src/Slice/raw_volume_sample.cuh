@@ -34,10 +34,12 @@ public:
             CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
         }
         else{
-            this->cu_ctx=cu_ctx;
+            this->cu_ctx=ctx;
         }
     };
-
+    void SetCUDACtx(){
+        CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
+    }
     void SetVolumeData(uint8_t* data,uint32_t dim_x,uint32_t dim_y,uint32_t dim_z);
 
     void Sample(uint8_t* data,Slice slice,float space_x,float space_y,float space_z);

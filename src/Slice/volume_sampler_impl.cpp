@@ -41,10 +41,29 @@ std::unique_ptr<VolumeSampler> VolumeSampler::CreateVolumeSampler(const std::sha
 
 VolumeSamplerImpl<CompVolume>::VolumeSamplerImpl(const std::shared_ptr<CompVolume> &volume):comp_volume(volume){
     initVolumeInfo();
-    this->cuda_comp_volume_sampler=std::make_unique<CUDACompVolumeSampler>();
+    this->cuda_volume_block_cache=CUDAVolumeBlockCache::Create();
+    this->cuda_volume_block_cache->SetCacheBlockLength(comp_volume->GetBlockLength()[0]);
+    this->cuda_volume_block_cache->SetCacheCapacity(4,2048,1024,1024);
+    this->cuda_volume_block_cache->CreateMappingTable(this->comp_volume->GetBlockDim());
+    this->cuda_comp_volume_sampler=std::make_unique<CUDACompVolumeSampler>(GetCUDACtx());
     this->cuda_comp_volume_sampler->SetBlockInfo(block_length,padding);
-    this->cuda_comp_volume_sampler->SetCUDATextures(4,2048,1024,1024);
-    this->cuda_comp_volume_sampler->CreateMappingTable(lod_block_dim);
+    {
+        auto &mapping_table = this->cuda_volume_block_cache->GetMappingTable();
+        this->cuda_comp_volume_sampler->UploadMappingTable(mapping_table.data(),mapping_table.size());
+        auto &lod_mapping_table_offset = this->cuda_volume_block_cache->GetLodMappingTableOffset();
+        std::vector<uint32_t> offset;//for one block not for uint32_t
+        offset.resize(max_lod+1, 0);
+        for (auto &it :lod_mapping_table_offset) {
+            if(it.first<=max_lod)
+                offset.at(it.first) = it.second/4;
+        }
+        this->cuda_comp_volume_sampler->UploadLodMappingTableOffset(offset.data(),offset.size());
+        auto texes=this->cuda_volume_block_cache->GetCUDATextureObjects();
+        this->cuda_comp_volume_sampler->SetCUDATextureObject(texes.data(),texes.size());
+    }
+
+//    this->cuda_comp_volume_sampler->SetCUDATextures(4,2048,1024,1024);
+//    this->cuda_comp_volume_sampler->CreateMappingTable(lod_block_dim);
     BlockParameter block_parameter;
     block_parameter.block_length=this->block_length;
     block_parameter.padding=this->padding;
@@ -55,8 +74,6 @@ VolumeSamplerImpl<CompVolume>::VolumeSamplerImpl(const std::shared_ptr<CompVolum
     block_parameter.texture_size3=make_int3(2048,1024,1024);
     cuda_comp_volume_sampler->UploadBlockParameter(block_parameter);
 }
-
-
 
 bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
 
@@ -92,6 +109,8 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     comp_sampler_parameter.right=make_float3(right.x,right.y,right.z);
     comp_sampler_parameter.down=make_float3(-up.x,-up.y,-up.z);
     comp_sampler_parameter.space=make_float3(space.x,space.y,space.z);
+    float min_space=std::min({space.x,space.y,space.z});
+    comp_sampler_parameter.space_ratio=make_float3(space.x/min_space,space.y/min_space,space.z/min_space);
     comp_sampler_parameter.voxels_per_pixel=make_float2(slice.voxel_per_pixel_width,slice.voxel_per_pixel_height);
     cuda_comp_volume_sampler->UploadCompSampleParameter(comp_sampler_parameter);
 
@@ -103,6 +122,9 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     sendRequests();
 
     fetchBlocks();
+
+    auto &mapping_table = this->cuda_volume_block_cache->GetMappingTable();
+    this->cuda_comp_volume_sampler->UploadMappingTable(mapping_table.data(),mapping_table.size());
 
     cuda_comp_volume_sampler->Sample(data,slice,0.01f,0.01f,0.03f);
 
@@ -210,7 +232,8 @@ void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
         auto block=comp_volume->GetBlock(it.index);
         if(block.valid){
             assert(block.block_data->GetDataPtr());
-            cuda_comp_volume_sampler->UploadCUDATexture3D(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+//            cuda_comp_volume_sampler->UploadCUDATexture3D(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
 //            spdlog::info("before release");
             block.Release();
 //            spdlog::info("after release");
@@ -231,7 +254,8 @@ void VolumeSamplerImpl<CompVolume>::filterIntersectBlocks() {
         for (const auto &it:new_need_blocks) {
 //        spdlog::info("before set" );
 
-            bool cached = cuda_comp_volume_sampler->SetCachedBlockValid(it.index);
+//            bool cached = cuda_comp_volume_sampler->SetCachedBlockValid(it.index);
+            bool cached = this->cuda_volume_block_cache->SetCachedBlockValid(it.index);
 //        spdlog::info("after set" );
             if (cached) {
 //            new_need_blocks.erase(it);
@@ -245,7 +269,8 @@ void VolumeSamplerImpl<CompVolume>::filterIntersectBlocks() {
     if(!no_need_blocks.empty())
     {
         for (auto &it:no_need_blocks) {
-            cuda_comp_volume_sampler->SetBlockInvalid(it.index);
+//            cuda_comp_volume_sampler->SetBlockInvalid(it.index);
+            this->cuda_volume_block_cache->SetBlockInvalid(it.index);
         }
     }
 //    spdlog::info("end of {0}",__FUNCTION__);

@@ -10,6 +10,7 @@
 #include <map>
 #include <unordered_set>
 #include "Common/boundingbox.hpp"
+#include <VolumeSlicer/volume_cache.hpp>
 VS_START
 
 template<class T>
@@ -92,6 +93,7 @@ private:
 
     std::unordered_map<uint32_t,std::vector<AABB>> virtual_blocks;
 
+    std::unique_ptr<CUDAVolumeBlockCache> cuda_volume_block_cache;
 };
 
 

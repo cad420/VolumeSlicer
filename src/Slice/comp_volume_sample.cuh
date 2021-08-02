@@ -17,6 +17,7 @@ struct CompSampleParameter{
     float3 right;
     float3 down;
     float3 space;
+    float3 space_ratio;
 };
 
 struct BlockParameter{
@@ -36,10 +37,24 @@ struct BlockParameter{
  */
 class CUDACompVolumeSampler{
 public:
-    CUDACompVolumeSampler()
+    CUDACompVolumeSampler(CUcontext ctx=nullptr)
     :old_h(0),old_w(0),cu_sample_result(nullptr)
     {
-        this->cu_ctx=GetCUDACtx();
+        if(!ctx){
+            CUDA_DRIVER_API_CALL(cuInit(0));
+            int cu_device_cnt=0;
+            CUdevice cu_device;
+            int using_gpu=0;
+            char using_device_name[80];
+            CUDA_DRIVER_API_CALL(cuDeviceGetCount(&cu_device_cnt));
+            CUDA_DRIVER_API_CALL(cuDeviceGet(&cu_device,using_gpu));
+            CUDA_DRIVER_API_CALL(cuDeviceGetName(using_device_name,sizeof(using_device_name),cu_device));
+            CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
+        }
+        else{
+            this->cu_ctx=ctx;
+        }
+
     }
     void SetCUDACtx(){
         CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
@@ -48,49 +63,19 @@ public:
 
     void Sample(uint8_t* data,Slice slice,float space_x,float space_y,float space_z);
 
-    bool IsCachedBlock(const std::array<uint32_t,4>&) const;
-
-    //if target block is cached, then set it valid and return true
-    //!and will update mapping_table
-    //if target block not found in cached blocks, return false.
-    bool SetCachedBlockValid(const std::array<uint32_t,4>&);
-
-    void SetBlockInvalid(const std::array<uint32_t,4>&);
-
     void UploadCompSampleParameter(const CompSampleParameter&);
 
     void UploadBlockParameter(const BlockParameter&);
 
-    //copy device data to CUDA array
-    //and will update mapping_table if copy successfully
-    void UploadCUDATexture3D(const std::array<uint32_t,4>&,uint8_t*,size_t);
+    void UploadMappingTable(const uint32_t* data,size_t size);
 
-    //create cuda array and texture obj
-    void SetCUDATextures(uint32_t tex_num, uint32_t tex_x, uint32_t tex_y, uint32_t tex_z);
+    void UploadLodMappingTableOffset(const uint32_t* data,size_t size);
 
-    void CreateMappingTable(const std::map<uint32_t,std::array<uint32_t,3>>&);
+    void SetCUDATextureObject(cudaTextureObject_t* textures,size_t size);
 
     //todo
     std::vector<std::array<uint32_t,4>> GetUnUploadBlocks();
-private:
-    struct BlockTableItem{
-        std::array<uint32_t,4> block_index;
-        std::array<uint32_t,4> pos_index;
-        bool valid;
-        bool cached;
-    };
-private:
-    void uploadCUDATextureObject();
 
-    void updateMappingTable(const std::array<uint32_t,4>& index,const std::array<uint32_t,4>& pos,bool valid=true);
-
-    void createBlockTable();
-
-    //call after every UploadCUDATexture3D
-    void uploadMappingTable();
-
-    //get empty or valid pos in one CUDA texture
-    bool getTexturePos(const std::array<uint32_t,4>&,std::array<uint32_t,4>&);
 private:
     CUcontext cu_ctx;
 
@@ -104,7 +89,6 @@ private:
     std::vector<cudaArray*> cu_arrays;
     std::vector<cudaTextureObject_t> cache_volumes;
 
-    std::list<BlockTableItem> block_table;
 
     uint32_t min_lod,max_lod;
     std::vector<uint32_t> mapping_table;
