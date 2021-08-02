@@ -1,5 +1,6 @@
 #version 430 core
 out vec4 frag_color;
+
 layout(binding=0,rgba32f) uniform image2D EntryPos;
 layout(binding=1,rgba32f) uniform image2D ExitPos;
 layout(binding=2,rgba32f) uniform image2D SliceColor;
@@ -71,8 +72,6 @@ void main() {
             }
         }
     }
-
-
     int steps=int(distance/step);
     vec4 color=vec4(0.0f);
     vec3 simple_pos=start_pos;
@@ -105,6 +104,7 @@ void main() {
         color=(1-color.a)*vec4(1.0f,1.0f,1.0f,1.0f)+color*color.a;
     }
     frag_color=color;
+//    gl_FragDepth=
 }
 
 

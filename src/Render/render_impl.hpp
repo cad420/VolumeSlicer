@@ -79,6 +79,8 @@ private:
     GLuint volume_board_vao,volume_board_vbo,volume_board_ebo;
     std::array<std::array<GLfloat,3>,8> volume_board_vertices;
     std::array<GLuint,36> volume_board_indices;
+    GLuint volume_board_line_vao,volume_board_line_vbo,volume_board_line_ebo;
+    std::array<GLuint,24> volume_board_line_indices;
 
     //volume render cube board
     float x0,x1,y0,y1,z0,z1;
@@ -109,6 +111,7 @@ private:
     std::unique_ptr<Shader> slice_render_shader;//no need to use unique_ptr
     std::unique_ptr<Shader> volume_render_pos_shader;
     std::unique_ptr<Shader> multi_volume_render_shader;
+    std::unique_ptr<Shader> volume_board_render_shader;
 
     //simple camera
     //may inside volume

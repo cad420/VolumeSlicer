@@ -33,6 +33,7 @@ MultiVolumeRender::MultiVolumeRender(int w, int h) {
         x1=y1=z1=1.f;
         volume_board_vao=volume_board_vbo=volume_board_ebo=0;
         volume_visible_board_vao=volume_visible_board_vbo=volume_visible_board_ebo=0;
+        volume_board_line_vao=volume_board_line_vbo=volume_board_line_ebo=0;
         transfer_func_tex=preInt_tf_tex=0;
         slice_vao=slice_vbo=0;
         screen_quad_vao=screen_quad_vbo=0;
@@ -223,6 +224,8 @@ void MultiVolumeRender::render() noexcept {
     glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
     glDisable(GL_CULL_FACE);
 
+
+
     slice_render_shader->use();
     slice_render_shader->setMat4("MVPMatrix",mvp);
 
@@ -258,9 +261,20 @@ void MultiVolumeRender::render() noexcept {
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         multi_volume_render_shader->use();
-        glBindVertexArray(screen_quad_vao);
-        glDrawArrays(GL_TRIANGLES,0,6);
+        multi_volume_render_shader->setMat4("MVPMatrix",mvp);
+//        glBindVertexArray(screen_quad_vao);
+//        glDrawArrays(GL_TRIANGLES,0,6);
+        glBindVertexArray(volume_visible_board_vao);
+        glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
     }
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    volume_board_render_shader->use();
+    volume_board_render_shader->setMat4("MVPMatrix",mvp);
+    glBindVertexArray(volume_board_line_vao);
+    glDrawElements(GL_LINES,24,GL_UNSIGNED_INT,0);
+
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 //    if(!volume_visible && !slice_visible){
 //        glBindFramebuffer(GL_FRAMEBUFFER,0);
 //        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -277,9 +291,12 @@ void MultiVolumeRender::RenderSlice() noexcept {
 }
 
 void MultiVolumeRender::setVolumeBoard() {
-    this->volume_board_x=volume_x*space_x;
-    this->volume_board_y=volume_y*space_y;
-    this->volume_board_z=volume_z*space_z;
+    float volume_origin_x=0.f-0.5f;
+    float volume_origin_y=0.f-0.5f;
+    float volume_origin_z=0.f-0.5f;
+    this->volume_board_x=volume_x*space_x+0.5f;
+    this->volume_board_y=volume_y*space_y+0.5f;
+    this->volume_board_z=volume_z*space_z+0.5f;
     volume_board_indices={
             0,1,2,0,2,3,
             0,4,1,4,5,1,
@@ -288,14 +305,29 @@ void MultiVolumeRender::setVolumeBoard() {
             7,4,3,3,4,0,
             4,7,6,4,6,5
     };
-    volume_board_vertices[0]={0.0f,0.0f,0.0f};
-    volume_board_vertices[1]={volume_board_x,0.0f,0.0f};
-    volume_board_vertices[2]={volume_board_x,volume_board_y,0.0f};
-    volume_board_vertices[3]={0.0f,volume_board_y,0.0f};
-    volume_board_vertices[4]={0.0f,0.0f,volume_board_z};
-    volume_board_vertices[5]={volume_board_x,0.0f,volume_board_z};
+    volume_board_vertices[0]={volume_origin_x,volume_origin_y,volume_origin_z};
+    volume_board_vertices[1]={volume_board_x,volume_origin_y,volume_origin_z};
+    volume_board_vertices[2]={volume_board_x,volume_board_y,volume_origin_z};
+    volume_board_vertices[3]={volume_origin_x,volume_board_y,volume_origin_z};
+    volume_board_vertices[4]={volume_origin_x,volume_origin_y,volume_board_z};
+    volume_board_vertices[5]={volume_board_x,volume_origin_y,volume_board_z};
     volume_board_vertices[6]={volume_board_x,volume_board_y,volume_board_z};
-    volume_board_vertices[7]={0.0f,volume_board_y,volume_board_z};
+    volume_board_vertices[7]={volume_origin_x,volume_board_y,volume_board_z};
+
+    volume_board_line_indices={
+            0,1,
+            1,2,
+            2,3,
+            3,0,
+            4,5,
+            5,6,
+            6,7,
+            7,4,
+            0,4,
+            1,5,
+            2,6,
+            3,7
+    };
 
     if(volume_board_vao && volume_board_vbo && volume_board_ebo){
         glNamedBufferSubData(volume_board_vbo,0,sizeof(volume_board_vertices),volume_board_vertices.data());
@@ -314,7 +346,24 @@ void MultiVolumeRender::setVolumeBoard() {
         glEnableVertexAttribArray(0);
         glBindVertexArray(0);
     }
+    if(volume_board_line_vao && volume_board_line_vbo && volume_board_line_ebo){
 
+    }
+    else{
+        glGenVertexArrays(1,&volume_board_line_vao);
+        glGenBuffers(1,&volume_board_line_vbo);
+        glGenBuffers(1,&volume_board_line_ebo);
+
+        glBindVertexArray(volume_board_line_vao);
+        glBindBuffer(GL_ARRAY_BUFFER,volume_board_line_vao);
+        glBufferData(GL_ARRAY_BUFFER,sizeof(volume_board_vertices),volume_board_vertices.data(),GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,volume_board_line_ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(volume_board_line_indices),volume_board_line_indices.data(),GL_STATIC_DRAW);
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(GLfloat),(void*)0);
+        glEnableVertexAttribArray(0);
+        glBindVertexArray(0);
+
+    }
     GL_CHECK
 
 }
@@ -363,6 +412,7 @@ void MultiVolumeRender::setVisibleBoard() {
         glEnableVertexAttribArray(0);
         glBindVertexArray(0);
     }
+
 
 
     GL_CHECK
@@ -454,6 +504,11 @@ void MultiVolumeRender::setShader() {
             "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\multi_volume_render_v.glsl",
             "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\multi_volume_render_f.glsl"
             );
+    this->volume_board_render_shader=std::make_unique<Shader>(
+            "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\volume_board_render_v.glsl",
+            "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\volume_board_render_f.glsl"
+            );
+
 }
 
 void MultiVolumeRender::SetTransferFunction(TransferFunc &&tf) noexcept {
@@ -566,4 +621,8 @@ void MultiVolumeRender::setSlice() {
 
 
 VS_END
+
+
+
+
 
