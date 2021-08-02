@@ -2,14 +2,15 @@
 // Created by wyz on 2021/6/8.
 //
 
-#include<random>
-#include<glm/gtc/matrix_transform.hpp>
+#include <random>
+#include <algorithm>
+#include <glm/gtc/matrix_transform.hpp>
 #include <VolumeSlicer/render.hpp>
 
-#include"Common/gl_helper.hpp"
-#include"Render/render_impl.hpp"
-#include"Render/transfer_function_impl.hpp"
-#include"Render/wgl_wrap.hpp"
+#include "Common/gl_helper.hpp"
+#include "Render/render_impl.hpp"
+#include "Render/transfer_function_impl.hpp"
+#include "Render/wgl_wrap.hpp"
 #define WGL_NV_gpu_affinity
 
 
@@ -166,6 +167,8 @@ void MultiVolumeRender::bindShaderUniform() {
     multi_volume_render_shader->setVec3("volume_board",volume_board_x,volume_board_y,volume_board_z);
 
     multi_volume_render_shader->setBool("slice_visible",slice_visible);
+
+    multi_volume_render_shader->setFloat("step",(std::min)({space_x,space_y,space_z})/3.f);
 
     slice_render_shader->use();
     slice_render_shader->setInt("volume_data",2);
@@ -504,19 +507,22 @@ void MultiVolumeRender::setSlice() {
         glm::vec3 origin= {slice.origin[0],slice.origin[1],slice.origin[2]};
         glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
         glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
+        float base_space=(std::min)({space_x,space_y,space_z});
+        glm::vec3 space={space_x,space_y,space_z};
+        glm::vec3 space_ratio={space_x/base_space,space_y/base_space,space_z/base_space};
         auto lu=origin+
                 (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
+                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/space_ratio;
         auto lb=origin-
                 (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
+                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/space_ratio;
         auto ru=origin+
                 (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
+                +right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/space_ratio;
         auto rb=origin-
                 (up*slice.voxel_per_pixel_height*(float)slice.n_pixels_height/2.f
-                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/glm::vec3(1.f,1.f,3.f);
-        glm::vec3 space={space_x,space_y,space_z};
+                -right*slice.voxel_per_pixel_width*(float)slice.n_pixels_width/2.f)/space_ratio;
+
         lu=lu * space;
         lb=lb * space;
         ru=ru * space;

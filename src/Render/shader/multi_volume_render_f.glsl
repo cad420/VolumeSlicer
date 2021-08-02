@@ -20,8 +20,8 @@ uniform float space_z;
 
 uniform vec3 volume_board;
 uniform bool slice_visible;
+uniform float step;
 
-float step=0.003f;
 
 vec3 g_ray_dir;
 vec3 phongShading(vec3 samplePos,vec3 diffuseColor);
