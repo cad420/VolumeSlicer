@@ -101,7 +101,23 @@ inline void UpdateCUDATexture3D(uint8_t* data,cudaArray* pCudaArray,uint32_t blo
 
     CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
 }
+inline void UpdateCUDATexture3D(uint8_t* data,cudaArray* pCudaArray,uint32_t x_length,uint32_t y_length,uint32_t z_length,uint32_t x_offset,uint32_t y_offset,uint32_t z_offset){
+    CUDA_MEMCPY3D m={0};
+    m.srcMemoryType=CU_MEMORYTYPE_HOST;
+    m.srcHost=data;
 
+    m.dstMemoryType=CU_MEMORYTYPE_ARRAY;
+    m.dstArray=(CUarray)pCudaArray;
+    m.dstXInBytes=x_offset;
+    m.dstY=y_offset;
+    m.dstZ=z_offset;
+
+    m.WidthInBytes=x_length;
+    m.Height=y_length;
+    m.Depth=z_length;
+
+    CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+}
 
 __host__ __device__ inline int PowII(int x,int y){
     int res=1;

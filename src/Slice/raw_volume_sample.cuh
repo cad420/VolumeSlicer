@@ -1,7 +1,6 @@
 #pragma once
-#include<VolumeSlicer/helper.hpp>
-#include<VolumeSlicer/slice.hpp>
-
+#include <VolumeSlicer/helper.hpp>
+#include <VolumeSlicer/slice.hpp>
 VS_START
 
 struct RawSampleParameter{
@@ -9,6 +8,7 @@ struct RawSampleParameter{
     uint32_t image_h;
     float3 volume_board;//dim*space
     float3 space;
+    float base_space;
     float2 voxels_per_pixel;
     float3 origin;
     float3 right;
@@ -17,21 +17,25 @@ struct RawSampleParameter{
 
 class CUDARawVolumeSampler{
 public:
-    CUDARawVolumeSampler()
+    CUDARawVolumeSampler(CUcontext ctx=nullptr)
     :old_h(0),old_w(0),cu_sample_result(nullptr),
     cu_volume_data(nullptr),volume_data_size(0),
     volume_x(0),volume_y(0),volume_z(0)
     {
-        CUDA_DRIVER_API_CALL(cuInit(0));
-        int cu_device_cnt=0;
-        CUdevice cu_device;
-        int using_gpu=0;
-        char using_device_name[80];
-        CUDA_DRIVER_API_CALL(cuDeviceGetCount(&cu_device_cnt));
-        CUDA_DRIVER_API_CALL(cuDeviceGet(&cu_device,using_gpu));
-        CUDA_DRIVER_API_CALL(cuDeviceGetName(using_device_name,sizeof(using_device_name),cu_device));
-        this->cu_ctx=nullptr;
-        CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
+        if(!ctx){
+            CUDA_DRIVER_API_CALL(cuInit(0));
+            int cu_device_cnt=0;
+            CUdevice cu_device;
+            int using_gpu=0;
+            char using_device_name[80];
+            CUDA_DRIVER_API_CALL(cuDeviceGetCount(&cu_device_cnt));
+            CUDA_DRIVER_API_CALL(cuDeviceGet(&cu_device,using_gpu));
+            CUDA_DRIVER_API_CALL(cuDeviceGetName(using_device_name,sizeof(using_device_name),cu_device));
+            CUDA_DRIVER_API_CALL(cuCtxCreate(&cu_ctx,0,cu_device));
+        }
+        else{
+            this->cu_ctx=cu_ctx;
+        }
     };
 
     void SetVolumeData(uint8_t* data,uint32_t dim_x,uint32_t dim_y,uint32_t dim_z);

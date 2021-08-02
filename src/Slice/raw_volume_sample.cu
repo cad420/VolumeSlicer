@@ -1,5 +1,6 @@
-#include"raw_volume_sample.cuh"
-#include"Algorithm/helper_math.h"
+#include "raw_volume_sample.cuh"
+#include "Algorithm/helper_math.h"
+#include "Common/cuda_utils.hpp"
 VS_START
 
 
@@ -9,7 +10,6 @@ __constant__ RawSampleParameter sampleParameter;//use for kernel function
 
 __global__ void CUDARawVolumeSample(uint8_t* image,//output result
                                     cudaTextureObject_t  volume_data//cuda texture for volume data
-
                                     );
 
 
@@ -21,41 +21,10 @@ void CUDARawVolumeSampler::SetVolumeData(uint8_t *data, uint32_t dim_x, uint32_t
     this->volume_z=dim_z;
     this->volume_data_size=(size_t)dim_x*dim_y*dim_z;
 
-    auto volume_dim=make_cudaExtent(dim_x,dim_y,dim_z);
-    auto channelDesc=cudaCreateChannelDesc<uint8_t>();
-    CUDA_RUNTIME_API_CALL(cudaMalloc3DArray(&cu_volume_data,&channelDesc,volume_dim));
-    cudaResourceDesc texRes;
-    memset(&texRes,0,sizeof(cudaResourceDesc));
-    texRes.resType=cudaResourceTypeArray;
-    texRes.res.array.array=cu_volume_data;
-    cudaTextureDesc texDesc;
-    memset(&texDesc,0,sizeof(cudaTextureDesc));
-    texDesc.normalizedCoords=true;
-    texDesc.filterMode=cudaFilterModeLinear;
-    texDesc.borderColor[0]=0.f;
-    texDesc.borderColor[1]=0.f;
-    texDesc.borderColor[2]=0.f;
-    texDesc.borderColor[3]=0.f;
-    texDesc.addressMode[0]=cudaAddressModeBorder;
-    texDesc.addressMode[1]=cudaAddressModeBorder;
-    texDesc.addressMode[2]=cudaAddressModeBorder;
-    texDesc.readMode=cudaReadModeNormalizedFloat;
-    CUDA_RUNTIME_API_CALL(cudaCreateTextureObject(&volume_texture,&texRes,&texDesc, nullptr));
 
-    CUDA_MEMCPY3D m={0};
-    m.srcMemoryType=CU_MEMORYTYPE_HOST;
-    m.srcHost=data;
-
-    m.dstMemoryType=CU_MEMORYTYPE_ARRAY;
-    m.dstArray=(CUarray)cu_volume_data;
-    m.dstXInBytes=0;
-    m.dstY=0;
-    m.dstZ=0;
-
-    m.WidthInBytes=dim_x;
-    m.Height=dim_y;
-    m.Depth=dim_z;
-    CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+    CreateCUDATexture3D(make_cudaExtent(dim_x,dim_y,dim_z),&cu_volume_data,
+                        &volume_texture);
+    UpdateCUDATexture3D(data,cu_volume_data,dim_x,dim_y,dim_z,0,0,0);
 
     spdlog::info("Successfully set volume data to CUDA.");
 }
@@ -84,6 +53,7 @@ void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float
     sample_parameter.voxels_per_pixel=make_float2(slice.voxel_per_pixel_width,slice.voxel_per_pixel_height);
     sample_parameter.volume_board=make_float3(volume_x,volume_y,volume_z);
     sample_parameter.space=make_float3(space_x,space_y,space_z);
+    sample_parameter.base_space=std::min({space_x,space_y,space_z});
     CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(sampleParameter,&sample_parameter,sizeof(RawSampleParameter)));
 
     dim3 threads_per_block={16,16};
@@ -92,7 +62,7 @@ void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float
     CUDARawVolumeSample<<<blocks_per_grid,threads_per_block>>>(cu_sample_result,volume_texture);
     CUDA_RUNTIME_CHECK
 
-    CUDA_RUNTIME_API_CALL(cudaMemcpy(data,cu_sample_result,(size_t)w*h,cudaMemcpyDeviceToHost));
+    CUDA_RUNTIME_API_CALL(cudaMemcpy(data,cu_sample_result,(size_t)w*h,cudaMemcpyDefault));
 
     spdlog::info("Finish CUDA raw volume sample.");
 }
@@ -105,7 +75,7 @@ __global__ void CUDARawVolumeSample(uint8_t *image, cudaTextureObject_t volume_d
 
     float3 virtual_sample_pos=sampleParameter.origin+((image_x-(int)sampleParameter.image_w/2)*sampleParameter.voxels_per_pixel.x*sampleParameter.right
                                                     +(image_y-(int)sampleParameter.image_h/2)*sampleParameter.voxels_per_pixel.y*sampleParameter.down)
-                                                     *0.01f/sampleParameter.space   ;
+                                                     *sampleParameter.base_space/sampleParameter.space   ;
 
 
 
