@@ -5,17 +5,17 @@
 #ifndef VOLUMESLICER_SLICE_HPP
 #define VOLUMESLICER_SLICE_HPP
 
-#include<cstdint>
-#include<array>
-#include<memory>
-#include<VolumeSlicer/export.hpp>
-#include<VolumeSlicer/status.hpp>
-#include<VolumeSlicer/define.hpp>
+#include <cstdint>
+#include <array>
+#include <memory>
+#include <VolumeSlicer/export.hpp>
+#include <VolumeSlicer/status.hpp>
+#include <VolumeSlicer/define.hpp>
 VS_START
 
 
 struct alignas(16) Slice{
-    std::array<float,4> origin;
+    std::array<float,4> origin;//measure in voxel
     std::array<float,4> normal;
     std::array<float,4> up;
     std::array<float,4> right;
@@ -46,6 +46,8 @@ public:
     virtual bool IsModified() const =0;
 
     virtual void SetStatus(bool modified) =0;
+
+    virtual void SetSliceSpaceRatio(const std::array<float,3>& ratio) = 0;
     //***************************************
     //functions modified slice
     virtual void RotateByX(float)=0;

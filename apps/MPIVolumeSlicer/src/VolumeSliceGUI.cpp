@@ -66,7 +66,7 @@
 #define GL_CHECK
 #endif
 VolumeSliceGUI::VolumeSliceGUI()
-:window_w(0),window_h(0),volume_space_x(0.f),volume_space_y(0.f),volume_space_z(0.f)
+:window_w(0),window_h(0),volume_space_x(1.f),volume_space_y(1.f),volume_space_z(1.f)
 {
 
 
@@ -265,12 +265,13 @@ void VolumeSliceGUI::show() {
         slice.n_pixels_height=window_manager->GetNodeWindowHeight();
         float center_x=window_manager->GetWindowColNum()*1.f/2-0.5f;
         float center_y=window_manager->GetWindowRowNum()*1.f/2-0.5f;
-        std::array<float,4> t={0.01f/volume_space_x,0.01f/volume_space_y,0.01f/volume_space_z};
+        float base_space=std::min({volume_space_x,volume_space_y,volume_space_z});
+        std::array<float,4> t={base_space/volume_space_x,base_space/volume_space_y,base_space/volume_space_z};
         slice.origin+=
                 (slice.right * ((window_manager->GetWorldRankOffsetX()-center_x)*slice.n_pixels_width*slice.voxel_per_pixel_width)
                 -slice.up*((window_manager->GetWorldRankOffsetY()-center_y)*slice.n_pixels_height*slice.voxel_per_pixel_height))*t;
 
-        slicer->SetSlice(slice);
+        this->node_slice = slice;
     };
     constexpr uint32_t frame_time=1000/50;
     uint32_t last_frame_time=SDL_GetTicks();
@@ -289,7 +290,7 @@ void VolumeSliceGUI::show() {
 
         GL_CHECK
         render_node_frame();
-
+        render_root_frame();
 
 
         if(SDL_GetTicks()-last_frame_time<frame_time){
@@ -320,7 +321,6 @@ void VolumeSliceGUI::set_comp_volume(const char *file) {
     slice.up={0.f,1.f,0.f,0.f};
 
     this->world_slicer=Slicer::CreateSlicer(slice);
-    this->slicer=Slicer::CreateSlicer(slice);
 
     comp_sample_frame.width=window_w;
     comp_sample_frame.height=window_h;
@@ -346,6 +346,16 @@ void VolumeSliceGUI::render_imgui() {
     {
         ImGui::Begin("Large Volume Renderer");
         ImGui::Text("FPS: %.1f",ImGui::GetIO().Framerate);
+        ImGui::InputFloat("Space X",&volume_space_x,0.0f,0.0f,"%.5f");
+        ImGui::InputFloat("Space Y",&volume_space_y,0.0f,0.0f,"%.5f");
+        ImGui::InputFloat("Space Z",&volume_space_z,0.0f,0.0f,"%.5f");
+        this->comp_volume->SetSpaceX(volume_space_x);
+        this->comp_volume->SetSpaceY(volume_space_y);
+        this->comp_volume->SetSpaceZ(volume_space_z);
+        float base_space=std::min({volume_space_x,volume_space_y,volume_space_z});
+        this->world_slicer->SetSliceSpaceRatio({volume_space_x/base_space,
+                                                volume_space_y/base_space,
+                                                volume_space_z/base_space});
         ImGui::End();
     }
     ImGui::EndFrame();
@@ -364,13 +374,8 @@ void VolumeSliceGUI::render_root_frame() {
 void VolumeSliceGUI::render_node_frame() {
     GL_CHECK
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-    comp_volume_sampler->Sample(slicer->GetSlice(),comp_sample_frame.data.data());
-//    int cnt=0;
-//    for(size_t i=0;i<comp_sample_frame.data.size();i++){
-//        if((int)comp_sample_frame.data[i]!=0)
-//            cnt++;
-//    }
-//    std::cout<<cnt<<std::endl;
+    comp_volume_sampler->Sample(node_slice,comp_sample_frame.data.data());
+
     glTextureSubImage2D(comp_sample_tex,0,0,0,window_w,window_h,GL_RED,GL_UNSIGNED_BYTE,comp_sample_frame.data.data());
     glBindTextureUnit(0,comp_sample_tex);
     GL_CHECK

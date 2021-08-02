@@ -124,7 +124,7 @@ void CUDACompVolumeSampler::UploadBlockParameter(const BlockParameter & blockPar
 }
 
 
-void CUDACompVolumeSampler::Sample(uint8_t *data, Slice slice, float space_x, float space_y, float space_z) {
+void CUDACompVolumeSampler::Sample(uint8_t *data, Slice slice) {
     SetCUDACtx();
     int w=slice.n_pixels_width;
     int h=slice.n_pixels_height;

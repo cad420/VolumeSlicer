@@ -11,7 +11,9 @@ VS_START
 
 
 
-SlicerImpl::SlicerImpl(const Slice &slice){
+SlicerImpl::SlicerImpl(const Slice &slice)
+:ratio({1.f,1.f,1.f})
+{
     SlicerImpl::SetSlice(slice);
     spdlog::info("Successfully create slicer.");
 }
@@ -60,12 +62,14 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
 }
 
 void SlicerImpl::MoveByNormal(float dist) {
-    this->origin+=(dist*this->normal)/glm::vec3(1,1,3);
+    spdlog::info("slice ratio {0} {1} {2}.",ratio.x,ratio.y,ratio.z);
+    this->origin+=(dist*this->normal)/ratio;
     SetStatus(true);
 }
 
 void SlicerImpl::MoveInPlane(float offsetX, float offsetY) {
-    this->origin+=(offsetX*this->right+offsetY*this->up)/glm::vec3(1,1,3);
+    spdlog::info("slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
+    this->origin+=(offsetX*this->right+offsetY*this->up)/this->ratio;
     SetStatus(true);
 }
 
@@ -147,9 +151,13 @@ void SlicerImpl::SetStatus(bool modified) {
     this->is_modified=modified;
 }
 
+void SlicerImpl::SetSliceSpaceRatio(const std::array<float, 3> &ratio) {
+    this->ratio={ratio[0],ratio[1],ratio[2]};
+    spdlog::info("set slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
+}
 
 
-std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
+    std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
 try{
     return std::make_unique<SlicerImpl>(slice);
 }

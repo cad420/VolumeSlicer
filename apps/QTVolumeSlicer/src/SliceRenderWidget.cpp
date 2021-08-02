@@ -48,7 +48,6 @@ void SliceRenderWidget::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void SliceRenderWidget::wheelEvent(QWheelEvent *event) {
-//    std::cout<<__FUNCTION__ <<std::endl;
     auto angle_delta=event->angleDelta();
     if((QApplication::keyboardModifiers() == Qt::ControlModifier)){
         spdlog::info("{0}",__FUNCTION__ );
@@ -72,7 +71,6 @@ void SliceRenderWidget::wheelEvent(QWheelEvent *event) {
 }
 
 void SliceRenderWidget::mousePressEvent(QMouseEvent *event) {
-//    std::cout<<__FUNCTION__ <<std::endl;
     setFocus();
 
     if(event->button()==Qt::MouseButton::LeftButton){
@@ -153,9 +151,9 @@ void SliceRenderWidget::initTest() {
     SetCUDACtx(0);
     volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
     volume_sampler=VolumeSampler::CreateVolumeSampler(volume);
-    volume->SetSpaceX(0.01f);
-    volume->SetSpaceY(0.01f);
-    volume->SetSpaceZ(0.03f);
+    volume->SetSpaceX(0.00032f);
+    volume->SetSpaceY(0.00032f);
+    volume->SetSpaceZ(0.001f);
     auto block_length=volume->GetBlockLength();
     std::cout<<"block length: "<<block_length[0]<<" "<<block_length[1]<<std::endl;
     auto block_dim=volume->GetBlockDim(0);

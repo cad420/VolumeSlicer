@@ -71,10 +71,13 @@ VolumeSamplerImpl<CompVolume>::VolumeSamplerImpl(const std::shared_ptr<CompVolum
     block_parameter.block_dim=make_int3(this->lod_block_dim.at(0)[0],
                                         this->lod_block_dim.at(0)[1],
                                         this->lod_block_dim.at(0)[2]);
-    block_parameter.texture_size3=make_int3(2048,1024,1024);
+    auto tex_shape=this->cuda_volume_block_cache->GetCacheShape();
+    block_parameter.texture_size3=make_int3(tex_shape[1],tex_shape[2],tex_shape[3]);
     cuda_comp_volume_sampler->UploadBlockParameter(block_parameter);
 }
-
+/**
+ * to dynamic change space in runtime, space should only get by GetVolumeSpace only in this Sample function.
+ */
 bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
 
     glm::vec3 origin={slice.origin[0],slice.origin[1],slice.origin[2]};
@@ -83,17 +86,17 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     glm::vec3 normal={slice.normal[0],slice.normal[1],slice.normal[2]};
     auto old_right=right;
     auto old_up=up;
-    const float slice_space=0.01f;
+
     glm::vec3 space={comp_volume->GetVolumeSpaceX(),comp_volume->GetVolumeSpaceY(),comp_volume->GetVolumeSpaceZ()};
+    float base_space=std::min({space.x, space.y, space.z});
     auto old_origin=origin;
     origin = origin;
-    right= right*(slice.n_pixels_width*slice.voxel_per_pixel_width)*slice_space/space /2.f;
-    up= up* (slice.n_pixels_height*slice.voxel_per_pixel_height)*slice_space/space /2.f;
+    //transform right and up to voxel-coord and then get slice's obb's right and up
+    //set slice's obb's normal length to 1 or 2*padding
+    right= right * (slice.n_pixels_width*slice.voxel_per_pixel_width) * base_space / space / 2.f;
+    up= up * (slice.n_pixels_height*slice.voxel_per_pixel_height) * base_space / space / 2.f;
     normal=glm::normalize(normal);//for preload
     OBB obb(origin,right,up,normal);
-
-
-//    cuda_comp_volume_sampler->SetCUDACtx();
 
     assert(slice.voxel_per_pixel_width==slice.voxel_per_pixel_height);
     this->current_lod=evaluateLod(slice.voxel_per_pixel_width);
@@ -109,11 +112,9 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     comp_sampler_parameter.right=make_float3(right.x,right.y,right.z);
     comp_sampler_parameter.down=make_float3(-up.x,-up.y,-up.z);
     comp_sampler_parameter.space=make_float3(space.x,space.y,space.z);
-    float min_space=std::min({space.x,space.y,space.z});
-    comp_sampler_parameter.space_ratio=make_float3(space.x/min_space,space.y/min_space,space.z/min_space);
+    comp_sampler_parameter.space_ratio=make_float3(space.x/base_space,space.y/base_space,space.z/base_space);
     comp_sampler_parameter.voxels_per_pixel=make_float2(slice.voxel_per_pixel_width,slice.voxel_per_pixel_height);
     cuda_comp_volume_sampler->UploadCompSampleParameter(comp_sampler_parameter);
-
 
     calcIntersectBlocks(obb);
 
@@ -126,7 +127,7 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
     auto &mapping_table = this->cuda_volume_block_cache->GetMappingTable();
     this->cuda_comp_volume_sampler->UploadMappingTable(mapping_table.data(),mapping_table.size());
 
-    cuda_comp_volume_sampler->Sample(data,slice,0.01f,0.01f,0.03f);
+    cuda_comp_volume_sampler->Sample(data,slice);
 
     return isSampleComplete();
 }
@@ -147,7 +148,6 @@ void VolumeSamplerImpl<CompVolume>::initVolumeInfo() {
                      lod_block_dim.at(i)[2]);
     }
     createVirtualBlocks();
-
 }
 
 void VolumeSamplerImpl<CompVolume>::createVirtualBlocks() {
@@ -168,7 +168,6 @@ void VolumeSamplerImpl<CompVolume>::createVirtualBlocks() {
             }
         }
     }
-
 }
 
 VolumeSamplerImpl<CompVolume>::~VolumeSamplerImpl() {
@@ -242,7 +241,6 @@ void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
             this->is_sample_complete=false;
         }
     }
-
 }
 
 void VolumeSamplerImpl<CompVolume>::filterIntersectBlocks() {
@@ -286,7 +284,7 @@ void VolumeSamplerImpl<CompVolume>::calcIntersectBlocks(const OBB &obb) {
     auto aabb=obb.getAABB();
     std::unordered_set<AABB,AABBHash> current_aabb_intersect_blocks;
     std::unordered_set<AABB,AABBHash> current_obb_intersect_blocks;
-    spdlog::info("current lod: {0}",this->current_lod);
+//    spdlog::info("current lod: {0}",this->current_lod);
     for(auto& it:virtual_blocks.at(this->current_lod)){
         if(aabb.intersect(it)){
             current_aabb_intersect_blocks.insert(it);
@@ -298,21 +296,21 @@ void VolumeSamplerImpl<CompVolume>::calcIntersectBlocks(const OBB &obb) {
             current_obb_intersect_blocks.insert(it);
         }
     }
-    spdlog::info("current obb intersect num: {0}",current_obb_intersect_blocks.size());
+//    spdlog::info("current obb intersect num: {0}",current_obb_intersect_blocks.size());
     for(auto &it:current_obb_intersect_blocks){
         if(current_intersect_blocks.find(it)==current_intersect_blocks.end()){
             new_need_blocks.insert(it);
         }
     }
 
-    spdlog::info("current new need num: {0}",new_need_blocks.size());
+//    spdlog::info("current new need num: {0}",new_need_blocks.size());
 
     for(auto& it:current_intersect_blocks){
         if(current_obb_intersect_blocks.find(it)==current_obb_intersect_blocks.end()){
             no_need_blocks.insert(it);
         }
     }
-    spdlog::info("current no need num: {0}",new_need_blocks.size());
+//    spdlog::info("current no need num: {0}",new_need_blocks.size());
     current_intersect_blocks=std::move(current_obb_intersect_blocks);
 //    spdlog::info("end of: {0}",__FUNCTION__ );
 }

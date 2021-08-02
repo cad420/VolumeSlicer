@@ -61,7 +61,7 @@ public:
     }
     void SetBlockInfo(uint32_t block_length,uint32_t padding);
 
-    void Sample(uint8_t* data,Slice slice,float space_x,float space_y,float space_z);
+    void Sample(uint8_t* data,Slice slice);
 
     void UploadCompSampleParameter(const CompSampleParameter&);
 

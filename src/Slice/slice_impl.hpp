@@ -23,6 +23,8 @@ public:
 
     void SetStatus(bool modified) override;
 
+    void SetSliceSpaceRatio(const std::array<float,3>& ratio) override;
+
     void RotateByX(float degree) override;
 
     void RotateByY(float degree) override;
@@ -58,6 +60,7 @@ private:
 
     std::vector<uint8_t> image;
     bool is_modified;
+    glm::vec3 ratio;
 };
 
 VS_END
