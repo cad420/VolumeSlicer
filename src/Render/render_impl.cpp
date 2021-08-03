@@ -116,6 +116,7 @@ void MultiVolumeRender::SetVisibleZ(float z0, float z1) noexcept {
 }
 
 void MultiVolumeRender::SetSlicer(std::shared_ptr<Slicer> slicer) noexcept {
+    wglMakeCurrent(window_handle,gl_context);
     this->slicer=slicer;
 //    this->slice_visible=true;
     setSlice();
@@ -298,6 +299,7 @@ void MultiVolumeRender::RenderSlice() noexcept {
 }
 
 void MultiVolumeRender::setVolumeBoard() {
+    wglMakeCurrent(window_handle,gl_context);
     float volume_origin_x=0.f-0.5f;
     float volume_origin_y=0.f-0.5f;
     float volume_origin_z=0.f-0.5f;
@@ -376,6 +378,7 @@ void MultiVolumeRender::setVolumeBoard() {
 }
 
 void MultiVolumeRender::setVisibleBoard() {
+    wglMakeCurrent(window_handle,gl_context);
     float v_x0=x0*volume_board_x;
     float v_x1=x1*volume_board_x;
     float v_y0=y0*volume_board_y;
@@ -427,6 +430,7 @@ void MultiVolumeRender::setVisibleBoard() {
 }
 
 void MultiVolumeRender::setPosFrameBuffer() {
+    wglMakeCurrent(window_handle,gl_context);
     glGenFramebuffers(1,&raycast_pos_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
 
@@ -474,6 +478,7 @@ void MultiVolumeRender::setPosFrameBuffer() {
 }
 
 void MultiVolumeRender::setScreenQuad() {
+    wglMakeCurrent(window_handle,gl_context);
     screen_quad_vertices={
             -1.0f,  1.0f,  0.0f, 1.0f,
             -1.0f, -1.0f,  0.0f, 0.0f,
@@ -499,6 +504,7 @@ void MultiVolumeRender::setScreenQuad() {
 }
 
 void MultiVolumeRender::setShader() {
+    wglMakeCurrent(window_handle,gl_context);
     this->slice_render_shader=std::make_unique<Shader>(
             "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\slice_render_v.glsl",
             "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\slice_render_f.glsl"
@@ -519,6 +525,7 @@ void MultiVolumeRender::setShader() {
 }
 
 void MultiVolumeRender::SetTransferFunction(TransferFunc &&tf) noexcept {
+    wglMakeCurrent(window_handle,gl_context);
     TransferFuncImpl tf_impl(tf);
 
     glGenTextures(1,&transfer_func_tex);
@@ -557,6 +564,7 @@ void MultiVolumeRender::SetTransferFunc1D(float *tf,int dim) noexcept{
 
 }
 auto MultiVolumeRender::GetFrame() noexcept -> Frame {
+    wglMakeCurrent(window_handle,gl_context);
     Frame frame;
     frame.width=window_width;
     frame.height=window_height;
