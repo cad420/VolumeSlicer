@@ -25,7 +25,7 @@ public:
 
 public:
     void initTest();
-
+    auto getCompVolume()->std::shared_ptr<CompVolume>;
 Q_SIGNALS:
     void sliceModified();
 

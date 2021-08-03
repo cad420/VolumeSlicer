@@ -33,6 +33,7 @@ private:
     std::shared_ptr<Slicer> slicer;
     std::shared_ptr<Slicer> max_zoom_slicer;
     std::unique_ptr<VolumeSampler> raw_volume_sampler;
+    std::shared_ptr<RawVolume> raw_volume;
 
 };
 

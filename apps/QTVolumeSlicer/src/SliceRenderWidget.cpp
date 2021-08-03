@@ -191,3 +191,7 @@ void SliceRenderWidget::redraw() {
 void SliceRenderWidget::resetColorTable(float *tf, int dim) {
     memcpy(color_table.data(),tf,dim*4*sizeof(float));
 }
+
+auto SliceRenderWidget::getCompVolume() -> std::shared_ptr<CompVolume> {
+    return this->volume;
+}
