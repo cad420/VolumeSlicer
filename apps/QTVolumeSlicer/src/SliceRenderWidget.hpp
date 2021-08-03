@@ -31,6 +31,7 @@ Q_SIGNALS:
 
 public :
     void redraw();
+    void resetColorTable(float*,int dim=256);
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -43,6 +44,8 @@ private:
     std::shared_ptr<Slicer> slicer;
     std::shared_ptr<CompVolume> volume;
     std::unique_ptr<VolumeSampler> volume_sampler;
+    QImage color_image;
+    std::vector<float> color_table;
 
     bool left_mouse_button_pressed;
     bool right_mouse_button_pressed;

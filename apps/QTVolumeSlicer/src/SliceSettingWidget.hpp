@@ -11,6 +11,7 @@ class QGroupBox;
 class QScrollArea;
 
 class SliceRenderWidget;
+class TF1DEditor;
 
 class SliceSettingWidget: public QWidget{
     Q_OBJECT
@@ -20,7 +21,8 @@ public:
 private:
     QScrollArea* m_slice_setting_scroll_area;
     SliceRenderWidget* m_slice_render_widget;
-
+    TF1DEditor* tf_editor_widget;
+    std::vector<float> tf;
 };
 
 

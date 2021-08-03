@@ -3,6 +3,7 @@
 //
 #include "SliceSettingWidget.hpp"
 #include "SliceRenderWidget.hpp"
+#include "tf1deditor.h"
 #include <iostream>
 
 #include <QPushButton>
@@ -104,6 +105,16 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->setStretchFactor(ud_layout,1);
 
     widget_layout->addWidget(slice_args);
+
+    tf_editor_widget=new TF1DEditor;
+    tf_editor_widget->setFixedHeight(300);
+    widget_layout->addWidget(tf_editor_widget);
+    tf.resize(256*4,0.f);
+    connect(tf_editor_widget,&TF1DEditor::TF1DChanged,[this](){
+        tf_editor_widget->getTransferFunction(tf.data(),256,1.0);
+        m_slice_render_widget->resetColorTable(tf.data(),256);
+        m_slice_render_widget->redraw();
+    });
 //    m_slice_setting_scroll_area=new QScrollArea(this);
 //    m_slice_setting_scroll_area->setWidget(slice_args);
 //    widget_layout->addWidget(m_slice_setting_scroll_area);

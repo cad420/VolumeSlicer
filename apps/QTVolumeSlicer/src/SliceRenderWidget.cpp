@@ -10,13 +10,23 @@
 #include <QMouseEvent>
 #include <QApplication>
 #include <QKeyEvent>
+#include <omp.h>
 SliceRenderWidget::SliceRenderWidget(QWidget *parent) {
+
     initTest();
+    color_image=QImage(slicer->GetImageW(),slicer->GetImageH(),QImage::Format_RGBA8888);
+    color_table.resize(256*4);
+    for(int i=0;i<256;i++){
+        color_table[i*4]=color_table[i*4+1]=color_table[i*4+2]=i/255.f;
+        color_table[i*4+3]=1.f;
+    }
 }
 
 void SliceRenderWidget::paintEvent(QPaintEvent *event) {
+
     std::cout<<"slice paint event"<<std::endl;
 //    std::cout<<__FUNCTION__ <<std::endl;
+    START_CPU_TIMER
     QPainter p(this);
     Frame frame;
     frame.width=slicer->GetImageW();
@@ -28,10 +38,22 @@ void SliceRenderWidget::paintEvent(QPaintEvent *event) {
     complete=volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
 
 
-    QImage image(frame.data.data(),frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
+//#pragma omp parallel for
+    for(int i=0;i<frame.width;i++){
+        for(int j=0;j<frame.height;j++){
+            size_t idx=(size_t)i*frame.width+j;
+            int scalar=frame.data[idx];
+            color_image.setPixelColor(j,frame.width-1-i,QColor(
+                    color_table[scalar*4]*255,color_table[scalar*4+1]*255,color_table[scalar*4+2]*255,255
+                    ));
+        }
+    }
+    p.drawImage(0,0,color_image);
 
-    p.drawPixmap(0,0,QPixmap::fromImage(image.mirrored(false,true)));
 
+//    QImage image(frame.data.data(),frame.width,frame.height,QImage::Format_Grayscale8);
+//    p.drawPixmap(0,0,QPixmap::fromImage(image.mirrored(false,true)));
+    END_CPU_TIMER
 }
 
 void SliceRenderWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -154,6 +176,7 @@ void SliceRenderWidget::initTest() {
     volume->SetSpaceX(0.00032f);
     volume->SetSpaceY(0.00032f);
     volume->SetSpaceZ(0.001f);
+    slicer->SetSliceSpaceRatio({1,1,0.001f/0.00032f});
     auto block_length=volume->GetBlockLength();
     std::cout<<"block length: "<<block_length[0]<<" "<<block_length[1]<<std::endl;
     auto block_dim=volume->GetBlockDim(0);
@@ -163,4 +186,8 @@ void SliceRenderWidget::initTest() {
 void SliceRenderWidget::redraw() {
     repaint();
     emit sliceModified();
+}
+
+void SliceRenderWidget::resetColorTable(float *tf, int dim) {
+    memcpy(color_table.data(),tf,dim*4*sizeof(float));
 }
