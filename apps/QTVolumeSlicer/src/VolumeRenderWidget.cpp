@@ -84,9 +84,12 @@ void VolumeRenderWidget::initTest() {
     slice.voxel_per_pixel_height=1.f;
     slice.voxel_per_pixel_width=1.f;
     slicer=Slicer::CreateSlicer(slice);
-    raw_volume=RawVolume::Load("E:\\mouse_23389_29581_10296_512_2_lod6/mouselod6_366_463_161_uint8.raw",
+    raw_volume=RawVolume::Load(
+            "E:\\mouse_23389_29581_10296_512_2_lod6/mouselod6_366_463_161_uint8.raw",
+//            "E:\\mouse_23389_29581_10296_512_2_lod5/mouselod5_731_925_322_uint8.raw",
                                VoxelType::UInt8,
                                {366,463,161},
+//            {731,925,322},
                                {0.01f,0.01f,0.03f});
     multi_volume_renderer=CreateRenderer(slice.n_pixels_width,slice.n_pixels_height);
     multi_volume_renderer->SetVolume(raw_volume);
@@ -140,4 +143,8 @@ auto VolumeRenderWidget::getRawVolume() -> const std::shared_ptr<RawVolume> & {
 void VolumeRenderWidget::setVisible(bool volume, bool slice) {
     multi_volume_renderer->SetVisible(volume,slice);
     redraw();
+}
+
+void VolumeRenderWidget::resetTransferFunc1D(float *data, int dim) {
+    multi_volume_renderer->SetTransferFunc1D(data,dim);
 }

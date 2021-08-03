@@ -542,7 +542,20 @@ void MultiVolumeRender::SetTransferFunction(TransferFunc &&tf) noexcept {
 
     GL_CHECK
 }
+void MultiVolumeRender::SetTransferFunc1D(float *tf,int dim) noexcept{
+    wglMakeCurrent(window_handle,gl_context);
+    if(!transfer_func_tex){
+        glGenTextures(1,&transfer_func_tex);
+        glBindTexture(GL_TEXTURE_1D,transfer_func_tex);
+//    glBindTextureUnit
+        glTexParameteri(GL_TEXTURE_1D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_1D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_1D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    }
+    glTextureSubImage1D(transfer_func_tex,0,0,256,GL_RGBA,GL_FLOAT,tf);
+    GL_CHECK
 
+}
 auto MultiVolumeRender::GetFrame() noexcept -> Frame {
     Frame frame;
     frame.width=window_width;
@@ -625,6 +638,8 @@ void MultiVolumeRender::setSlice() {
         }
     }
 }
+
+
 
 
 VS_END

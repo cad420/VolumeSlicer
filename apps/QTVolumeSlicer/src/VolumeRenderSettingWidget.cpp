@@ -4,10 +4,12 @@
 #include "VolumeRenderSettingWidget.hpp"
 #include "VolumeRenderWidget.hpp"
 #include "TransferFunctionWidget.hpp"
+#include "tf1deditor.h"
 #include <QVBoxLayout>
 #include <QCheckBox>
 #include <iostream>
 #include <QScrollArea>
+#include "TrivalVolume.hpp"
 
 VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget, QWidget *parent)
 :m_volume_render_widget(widget)
@@ -38,8 +40,23 @@ VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget,
 
     widget_layout->addLayout(visible_layout);
 
-    tf_widget=new TransferFunctionWidget();
-    widget_layout->addWidget(tf_widget);
+//    tf_widget=new TransferFunctionWidget();
+//    widget_layout->addWidget(tf_widget);
+
+    tf_editor_widget=new TF1DEditor();
+    auto raw_volume=m_volume_render_widget->getRawVolume();
+    trival_volume=std::make_unique<TrivalVolume>(raw_volume->GetData(),raw_volume->GetVolumeDimX(),
+                                                 raw_volume->GetVolumeDimY(),raw_volume->GetVolumeDimZ());
+    tf_editor_widget->setVolumeInformation(trival_volume.get());
+    tf_editor_widget->setFixedHeight(400);
+    tf.resize(256*4,0.f);
+    connect(tf_editor_widget,&TF1DEditor::TF1DChanged,[this](){
+        tf_editor_widget->getTransferFunction(tf.data(),256,1.0);
+        m_volume_render_widget->resetTransferFunc1D(tf.data(),256);
+        m_volume_render_widget->redraw();
+    });
+    widget_layout->addWidget(tf_editor_widget);
+
 
     this->setLayout(widget_layout);
 }

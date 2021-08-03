@@ -29,6 +29,8 @@ public:
 
     void SetTransferFunction(TransferFunc&& tf) noexcept override;
 
+    void SetTransferFunc1D(float* tf,int dim=256) noexcept override;
+
     void SetVolume(const std::shared_ptr<RawVolume>& volume) noexcept override;
 
     void ResetVolumeSpace(float x,float y,float z) noexcept override;

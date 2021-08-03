@@ -32,6 +32,8 @@ public:
 
     virtual void SetTransferFunction(TransferFunc&& tf) noexcept =0;
 
+    virtual void SetTransferFunc1D(float* data,int dim=256) noexcept = 0;
+
     //in general, volume data would not modify since loaded.
     //this function just load volume data upto GPU's texture once.
     virtual void SetVolume(const std::shared_ptr<T>& volume) noexcept =0;
