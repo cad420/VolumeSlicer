@@ -188,6 +188,7 @@ void MultiVolumeRender::bindTextureUnit() {
 }
 
 void MultiVolumeRender::render() noexcept {
+    wglMakeCurrent(window_handle,gl_context);
 //    spdlog::info("{0}",__FUNCTION__ );
     setSlice();
     bindTextureUnit();
@@ -269,11 +270,17 @@ void MultiVolumeRender::render() noexcept {
     }
     glBindFramebuffer(GL_FRAMEBUFFER,0);
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glEnable(GL_LINE_SMOOTH);
+    glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     volume_board_render_shader->use();
     volume_board_render_shader->setMat4("MVPMatrix",mvp);
+    glLineWidth(2);
     glBindVertexArray(volume_board_line_vao);
     glDrawElements(GL_LINES,24,GL_UNSIGNED_INT,0);
-
+    glDisable(GL_BLEND);
+    glDisable(GL_LINE_SMOOTH);
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 //    if(!volume_visible && !slice_visible){
 //        glBindFramebuffer(GL_FRAMEBUFFER,0);
