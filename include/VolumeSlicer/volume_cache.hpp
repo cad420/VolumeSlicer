@@ -71,7 +71,9 @@ public:
 
 class VS_EXPORT CPUVolumeBlockCache: public VolumeBlockCache{
 public:
+    static std::unique_ptr<CPUVolumeBlockCache> Create();
 
+//    virtual float Sample(uint32_t idx,double x,double y,double z);
 };
 VS_END
 
