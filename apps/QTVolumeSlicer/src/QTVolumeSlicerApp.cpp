@@ -157,8 +157,13 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_volume_setting_widget=new VolumeSettingWidget(m_slice_render_widget,
                                                     m_volume_render_widget,
                                                     this);
-
-
+    //if slice setting changed, notice slice render to emit and redraw
+    connect(m_slice_setting_widget,&SliceSettingWidget::sliceModified,[this](){
+       emit m_slice_render_widget->sliceModified();
+       m_slice_render_widget->redraw();
+    });
+    connect(m_slice_render_widget,&SliceRenderWidget::sliceModified,m_slice_setting_widget,
+            &SliceSettingWidget::updateSliceSettings);
 
 
     m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Panned"),this);
