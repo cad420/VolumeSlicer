@@ -27,6 +27,7 @@ public:
     void setSlicer(const std::shared_ptr<Slicer>&);
     auto getRawVolume()->const std::shared_ptr<RawVolume>&;
     void resetTransferFunc1D(float* data,int dim=256);
+    void loadVolume(const char*,const std::array<uint32_t,3>&,const std::array<float,3>&);
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -37,6 +38,7 @@ protected:
 public Q_SLOTS:
     void redraw();
     void setVisible(bool volume,bool slice);
+    void volumeLoaded();
 private:
     void initTest();
 private:

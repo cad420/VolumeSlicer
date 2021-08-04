@@ -44,12 +44,16 @@ VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget,
 //    widget_layout->addWidget(tf_widget);
 
     tf_editor_widget=new TF1DEditor();
+
     auto raw_volume=m_volume_render_widget->getRawVolume();
-    trival_volume=std::make_unique<TrivalVolume>(raw_volume->GetData(),raw_volume->GetVolumeDimX(),
-                                                 raw_volume->GetVolumeDimY(),raw_volume->GetVolumeDimZ());
-    tf_editor_widget->setVolumeInformation(trival_volume.get());
-    tf_editor_widget->setFixedHeight(400);
-    tf.resize(256*4,0.f);
+    if(raw_volume){
+        trival_volume=std::make_unique<TrivalVolume>(raw_volume->GetData(),raw_volume->GetVolumeDimX(),
+                                                     raw_volume->GetVolumeDimY(),raw_volume->GetVolumeDimZ());
+        tf_editor_widget->setVolumeInformation(trival_volume.get());
+        tf_editor_widget->setFixedHeight(400);
+        tf.resize(256*4,0.f);
+    }
+
     connect(tf_editor_widget,&TF1DEditor::TF1DChanged,[this](){
         tf_editor_widget->getTransferFunction(tf.data(),256,1.0);
         m_volume_render_widget->resetTransferFunc1D(tf.data(),256);
@@ -59,4 +63,14 @@ VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget,
 
 
     this->setLayout(widget_layout);
+}
+void VolumeRenderSettingWidget::volumeLoaded() {
+    auto raw_volume=m_volume_render_widget->getRawVolume();
+    if(raw_volume){
+        trival_volume=std::make_unique<TrivalVolume>(raw_volume->GetData(),raw_volume->GetVolumeDimX(),
+                                                     raw_volume->GetVolumeDimY(),raw_volume->GetVolumeDimZ());
+        tf_editor_widget->setVolumeInformation(trival_volume.get());
+        tf_editor_widget->setFixedHeight(400);
+        tf.resize(256*4,0.f);
+    }
 }

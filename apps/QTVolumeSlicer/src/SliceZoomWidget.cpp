@@ -13,6 +13,7 @@ SliceZoomWidget::SliceZoomWidget(QWidget *parent) {
 }
 
 void SliceZoomWidget::paintEvent(QPaintEvent *event) {
+    if(!slicer || !max_zoom_slicer || !raw_volume || ! raw_volume_sampler) return;
     QPainter p(this);
     Frame frame;
     frame.width=max_zoom_slicer->GetImageW();
@@ -46,6 +47,8 @@ void SliceZoomWidget::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
+    if(!slicer) return;
+
     this->slicer=slicer;
     auto slice=this->slicer->GetSlice();
     slice.origin={slice.origin[0]/64,slice.origin[1]/64,slice.origin[2]/64};
@@ -209,6 +212,10 @@ void SliceZoomWidget::setRawVolume(const std::shared_ptr<RawVolume>& raw_volume)
 
 void SliceZoomWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
+}
+
+void SliceZoomWidget::volumeLoaded() {
+
 }
 
 

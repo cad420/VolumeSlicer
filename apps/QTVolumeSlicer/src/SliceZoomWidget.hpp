@@ -22,6 +22,7 @@ private:
     void drawSliceLine( QImage& image);
 public Q_SLOTS:
     void redraw();
+    void volumeLoaded();
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

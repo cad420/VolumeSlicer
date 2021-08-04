@@ -16,6 +16,8 @@ class VolumeRenderSettingWidget: public QWidget{
 public:
     explicit VolumeRenderSettingWidget(VolumeRenderWidget* widget,QWidget* parent= nullptr);
 
+public Q_SLOTS:
+    void volumeLoaded();
 private:
     VolumeRenderWidget* m_volume_render_widget;
     TransferFunctionWidget* tf_widget;

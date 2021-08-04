@@ -11,11 +11,11 @@
 #include <QMouseEvent>
 #include "camera.hpp"
 VolumeRenderWidget::VolumeRenderWidget(QWidget *parent) {
-    initTest();
-
+//    initTest();
 }
 
 void VolumeRenderWidget::paintEvent(QPaintEvent *event) {
+    if(!slicer || !dummy_slicer || ! raw_volume ) return;
     QPainter p(this);
     multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->render();
@@ -30,6 +30,7 @@ void VolumeRenderWidget::paintEvent(QPaintEvent *event) {
 }
 
 void VolumeRenderWidget::mouseMoveEvent(QMouseEvent *event) {
+    if(!trackball_camera) return;
     trackball_camera->processMouseMove(event->pos().x(),event->pos().y());
     auto pos=trackball_camera->getCameraPos();
     auto lookat=trackball_camera->getCameraLookAt();
@@ -43,6 +44,7 @@ void VolumeRenderWidget::mouseMoveEvent(QMouseEvent *event) {
 
 void VolumeRenderWidget::wheelEvent(QWheelEvent *event) {
     setFocus();
+    if(!trackball_camera) return;
     trackball_camera->processMouseScroll(event->angleDelta().y());
     auto pos=trackball_camera->getCameraPos();
     auto lookat=trackball_camera->getCameraLookAt();
@@ -56,6 +58,7 @@ void VolumeRenderWidget::wheelEvent(QWheelEvent *event) {
 
 void VolumeRenderWidget::mousePressEvent(QMouseEvent *event) {
     setFocus();
+    if(!trackball_camera) return;
     trackball_camera->processMouseButton(control::CameraDefinedMouseButton::Left,
                                          true,
                                          event->position().x(),
@@ -65,12 +68,59 @@ void VolumeRenderWidget::mousePressEvent(QMouseEvent *event) {
 }
 
 void VolumeRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
+    if(!trackball_camera) return;
     trackball_camera->processMouseButton(control::CameraDefinedMouseButton::Left,
                                          false,
                                          event->position().x(),
                                          event->position().y());
     event->accept();
     repaint();
+}
+void VolumeRenderWidget::loadVolume(const char * path,
+                                    const std::array<uint32_t,3>& dim,
+                                    const std::array<float,3>& space) {
+    Slice slice;
+    slice.origin={128.f,128.f,128.f,1.f};
+    slice.right={1.f,0.f,0.f,0.f};
+    slice.up={0.f,1.f,-1.f,0.f};
+    slice.normal={0.f,1.f,1.f,0.f};
+    slice.n_pixels_width=400;
+    slice.n_pixels_height=400;
+    slice.voxel_per_pixel_height=1.f;
+    slice.voxel_per_pixel_width=1.f;
+    slicer=Slicer::CreateSlicer(slice);
+    raw_volume=RawVolume::Load(
+            path,
+            VoxelType::UInt8,
+            dim,
+            space);
+    multi_volume_renderer=CreateRenderer(slice.n_pixels_width,slice.n_pixels_height);
+    multi_volume_renderer->SetVolume(raw_volume);
+//    multi_volume_renderer->SetSlicer(slicer);
+
+    TransferFunc tf;
+    tf.points.emplace_back(0,std::array<double,4>{0.0,0.0,0.0,0.0});
+    tf.points.emplace_back(114,std::array<double,4>{0.5,0.25,0.11,0.0});
+    tf.points.emplace_back(165,std::array<double,4>{0.5,0.25,0.11,0.6});
+    tf.points.emplace_back(216,std::array<double,4>{0.5,0.25,0.11,0.3});
+    tf.points.emplace_back(255,std::array<double,4>{0.0,0.0,0.0,0.0});
+    multi_volume_renderer->SetTransferFunction(std::move(tf));
+
+    base_camera=std::make_unique<vs::Camera>();
+    base_camera->pos={1.83f,2.315f,2.415f+6.f};
+    base_camera->up={0.f,1.f,0.f};
+    base_camera->look_at={1.83f,2.315f,2.415f};
+    base_camera->zoom=60.f;
+    base_camera->n=0.01f;
+    base_camera->f=20.f;
+    multi_volume_renderer->SetCamera(*base_camera);
+    multi_volume_renderer->SetVisible(true,true);
+    this->trackball_camera=std::make_unique<control::TrackBallCamera>(
+            3.f,slice.n_pixels_width,slice.n_pixels_height,
+            glm::vec3{1.83f,2.315f,2.415f}
+    );
+
+    redraw();
 }
 
 void VolumeRenderWidget::initTest() {
@@ -120,6 +170,7 @@ void VolumeRenderWidget::initTest() {
 }
 
 void VolumeRenderWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
+    if(!slicer) return;
     this->slicer=slicer;
     auto slice=this->slicer->GetSlice();
     slice.origin={slice.origin[0]/64,slice.origin[1]/64,slice.origin[2]/64};
@@ -128,10 +179,10 @@ void VolumeRenderWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
     this->dummy_slicer=Slicer::CreateSlicer(slice);
     multi_volume_renderer->SetSlicer(dummy_slicer);
 
-
 }
 
 void VolumeRenderWidget::redraw() {
+    if(!slicer) return;
     setSlicer(this->slicer);
     repaint();
 }
@@ -141,18 +192,21 @@ auto VolumeRenderWidget::getRawVolume() -> const std::shared_ptr<RawVolume> & {
 }
 
 void VolumeRenderWidget::setVisible(bool volume, bool slice) {
+    if(!multi_volume_renderer) return;
     multi_volume_renderer->SetVisible(volume,slice);
     redraw();
 }
 
 void VolumeRenderWidget::resetTransferFunc1D(float *data, int dim) {
+    if(!multi_volume_renderer) return;
     multi_volume_renderer->SetTransferFunc1D(data,dim);
 }
 
-void VolumeRenderWidget::loadVolume(const char * path) {
-
-}
 
 void VolumeRenderWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
+}
+
+void VolumeRenderWidget::volumeLoaded() {
+
 }

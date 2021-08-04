@@ -39,9 +39,20 @@ VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
     initTest();
 }
 void VolumeSlicerMainWindow::open(const std::string &file_name) {
-    if(file_name.empty())
-        return ;
-
+    this->m_slice_render_widget->loadVolume(
+            "E:/MouseNeuronData/mouse_file_config.json",
+            {0.00032f,0.00032f,0.001f}
+    );
+    this->m_volume_render_widget->loadVolume(
+            "E:\\mouse_23389_29581_10296_512_2_lod6/mouselod6_366_463_161_uint8.raw",
+            {366,463,161},{0.01f,0.01f,0.03f}
+            );
+    m_volume_render_widget->setSlicer(m_slice_render_widget->getSlicer());
+    m_slice_zoom_widget->setRawVolume(m_volume_render_widget->getRawVolume());
+    m_slice_zoom_widget->setSlicer(m_slice_render_widget->getSlicer());
+    m_volume_setting_widget->volumeLoaded();
+    m_volume_render_setting_widget->volumeLoaded();
+    m_slice_setting_widget->volumeLoaded();
 }
 void VolumeSlicerMainWindow::createMenu() {
     m_file_menu=menuBar()->addMenu("File");
@@ -184,11 +195,15 @@ void VolumeSlicerMainWindow::createWidgets() {
     splitDockWidget(m_setting_dock_widget,m_slice_render_dock_widget,Qt::Horizontal);
 
 
-    m_volume_render_widget->setSlicer(m_slice_render_widget->getSlicer());
+    {
+//        m_volume_render_widget->setSlicer(m_slice_render_widget->getSlicer());
+//        m_slice_zoom_widget->setRawVolume(m_volume_render_widget->getRawVolume());
+//        m_slice_zoom_widget->setSlicer(m_slice_render_widget->getSlicer());
+    }
+
     connect(m_slice_render_widget,&SliceRenderWidget::sliceModified,m_volume_render_widget,
             &VolumeRenderWidget::redraw);
-    m_slice_zoom_widget->setRawVolume(m_volume_render_widget->getRawVolume());
-    m_slice_zoom_widget->setSlicer(m_slice_render_widget->getSlicer());
+
     connect(m_slice_render_widget,&SliceRenderWidget::sliceModified,m_slice_zoom_widget,
             &SliceZoomWidget::redraw);
 }

@@ -25,10 +25,12 @@ public:
 
 public:
     void initTest();
+    bool loadVolume(const char* file_path,const std::array<float,3>&);
     auto getCompVolume()->std::shared_ptr<CompVolume>;
 Q_SIGNALS:
     void sliceModified();
-
+public Q_SLOTS:
+    void volumeLoaded();
 public :
     void redraw();
     void resetColorTable(float*,int dim=256);

@@ -103,3 +103,6 @@ QWidget(parent)
     widget_layout->addWidget(raw_volume_group_box);
     this->setLayout(widget_layout);
 }
+void VolumeSettingWidget::volumeLoaded() {
+    //todo
+}

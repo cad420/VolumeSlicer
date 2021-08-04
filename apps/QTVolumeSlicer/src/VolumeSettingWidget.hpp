@@ -15,7 +15,8 @@ public:
     explicit VolumeSettingWidget(SliceRenderWidget* sliceRenderWidget,
                                  VolumeRenderWidget* volumeRenderWidget,
                                  QWidget* parent= nullptr);
-
+public Q_SLOTS:
+    void volumeLoaded();
 private:
     SliceRenderWidget* m_slice_render_widget;
     VolumeRenderWidget* m_volume_render_widget;

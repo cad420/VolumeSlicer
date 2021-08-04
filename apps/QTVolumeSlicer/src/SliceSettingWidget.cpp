@@ -44,13 +44,15 @@ last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
     origin_z_spin_box->setSingleStep(0.001);
     {
         auto comp_volume=m_slice_render_widget->getCompVolume();
-        origin_x_spin_box->setMaximum(volume_board_x=(space_x=comp_volume->GetVolumeSpaceX())*comp_volume->GetVolumeDimX());
-        origin_y_spin_box->setMaximum(volume_board_y=(space_y=comp_volume->GetVolumeSpaceY())*comp_volume->GetVolumeDimY());
-        origin_z_spin_box->setMaximum(volume_board_z=(space_z=comp_volume->GetVolumeSpaceZ())*comp_volume->GetVolumeDimZ());
-        float base_ratio=std::min({space_x,space_y,space_z});
-        space_ratio_x=space_x/base_ratio;
-        space_ratio_y=space_y/base_ratio;
-        space_ratio_z=space_z/base_ratio;
+        if(comp_volume){
+            origin_x_spin_box->setMaximum(volume_board_x=(space_x=comp_volume->GetVolumeSpaceX())*comp_volume->GetVolumeDimX());
+            origin_y_spin_box->setMaximum(volume_board_y=(space_y=comp_volume->GetVolumeSpaceY())*comp_volume->GetVolumeDimY());
+            origin_z_spin_box->setMaximum(volume_board_z=(space_z=comp_volume->GetVolumeSpaceZ())*comp_volume->GetVolumeDimZ());
+            float base_ratio=std::min({space_x,space_y,space_z});
+            space_ratio_x=space_x/base_ratio;
+            space_ratio_y=space_y/base_ratio;
+            space_ratio_z=space_z/base_ratio;
+        }
     }
     connect(origin_x_spin_box,&QDoubleSpinBox::valueChanged,[this](){
         if(update) return;
@@ -444,6 +446,7 @@ last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
 }
 void SliceSettingWidget::updateSliceSettings(bool slice_update) {
     spdlog::info("update slice settings.");
+    if(!slicer) return;
     this->update=slice_update;
     updateOrigin();
     updateOffset();
@@ -529,4 +532,17 @@ void SliceSettingWidget::initRotation() {
     this->fb_spin_box->setValue(0.0);
     this->ud_horizontal_slider->setValue(50);
     this->ud_spin_box->setValue(0.0);
+}
+void SliceSettingWidget::volumeLoaded() {
+    auto comp_volume=m_slice_render_widget->getCompVolume();
+    if(comp_volume){
+        origin_x_spin_box->setMaximum(volume_board_x=(space_x=comp_volume->GetVolumeSpaceX())*comp_volume->GetVolumeDimX());
+        origin_y_spin_box->setMaximum(volume_board_y=(space_y=comp_volume->GetVolumeSpaceY())*comp_volume->GetVolumeDimY());
+        origin_z_spin_box->setMaximum(volume_board_z=(space_z=comp_volume->GetVolumeSpaceZ())*comp_volume->GetVolumeDimZ());
+        float base_ratio=std::min({space_x,space_y,space_z});
+        space_ratio_x=space_x/base_ratio;
+        space_ratio_y=space_y/base_ratio;
+        space_ratio_z=space_z/base_ratio;
+    }
+    this->slicer=m_slice_render_widget->getSlicer();
 }
