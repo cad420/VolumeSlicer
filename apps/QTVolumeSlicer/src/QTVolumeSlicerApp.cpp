@@ -159,11 +159,18 @@ void VolumeSlicerMainWindow::createWidgets() {
                                                     this);
     //if slice setting changed, notice slice render to emit and redraw
     connect(m_slice_setting_widget,&SliceSettingWidget::sliceModified,[this](){
-       emit m_slice_render_widget->sliceModified();
-       m_slice_render_widget->redraw();
+//       emit m_slice_render_widget->sliceModified();//m_slice_setting_widget will receive this signal
+//       std::async(std::launch::async,&SliceRenderWidget::redraw,m_slice_render_widget);
+//       std::async(std::launch::async,&SliceZoomWidget::redraw,m_slice_zoom_widget);
+//       std::async(std::launch::async,&VolumeRenderWidget::redraw,m_volume_render_widget);
+        m_slice_render_widget->redraw();
+        m_volume_render_widget->redraw();
+        m_slice_zoom_widget->redraw();
     });
-    connect(m_slice_render_widget,&SliceRenderWidget::sliceModified,m_slice_setting_widget,
-            &SliceSettingWidget::updateSliceSettings);
+    connect(m_slice_render_widget,&SliceRenderWidget::sliceModified,[this](){
+        spdlog::info("slice render widget emit sliceModify.");
+        m_slice_setting_widget->updateSliceSettings(true);
+    });
 
 
     m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Panned"),this);
@@ -209,6 +216,7 @@ void VolumeSlicerMainWindow::paintEvent(QPaintEvent* event) {
 //    auto pix=QPixmap::fromImage(image.mirrored(false,true));
 //    auto w=pix.width();
 //    p.drawPixmap(0,0,pix);
+    event->accept();
 
 }
 void VolumeSlicerMainWindow::drawVolume() {
@@ -235,6 +243,7 @@ void VolumeSlicerMainWindow::wheelEvent(QWheelEvent *event) {
 //    }
 //    event->accept();
 //    repaint();
+    event->accept();
 }
 void VolumeSlicerMainWindow::mousePressEvent(QMouseEvent *event) {
 
@@ -243,6 +252,7 @@ void VolumeSlicerMainWindow::mousePressEvent(QMouseEvent *event) {
 //    last_pos=event->pos();
 //    event->accept();
 //    repaint();
+    event->accept();
 }
 void VolumeSlicerMainWindow::mouseMoveEvent(QMouseEvent *event) {
 //    if(left_mouse_button_pressed){

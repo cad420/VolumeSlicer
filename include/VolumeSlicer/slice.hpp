@@ -56,6 +56,18 @@ public:
 
     virtual void RotateByZ(float)=0;
 
+    virtual void NormalX() = 0;
+
+    virtual void NormalY() = 0;
+
+    virtual void NormalZ() =0;
+
+    virtual void NormalIncreaseX(float) = 0;
+
+    virtual void NormalIncreaseY(float) = 0;
+
+    virtual void NormalIncreaseZ(float) = 0;
+
     virtual void MoveByNormal(float dist)=0;
 
     virtual void MoveInPlane(float offsetX,float offsetY)=0;

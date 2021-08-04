@@ -55,7 +55,10 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
     float d2=glm::dot(_normal,_right);
     float d3=glm::dot(_up,_right);
     if(d1>FLOAT_ZERO || d2>FLOAT_ZERO || d3>FLOAT_ZERO){
-        spdlog::error("normal right up are not all dot equal zero.");
+        spdlog::error("normal right up are not all dot equal zero:{0} {1} {2}.",d1,d2,d3);
+        spdlog::error("normal:{0} {1} {2}.",normal[0],normal[1],normal[2]);
+        spdlog::error("up:{0} {1} {2}.",up[0],up[1],up[2]);
+        spdlog::error("right:{0} {1} {2}.",right[0],right[1],right[2]);
         return false;
     }
     return true;
@@ -104,6 +107,162 @@ void SlicerImpl::RotateByZ(float degree) {
     trans=glm::rotate(trans,degree,this->normal);
     this->up=trans*glm::vec4(this->up,0.f);
     this->right=trans*glm::vec4(this->right,0.f);
+    SetStatus(true);
+}
+
+void SlicerImpl::NormalX() {
+    glm::mat4 trans(1.0);
+    glm::vec3 x={1.f,0.f,0.f};
+    if(glm::length(x-this->normal)<0.0001f) return;
+    glm::vec3 axis=glm::normalize(glm::cross(x,this->normal));
+    float degree=-glm::acos(glm::dot(x,this->normal));
+    trans=glm::rotate(trans,degree,axis);
+    this->up=trans*glm::vec4(this->up,0.f);
+    this->right=trans*glm::vec4(this->right,0.f);
+    this->normal=x;
+    SetStatus(true);
+}
+
+void SlicerImpl::NormalY() {
+    glm::mat4 trans(1.0);
+    glm::vec3 x={0.f,1.f,0.f};
+    if(glm::length(x-this->normal)<0.0001f) return;
+    glm::vec3 axis=glm::normalize(glm::cross(x,this->normal));
+    float degree=-glm::acos(glm::dot(x,this->normal));
+    trans=glm::rotate(trans,degree,axis);
+    this->up=trans*glm::vec4(this->up,0.f);
+    this->right=trans*glm::vec4(this->right,0.f);
+    this->normal=x;
+    SetStatus(true);
+}
+
+void SlicerImpl::NormalZ() {
+    glm::mat4 trans(1.0);
+    glm::vec3 x={0.f,0.f,1.f};
+    if(glm::length(x-this->normal)<0.0001f) return;
+    glm::vec3 axis=glm::normalize(glm::cross(x,this->normal));
+    float degree=-glm::acos(glm::dot(x,this->normal));
+    trans=glm::rotate(trans,degree,axis);
+    this->up=trans*glm::vec4(this->up,0.f);
+    this->right=trans*glm::vec4(this->right,0.f);
+    this->normal=x;
+    SetStatus(true);
+}
+
+void SlicerImpl::NormalIncreaseX(float d) {
+    float x0=this->normal.x;
+    float y0=this->normal.y;
+    float z0=this->normal.z;
+    float x1=this->normal.x+d;
+    float y1,z1;
+    if(x1 >  1.0) x1 =  1.0;
+    if(x1 < -1.0) x1 = -1.0;
+    if(std::abs(x1-x0)<0.0001f) return;
+    // x0*x0 + y0*y0 + z0*z0 = 1
+    // x1*x1 + y1*y1 + z1*z1 = 1
+    // t = y0/z0 = y1/z1
+    // x1*x1 + t*t*z1*z1 + z1*z1 = 1
+    // (1+t*t)*z1*z1 = 1 - x1*x1
+    // z1*z1 = (1 - x1*x1) / (1 + t*t)
+    if(std::abs(z0)>0.0001f){
+        float t=y0/z0;
+        z1=std::sqrt((1-x1*x1)/(1+t*t));
+        y1=z1*t;
+    }
+    else if(std::abs(y0)>0.0001f){
+        float t=z0/y0;
+        y1=std::sqrt((1-x1*x1)/(1+t*t));
+        z1=y1*t;
+    }
+    else{
+        z1=y1=std::sqrt((1-x1*x1)/2.f);
+    }
+
+    glm::mat4 trans(1.0);
+    glm::vec3 x={x1,y1,z1};
+    if(glm::length(x-this->normal)<0.0001f) return;
+    glm::vec3 axis=glm::normalize(glm::cross(x,this->normal));
+    float degree=-glm::acos(glm::dot(x,this->normal));
+    trans=glm::rotate(trans,degree,axis);
+    this->up=trans*glm::vec4(this->up,0.f);
+    this->right=trans*glm::vec4(this->right,0.f);
+    this->normal=x;
+    IsValidSlice(GetSlice());
+    SetStatus(true);
+
+}
+
+void SlicerImpl::NormalIncreaseY(float d) {
+    float x0=this->normal.x;
+    float y0=this->normal.y;
+    float z0=this->normal.z;
+    float y1=this->normal.y+d;
+    float x1,z1;
+    if(y1 >  1.0) y1 =  1.0;
+    if(y1 < -1.0) y1 = -1.0;
+    if(std::abs(y1-y0)<0.0001f) return;
+
+    if(std::abs(z0)>0.0001f){
+        float t=x0/z0;
+        z1=std::sqrt((1-y1*y1)/(1+t*t));
+        x1=z1*t;
+    }
+    else if(std::abs(x0)>0.0001f){
+        float t=z0/x0;
+        x1=std::sqrt((1-y1*y1)/(1+t*t));
+        z1=x1*t;
+    }
+    else{
+        z1=x1=std::sqrt((1-y1*y1)/2.f);
+    }
+
+    glm::mat4 trans(1.0);
+    glm::vec3 x={x1,y1,z1};
+    if(glm::length(x-this->normal)<0.0001f) return;
+    glm::vec3 axis=glm::normalize(glm::cross(x,this->normal));
+    float degree=-glm::acos(glm::dot(x,this->normal));
+    trans=glm::rotate(trans,degree,axis);
+    this->up=trans*glm::vec4(this->up,0.f);
+    this->right=trans*glm::vec4(this->right,0.f);
+    this->normal=x;
+
+    SetStatus(true);
+}
+
+void SlicerImpl::NormalIncreaseZ(float d) {
+    float x0=this->normal.x;
+    float y0=this->normal.y;
+    float z0=this->normal.z;
+    float z1=this->normal.z+d;
+    float x1,y1;
+    if(z1 >  1.0) z1 =  1.0;
+    if(z1 < -1.0) z1 = -1.0;
+    if(std::abs(z1-z0)<0.0001f) return;
+
+    if(std::abs(x0)>0.0001f){
+        float t=y0/x0;
+        x1=std::sqrt((1-z1*z1)/(1+t*t));
+        y1=x1*t;
+    }
+    else if(std::abs(y0)>0.0001f){
+        float t=x0/y0;
+        y1=std::sqrt((1-z1*z1)/(1+t*t));
+        x1=y1*t;
+    }
+    else{
+        x1=y1=std::sqrt((1-z1*z1)/2.f);
+    }
+
+    glm::mat4 trans(1.0);
+    glm::vec3 x={x1,y1,z1};
+    if(glm::length(x-this->normal)<0.0001f) return;
+    glm::vec3 axis=glm::normalize(glm::cross(x,this->normal));
+    float degree=-glm::acos(glm::dot(x,this->normal));
+    trans=glm::rotate(trans,degree,axis);
+    this->up=trans*glm::vec4(this->up,0.f);
+    this->right=trans*glm::vec4(this->right,0.f);
+    this->normal=x;
+
     SetStatus(true);
 }
 

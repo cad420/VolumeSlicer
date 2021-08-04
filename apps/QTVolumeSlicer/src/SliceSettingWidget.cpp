@@ -15,7 +15,9 @@
 
 
 SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *parent)
-: m_slice_render_widget(widget)
+: m_slice_render_widget(widget),update(false),
+last_lr_slider_value(50),last_fb_slider_value(50),last_ud_slider_value(50),
+last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
 {
     auto widget_layout=new QVBoxLayout;
 
@@ -30,12 +32,16 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->addWidget(origin_label);
     groupbox_layout->setStretchFactor(origin_label,1);
 
+
     origin_x_spin_box=new QDoubleSpinBox;
     origin_y_spin_box=new QDoubleSpinBox;
     origin_z_spin_box=new QDoubleSpinBox;
-    origin_x_spin_box->setSingleStep(0.01);
-    origin_y_spin_box->setSingleStep(0.01);
-    origin_z_spin_box->setSingleStep(0.01);
+    origin_x_spin_box->setDecimals(3);
+    origin_y_spin_box->setDecimals(3);
+    origin_z_spin_box->setDecimals(3);
+    origin_x_spin_box->setSingleStep(0.001);
+    origin_y_spin_box->setSingleStep(0.001);
+    origin_z_spin_box->setSingleStep(0.001);
     {
         auto comp_volume=m_slice_render_widget->getCompVolume();
         origin_x_spin_box->setMaximum(volume_board_x=(space_x=comp_volume->GetVolumeSpaceX())*comp_volume->GetVolumeDimX());
@@ -47,6 +53,7 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
         space_ratio_z=space_z/base_ratio;
     }
     connect(origin_x_spin_box,&QDoubleSpinBox::valueChanged,[this](){
+        if(update) return;
        auto slice=slicer->GetSlice();
        slice.origin[0]=origin_x_spin_box->value()/space_x;
        slicer->SetSlice(slice);
@@ -54,6 +61,7 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
        emit sliceModified();
     });
     connect(origin_y_spin_box,&QDoubleSpinBox::valueChanged,[this](){
+        if(update) return;
         auto slice=slicer->GetSlice();
         slice.origin[1]=origin_y_spin_box->value()/space_y;
         slicer->SetSlice(slice);
@@ -61,6 +69,7 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
         emit sliceModified();
     });
     connect(origin_z_spin_box,&QDoubleSpinBox::valueChanged,[this](){
+        if(update) return;
         auto slice=slicer->GetSlice();
         slice.origin[2]=origin_z_spin_box->value()/space_z;
         slicer->SetSlice(slice);
@@ -92,6 +101,29 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->addWidget(rotation_label);
     groupbox_layout->setStretchFactor(rotation_label,1);
 
+    auto normal_label=new QLabel("Normal");
+
+    normal_x_spin_box=new QDoubleSpinBox;
+    normal_y_spin_box=new QDoubleSpinBox;
+    normal_z_spin_box=new QDoubleSpinBox;
+
+    normal_x_spin_box->setRange(-1.0,1.0);
+    normal_y_spin_box->setRange(-1.0,1.0);
+    normal_z_spin_box->setRange(-1.0,1.0);
+    normal_x_spin_box->setDecimals(3);
+    normal_y_spin_box->setDecimals(3);
+    normal_z_spin_box->setDecimals(3);
+    normal_x_spin_box->setSingleStep(0.1);
+    normal_y_spin_box->setSingleStep(0.1);
+    normal_z_spin_box->setSingleStep(0.1);
+
+    auto normal_layout=new QHBoxLayout;
+    normal_layout->addWidget(normal_label);
+    normal_layout->addWidget(normal_x_spin_box);
+    normal_layout->addWidget(normal_y_spin_box);
+    normal_layout->addWidget(normal_z_spin_box);
+    groupbox_layout->addLayout(normal_layout);
+
     auto reset_label=new QLabel("Reset Normal");
     auto reset_combobox=new QComboBox;
     reset_combobox->addItem("x-axis");
@@ -108,10 +140,12 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->setStretchFactor(reset_layout,1);
 
     auto lr_label=new QLabel("LR");
-    auto lr_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
-    auto lr_spin_box=new QDoubleSpinBox();
-    lr_spin_box->setMinimum(-180.0);
-    lr_spin_box->setMaximum(180.0);
+    lr_label->setFixedWidth(20);
+    lr_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
+    lr_horizontal_slider->setRange(0,100);
+    lr_horizontal_slider->setValue(50);
+    lr_spin_box=new QDoubleSpinBox();
+    lr_spin_box->setRange(-180.0,180);
     auto lr_layout=new QHBoxLayout;
     lr_layout->addWidget(lr_label);
     lr_layout->addWidget(lr_horizontal_slider);
@@ -120,8 +154,12 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->setStretchFactor(lr_layout,1);
 
     auto fb_label=new QLabel("FB");
-    auto fb_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
-    auto fb_spin_box=new QDoubleSpinBox();
+    fb_label->setFixedWidth(20);
+    fb_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
+    fb_horizontal_slider->setRange(0,100);
+    fb_horizontal_slider->setValue(50);
+    fb_spin_box=new QDoubleSpinBox();
+    fb_spin_box->setRange(-180.0,180);
     auto fb_layout=new QHBoxLayout;
     fb_layout->addWidget(fb_label);
     fb_layout->addWidget(fb_horizontal_slider);
@@ -130,8 +168,12 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->setStretchFactor(fb_layout,1);
 
     auto ud_label=new QLabel("UD");
-    auto ud_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
-    auto ud_spin_box=new QDoubleSpinBox();
+    ud_label->setFixedWidth(20);
+    ud_horizontal_slider=new QSlider(Qt::Orientation::Horizontal);
+    ud_horizontal_slider->setRange(0,100);
+    ud_horizontal_slider->setValue(50);
+    ud_spin_box=new QDoubleSpinBox();
+    ud_spin_box->setRange(-180.0,180.0);
     auto ud_layout=new QHBoxLayout;
     ud_layout->addWidget(ud_label);
     ud_layout->addWidget(ud_horizontal_slider);
@@ -139,6 +181,7 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
     groupbox_layout->addLayout(ud_layout);
     groupbox_layout->setStretchFactor(ud_layout,1);
 
+    slice_args->setFixedHeight(500);
     widget_layout->addWidget(slice_args);
 
     tf_editor_widget=new TF1DEditor;
@@ -155,9 +198,9 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
 //    widget_layout->addWidget(m_slice_setting_scroll_area);
     this->setLayout(widget_layout);
     this->slicer=m_slice_render_widget->getSlicer();
-    updateSliceSettings();
+    updateSliceSettings(false);
     connect(offset_horizontal_slider,&QSlider::valueChanged,[this](){
-
+        if(update) return;
         spdlog::info("QSlider value changed:{0}.",offset_horizontal_slider->value());
         spdlog::info("last slider value:{0}.",last_slider_value);
         spdlog::info("last offset length:{0}.",last_offset_length);
@@ -172,11 +215,17 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
                       slice.origin[2]+delta_offset*last_slice_normal[2]/space_z};
 
         slicer->SetSlice(slice);
-        updateOffset();
+
+
+//        updateOffset();
+        last_slider_value=cur_slider_value;
+        last_origin_offset=(cur_slider_value)/100.0*last_offset_length;
+        this->offset_spin_box->setValue(last_origin_offset);
+
         emit sliceModified();
     });
     connect(offset_spin_box,&QDoubleSpinBox::valueChanged,[this](){
-
+        if(update) return;
         auto slice=slicer->GetSlice();
         float cur_offset=offset_spin_box->value();
         float delta_offset=cur_offset-last_origin_offset;
@@ -185,55 +234,222 @@ SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *paren
                       slice.origin[1]+delta_offset*last_slice_normal[1]/space_y,
                       slice.origin[2]+delta_offset*last_slice_normal[2]/space_z};
         slicer->SetSlice(slice);
-        updateOffset();
+
+//        updateOffset();
+        last_origin_offset=cur_offset;
+        last_slider_value=cur_offset/last_offset_length*100;
+        this->offset_horizontal_slider->setValue(last_slider_value);
+
         emit sliceModified();
     });
+    //normal x
+    connect(normal_x_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+
+        this->slicer->NormalIncreaseX(value-last_normal_x);
+
+        this->update=true;
+        initRotation();
+        updateNormal();
+        updateOffset();
+        this->update=false;
+
+        emit sliceModified();
+    });
+    //normal y
+    connect(normal_y_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+       if(update) return;
+        this->slicer->NormalIncreaseY(value-last_normal_y);
+
+        this->update=true;
+        initRotation();
+        updateNormal();
+        updateOffset();
+        this->update=false;
+
+        emit sliceModified();
+    });
+    //normal z
+    connect(normal_z_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+
+        this->slicer->NormalIncreaseZ(value-last_normal_z);
+
+        this->update=true;
+        initRotation();
+        updateNormal();
+        updateOffset();
+        this->update=false;
+
+        emit sliceModified();
+    });
+
     //reset button
     connect(reset_button,&QPushButton::clicked,[reset_combobox,this](){
-        //todo
         auto item=reset_combobox->currentText().toStdString();
         if(item=="x-axis"){
-
+            slicer->NormalX();
         }
         else if(item=="y-axis"){
-
+            slicer->NormalY();
         }
         else if(item=="z-axis"){
-
+            slicer->NormalZ();
         }
         updateNormal();
+        initRotation();
         emit sliceModified();
     });
-    connect(lr_horizontal_slider,&QSlider::valueChanged,[lr_horizontal_slider,this](int value){
-        //todo
-        double v=value/100.0*360.0-180.0;
-//        std::cout<<v<<std::endl;
-//        lr_spin_box->setValue(v);
-        m_slice_render_widget->redraw();
+
+    //lr
+    //lr slider
+    connect(lr_horizontal_slider,&QSlider::valueChanged,[this](int value){
+        if(update) return;
+        if(value==last_lr_slider_value ) return;
+
+        double delta_degree=((value-last_lr_slider_value)*3.6)*3.141592627/180.0;
+        spdlog::info("last:{1}, cur:{2}, lr delta degree: {0}.",delta_degree,last_lr_slider_value,value);
+        this->slicer->RotateByX(delta_degree);
+
+//        updateRotation();
+        last_lr_slider_value=value;
+
+        last_fb_slider_value=50;
+        fb_horizontal_slider->setValue(last_fb_slider_value);
+        last_ud_slider_value=50;
+        ud_horizontal_slider->setValue(last_ud_slider_value);
+        last_fb_spin_value=0.0;
+        fb_spin_box->setValue(last_fb_spin_value);
+        last_ud_spin_value=0.0;
+        ud_spin_box->setValue(last_ud_spin_value);
+
+        last_lr_spin_value=value*3.6-180.0;
+        lr_spin_box->setValue(last_lr_spin_value);
+
+        this->update=true;
+        updateNormal();
+        updateOffset();
+        this->update=false;
+
+        emit sliceModified();
     });
-    connect(lr_spin_box,&QDoubleSpinBox::valueChanged,[lr_spin_box,this](double value){
+    //lr spin box
+    connect(lr_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+        if(std::abs(last_lr_spin_value-value)<0.0001) return;
 
+        last_lr_spin_value=value;
+
+        lr_horizontal_slider->setValue((value+180.0)/3.6);
+
+        this->update=true;
+        updateNormal();
+        updateOffset();
+        this->update=false;
     });
 
-    connect(fb_horizontal_slider,&QSlider::valueChanged,[fb_horizontal_slider,this](int value){
+    //fb
+    //fb slider
+    connect(fb_horizontal_slider,&QSlider::valueChanged,[this](int value){
+        if(update) return;
+        if(value==last_fb_slider_value) return;
+
+        double delta_degree=((value-last_fb_slider_value)*3.6)*3.141592627/180.0;
+
+        this->slicer->RotateByY(delta_degree);
+
+
+        last_fb_slider_value=value;
+
+        last_lr_slider_value=50;
+        lr_horizontal_slider->setValue(last_lr_slider_value);
+        last_ud_slider_value=50;
+        ud_horizontal_slider->setValue(last_ud_slider_value);
+        last_lr_spin_value=0.0;
+        lr_spin_box->setValue(last_lr_spin_value);
+        last_ud_spin_value=0.0;
+        ud_spin_box->setValue(last_ud_spin_value);
+
+        last_fb_spin_value=value*3.6-180.0;
+        fb_spin_box->setValue(last_fb_spin_value);
+
+        this->update=true;
+        updateNormal();
+        updateOffset();
+        this->update=false;
+
+        emit sliceModified();
 
     });
-    connect(fb_spin_box,&QDoubleSpinBox::valueChanged,[fb_spin_box,this](double value){
+    //fb spin box
+    connect(fb_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+        if(std::abs(last_fb_spin_value-value)<0.0001) return;
 
+        last_fb_spin_value=value;
+
+        fb_horizontal_slider->setValue((value+180.0)/3.6);
+
+        this->update=true;
+        updateNormal();
+        updateOffset();
+        this->update=false;
     });
 
-    connect(ud_horizontal_slider,&QSlider::valueChanged,[ud_horizontal_slider,this](int value){
+    //ud
+    //ud slider
+    connect(ud_horizontal_slider,&QSlider::valueChanged,[this](int value){
+        if(update) return;
+        if(value==last_ud_slider_value) return;
 
+        double delta_degree=((value-last_ud_slider_value)*3.6)*3.141592627/180.0;
+
+        this->slicer->RotateByZ(delta_degree);
+
+        last_ud_slider_value=value;
+
+        last_lr_slider_value=50;
+        lr_horizontal_slider->setValue(last_lr_slider_value);
+        last_fb_slider_value=50;
+        fb_horizontal_slider->setValue(last_fb_slider_value);
+        last_fb_spin_value=0.0;
+        fb_spin_box->setValue(last_fb_spin_value);
+        last_ud_spin_value=0.0;
+        ud_spin_box->setValue(last_ud_spin_value);
+
+        last_ud_spin_value=value*3.6-180;
+        ud_spin_box->setValue(last_ud_spin_value);
+
+        this->update=true;
+        updateNormal();
+        updateOffset();
+        this->update=false;
+
+        emit sliceModified();
     });
-    connect(ud_spin_box,&QDoubleSpinBox::valueChanged,[ud_spin_box,this](double value){
+    //ud spin box
+    connect(ud_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+        if(std::abs(last_ud_spin_value-value)<0.0001) return;
 
+        last_ud_spin_value=value;
+
+        ud_horizontal_slider->setValue((value+180.0)/3.6);
+
+        this->update=true;
+        updateNormal();
+        updateOffset();
+        this->update=false;
     });
 }
-void SliceSettingWidget::updateSliceSettings() {
+void SliceSettingWidget::updateSliceSettings(bool slice_update) {
     spdlog::info("update slice settings.");
+    this->update=slice_update;
     updateOrigin();
     updateOffset();
     updateNormal();
+    updateRotation();
+    this->update=false;
 }
 
 void SliceSettingWidget::updateOrigin() {
@@ -290,6 +506,27 @@ void SliceSettingWidget::updateOffset() {
 }
 
 void SliceSettingWidget::updateNormal() {
-
+    auto slice=slicer->GetSlice();
+    auto normal=slice.normal;
+    this->normal_x_spin_box->setValue(normal[0]);
+    this->normal_y_spin_box->setValue(normal[1]);
+    this->normal_z_spin_box->setValue(normal[2]);
+    last_normal_x=normal[0];
+    last_normal_y=normal[1];
+    last_normal_z=normal[2];
 }
 
+void SliceSettingWidget::updateRotation() {
+    if(update) {
+        initRotation();
+        return;
+    }
+}
+void SliceSettingWidget::initRotation() {
+    this->lr_horizontal_slider->setValue(50);
+    this->lr_spin_box->setValue(0.0);
+    this->fb_horizontal_slider->setValue(50);
+    this->fb_spin_box->setValue(0.0);
+    this->ud_horizontal_slider->setValue(50);
+    this->ud_spin_box->setValue(0.0);
+}

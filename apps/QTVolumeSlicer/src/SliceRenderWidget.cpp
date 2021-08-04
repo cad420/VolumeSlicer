@@ -104,7 +104,7 @@ void SliceRenderWidget::mousePressEvent(QMouseEvent *event) {
     last_pos=event->pos();
     event->accept();
     repaint();
-    emit sliceModified();
+//    emit sliceModified();
 }
 
 void SliceRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
@@ -121,7 +121,7 @@ void SliceRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
     }
     event->accept();
     repaint();
-    emit sliceModified();
+//    emit sliceModified();
 }
 
 void SliceRenderWidget::keyPressEvent(QKeyEvent *event) {
@@ -185,7 +185,7 @@ void SliceRenderWidget::initTest() {
 
 void SliceRenderWidget::redraw() {
     repaint();
-    emit sliceModified();
+//    emit sliceModified();
 }
 
 void SliceRenderWidget::resetColorTable(float *tf, int dim) {

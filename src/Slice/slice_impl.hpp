@@ -31,6 +31,18 @@ public:
 
     void RotateByZ(float degree) override;
 
+    void NormalX() override;
+
+    void NormalY() override;
+
+    void NormalZ() override;
+
+    void NormalIncreaseX(float) override;
+
+    void NormalIncreaseY(float) override;
+
+    void NormalIncreaseZ(float) override;
+
     void MoveByNormal(float dist) override;
 
     void MoveInPlane(float offsetX,float offsetY) override;

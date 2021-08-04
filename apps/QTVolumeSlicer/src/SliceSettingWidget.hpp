@@ -25,13 +25,15 @@ Q_SIGNALS:
     void sliceModified();
 
 public Q_SLOTS:
-    void updateSliceSettings();
+    void updateSliceSettings(bool slice_update);
 private:
     void updateOrigin();
     void updateOffset();
     void updateNormal();
-
+    void updateRotation();
+    void initRotation();
 private:
+    bool update;
     QDoubleSpinBox* origin_x_spin_box ;
     QDoubleSpinBox* origin_y_spin_box ;
     QDoubleSpinBox* origin_z_spin_box ;
@@ -41,6 +43,28 @@ private:
     std::array<float,3> last_slice_normal;
     float last_offset_length;
     float last_origin_offset;
+
+    QDoubleSpinBox* normal_x_spin_box;
+    QDoubleSpinBox* normal_y_spin_box;
+    QDoubleSpinBox* normal_z_spin_box;
+    double last_normal_x;
+    double last_normal_y;
+    double last_normal_z;
+
+    QSlider* lr_horizontal_slider;
+    QDoubleSpinBox* lr_spin_box;
+    int last_lr_slider_value;
+    double last_lr_spin_value;
+
+    QSlider* fb_horizontal_slider;
+    QDoubleSpinBox* fb_spin_box;
+    int last_fb_slider_value;
+    double last_fb_spin_value;
+
+    QSlider* ud_horizontal_slider;
+    QDoubleSpinBox* ud_spin_box;
+    int last_ud_slider_value;
+    double last_ud_spin_value;
 
     QScrollArea* m_slice_setting_scroll_area;
     SliceRenderWidget* m_slice_render_widget;
