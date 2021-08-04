@@ -146,6 +146,15 @@ void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
     this->max_zoom_slicer=Slicer::CreateSlicer(slice);
 }
 void SliceZoomWidget::drawSliceLine( QImage& image) {
+
+    static float space_x=this->raw_volume->GetVolumeSpaceX();
+    static float space_y=this->raw_volume->GetVolumeSpaceY();
+    static float space_z=this->raw_volume->GetVolumeSpaceZ();
+    static float base_space=std::min({space_x,space_y,space_z});
+    static float space_ratio_x=space_x/base_space;
+    static float space_ratio_y=space_y/base_space;
+    static float space_ratio_z=space_z/base_space;
+
     auto slice=slicer->GetSlice();
     assert(slice.voxel_per_pixel_height==slice.voxel_per_pixel_width);
     float p=slice.voxel_per_pixel_height/64.f;
@@ -155,30 +164,33 @@ void SliceZoomWidget::drawSliceLine( QImage& image) {
     glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
 //    float x_t=std::abs(glm::dot(right,{1,1,3}));
 //    float y_t=std::abs(glm::dot(up,{1,1,3}));
-    glm::vec3 offset={slice.origin[0]/64.f-max_zoom_slice.origin[0],
-                      slice.origin[1]/64.f-max_zoom_slice.origin[1],
-                      slice.origin[2]/64.f-max_zoom_slice.origin[2]};
+    glm::vec3 offset={(slice.origin[0]/64.f-max_zoom_slice.origin[0])*space_ratio_x,
+                      (slice.origin[1]/64.f-max_zoom_slice.origin[1])*space_ratio_y,
+                      (slice.origin[2]/64.f-max_zoom_slice.origin[2])*space_ratio_z};
+
     float x_offset=glm::dot(right,offset);
     float y_offset=-glm::dot(up,offset);
-    uint32_t min_p_x=x_offset/max_zoom_slice.voxel_per_pixel_width
+    int min_p_x=x_offset/max_zoom_slice.voxel_per_pixel_width
             + max_zoom_slice.n_pixels_width/2 - slice.n_pixels_width/2*p/max_zoom_slice.voxel_per_pixel_width;
-    uint32_t min_p_y=y_offset/max_zoom_slice.voxel_per_pixel_height
+    int min_p_y=y_offset/max_zoom_slice.voxel_per_pixel_height
             + max_zoom_slice.n_pixels_height/2 - slice.n_pixels_height/2*p/max_zoom_slice.voxel_per_pixel_width;
-    uint32_t max_p_x=x_offset/max_zoom_slice.voxel_per_pixel_width
+    int max_p_x=x_offset/max_zoom_slice.voxel_per_pixel_width
             + max_zoom_slice.n_pixels_width/2 + slice.n_pixels_width/2*p/max_zoom_slice.voxel_per_pixel_width;
-    uint32_t max_p_y=y_offset/max_zoom_slice.voxel_per_pixel_height
+    int max_p_y=y_offset/max_zoom_slice.voxel_per_pixel_height
             + max_zoom_slice.n_pixels_height/2 + slice.n_pixels_height/2*p/max_zoom_slice.voxel_per_pixel_width;
     spdlog::info("min_x:{0}, min_y:{1}, max_x:{2}, max_y{3}.",min_p_x,min_p_y,max_p_x,max_p_y);
-    if(min_p_x>=0 && max_p_x<max_zoom_slice.n_pixels_width)
-        for(auto i=min_p_x;i<=max_p_x;i++){
-            image.setPixelColor(i,min_p_y,QColor(255,0,0,255));
-            image.setPixelColor(i,max_p_y,QColor(255,0,0,255));
-        }
-    if(min_p_y>=0 && max_p_y<max_zoom_slice.n_pixels_height)
-        for(auto i=min_p_y;i<=max_p_y;i++){
-            image.setPixelColor(min_p_x,i,QColor(255,0,0,255));
-            image.setPixelColor(max_p_x,i,QColor(255,0,0,255));
-        }
+    min_p_x=min_p_x<0?0:min_p_x;
+    max_p_x=max_p_x<max_zoom_slice.n_pixels_width?max_p_x:max_zoom_slice.n_pixels_width-1;
+    min_p_y=min_p_y<0?0:min_p_y;
+    max_p_y=max_p_y<max_zoom_slice.n_pixels_height?max_p_y:max_zoom_slice.n_pixels_height-1;
+    for(auto i=min_p_x;i<=max_p_x;i++){
+        image.setPixelColor(i,min_p_y,QColor(255,0,0,255));
+        image.setPixelColor(i,max_p_y,QColor(255,0,0,255));
+    }
+    for(auto i=min_p_y;i<=max_p_y;i++){
+        image.setPixelColor(min_p_x,i,QColor(255,0,0,255));
+        image.setPixelColor(max_p_x,i,QColor(255,0,0,255));
+    }
 }
 void SliceZoomWidget::redraw() {
     setSlicer(this->slicer);
