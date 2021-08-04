@@ -207,4 +207,8 @@ void SliceZoomWidget::setRawVolume(const std::shared_ptr<RawVolume>& raw_volume)
     this->raw_volume=raw_volume;
 }
 
+void SliceZoomWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+}
+
 

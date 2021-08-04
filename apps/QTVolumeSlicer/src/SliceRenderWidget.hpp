@@ -39,7 +39,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
-
+    void resizeEvent(QResizeEvent *event) override;
 private:
     std::shared_ptr<Slicer> slicer;
     std::shared_ptr<CompVolume> volume;

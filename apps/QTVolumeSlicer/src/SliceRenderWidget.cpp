@@ -195,3 +195,10 @@ void SliceRenderWidget::resetColorTable(float *tf, int dim) {
 auto SliceRenderWidget::getCompVolume() -> std::shared_ptr<CompVolume> {
     return this->volume;
 }
+
+void SliceRenderWidget::resizeEvent(QResizeEvent *event) {
+
+    QWidget::resizeEvent(event);
+}
+
+

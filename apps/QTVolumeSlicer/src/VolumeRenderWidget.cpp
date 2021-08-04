@@ -148,3 +148,11 @@ void VolumeRenderWidget::setVisible(bool volume, bool slice) {
 void VolumeRenderWidget::resetTransferFunc1D(float *data, int dim) {
     multi_volume_renderer->SetTransferFunc1D(data,dim);
 }
+
+void VolumeRenderWidget::loadVolume(const char * path) {
+
+}
+
+void VolumeRenderWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+}

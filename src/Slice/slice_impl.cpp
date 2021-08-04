@@ -315,6 +315,13 @@ void SlicerImpl::SetSliceSpaceRatio(const std::array<float, 3> &ratio) {
     spdlog::info("set slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
 }
 
+void SlicerImpl::resize(int w,int h) {
+    if(w<0 || h<0) return;
+    n_pixels_width=w;
+    n_pixels_height=h;
+    SetStatus(true);
+}
+
 
     std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
 try{

@@ -81,6 +81,8 @@ public:
 
     virtual uint32_t GetImageH() const=0;
 
+    virtual void resize(int w,int h) = 0;
+
     virtual Slice GetSlice() const=0;
 };
 

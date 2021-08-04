@@ -55,6 +55,8 @@ public:
 
     uint32_t GetImageH() const override;
 
+    void resize(int w,int h) override;
+
     Slice GetSlice() const override;
 
 public:

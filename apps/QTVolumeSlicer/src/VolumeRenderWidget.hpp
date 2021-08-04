@@ -33,6 +33,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 public Q_SLOTS:
     void redraw();
     void setVisible(bool volume,bool slice);
