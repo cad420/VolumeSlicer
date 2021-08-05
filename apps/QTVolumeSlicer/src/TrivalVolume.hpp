@@ -50,7 +50,6 @@ public:
     const void * data()const;
     const VolumeFormat & format()const;
     void blend(int xpos, int ypos, int zpos,void * data, size_t xlen, size_t ylen, size_t zlen,VolumeFormat sourceVolumeFormat)=delete;
-    virtual ~TrivalVolume();
 private:
     void calcIsoStat();
     template<typename T>
@@ -77,7 +76,6 @@ inline int TrivalVolume::yLength() const { return m_ySize; }
 inline int TrivalVolume::zLength() const { return m_zSize; }
 inline const void * TrivalVolume::data() const { return m_data.get(); }
 inline const VolumeFormat & TrivalVolume::format()const { return m_fmt; }
-inline TrivalVolume::~TrivalVolume() {}
 
 
 inline TrivalVolume::TrivalVolume(const void * data, size_t xSize, size_t ySize, size_t zSize, const VolumeFormat& fmt) :
@@ -172,15 +170,6 @@ inline void TrivalVolume::calcIsoStat()
 {
     memset(m_isoStat.get(), 0, sizeof(double) * 256);
 
-//    for(int i = 0; i < m_zSize; ++i) {
-//        for(int j = 0; j < m_ySize; ++j) {
-//            for(int k = 0; k < m_xSize; ++k) {
-//                const int index = i * m_xSize * m_ySize + j * m_xSize + k;
-//                const int value = m_data.get()[index];
-//                m_isoStat[value] += 1.0;
-//            }
-//        }
-//    }
     int size=m_zSize*m_ySize*m_xSize;
     for(int i=0;i<size;i++){
         m_isoStat[m_data.get()[i]]+=1.0;
@@ -189,7 +178,6 @@ inline void TrivalVolume::calcIsoStat()
     m_maxIsoValue = m_isoStat[0];
     for (int i = 1; i < 256; ++i){
         m_maxIsoValue = std::max(m_maxIsoValue, m_isoStat[i]);
-        std::cout<<i<<" "<<m_isoStat[i]<<std::endl;
     }
 }
 #endif //VOLUMESLICER_TRIVALVOLUME_HPP

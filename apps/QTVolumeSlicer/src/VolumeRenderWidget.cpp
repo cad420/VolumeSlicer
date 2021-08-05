@@ -79,8 +79,9 @@ void VolumeRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
 void VolumeRenderWidget::loadVolume(const char * path,
                                     const std::array<uint32_t,3>& dim,
                                     const std::array<float,3>& space) {
+    PrintCUDAMemInfo("before raw volume load");
     raw_volume=RawVolume::Load(path,VoxelType::UInt8,dim,space);
-
+    PrintCUDAMemInfo("after raw volume load");
 //    Slice slice;
 //    slice.origin={raw_volume->GetVolumeDimX()/2.f,
 //                  raw_volume->GetVolumeDimY()/2.f,
@@ -94,8 +95,7 @@ void VolumeRenderWidget::loadVolume(const char * path,
 //    slice.voxel_per_pixel_width=1.f;
 //    slicer=Slicer::CreateSlicer(slice);
 
-    multi_volume_renderer=CreateRenderer(this->width(),this->height());
-    multi_volume_renderer->SetVolume(raw_volume);
+
 //    multi_volume_renderer->SetSlicer(slicer);
 
     TransferFunc tf;
@@ -104,7 +104,7 @@ void VolumeRenderWidget::loadVolume(const char * path,
 //    tf.points.emplace_back(165,std::array<double,4>{0.5,0.25,0.11,0.6});
 //    tf.points.emplace_back(216,std::array<double,4>{0.5,0.25,0.11,0.3});
     tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,1.0,1.0});
-    multi_volume_renderer->SetTransferFunction(std::move(tf));
+
 
     this->trackball_camera=std::make_unique<control::TrackBallCamera>(
             raw_volume->GetVolumeDimZ()*raw_volume->GetVolumeSpaceZ()/2.f,
@@ -134,8 +134,7 @@ void VolumeRenderWidget::loadVolume(const char * path,
     multi_volume_renderer->SetTransferFunction(std::move(tf));
     multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->SetVisible(true,true);
-
-
+    PrintCUDAMemInfo("after multi_volume_renderer create");
     redraw();
 }
 

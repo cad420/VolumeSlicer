@@ -12,7 +12,7 @@
 #include <QScrollArea>
 #include <QLabel>
 #include <QtWidgets>
-
+#include <VolumeSlicer/utils.hpp>
 
 SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *parent)
 : m_slice_render_widget(widget),update(false),
@@ -534,6 +534,7 @@ void SliceSettingWidget::initRotation() {
     this->ud_spin_box->setValue(0.0);
 }
 void SliceSettingWidget::volumeLoaded() {
+    PrintCUDAMemInfo("before SliceSettingWidget::volumeLoaded");
     auto comp_volume=m_slice_render_widget->getCompVolume();
     if(comp_volume){
         origin_x_spin_box->setMaximum(volume_board_x=(space_x=comp_volume->GetVolumeSpaceX())*comp_volume->GetVolumeDimX());

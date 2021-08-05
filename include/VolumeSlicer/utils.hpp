@@ -15,8 +15,11 @@
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
 #include<iostream>
+#include<VolumeSlicer/cuda_context.hpp>
 VS_START
 
+#define PrintCUDAMemInfo(string) \
+spdlog::info("{0} CUDA free mem: {1:.2f}, used mem: {2:.2f}",string,(GetCUDAFreeMem()/1024/1024)/1024.0,(GetCUDAUsedMem()/1024/1024)/1024.0)
 
 template<typename T>
 class ConcurrentQueue

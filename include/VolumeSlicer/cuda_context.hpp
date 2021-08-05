@@ -32,6 +32,15 @@ inline void SetCUDACtx(CUdevice d){
 inline CUcontext GetCUDACtx(){
     return Singleton<CUDACtx>::get()->GetCUDACtx();
 }
-
+inline size_t GetCUDAFreeMem(){
+    size_t free,total;
+    cudaMemGetInfo(&free,&total);
+    return free;
+}
+inline size_t GetCUDAUsedMem(){
+    size_t free,total;
+    cudaMemGetInfo(&free,&total);
+    return total-free;
+}
 
 #endif //VOLUMESLICER_CUDA_CONTEXT_HPP

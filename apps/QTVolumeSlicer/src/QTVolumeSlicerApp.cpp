@@ -43,6 +43,7 @@ VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
     createToolBar();
 }
 void VolumeSlicerMainWindow::open(const std::string &file_name) {
+    PrintCUDAMemInfo("start open");
     json j;
     std::ifstream in(file_name);
     if(!in.is_open()){
@@ -58,10 +59,12 @@ void VolumeSlicerMainWindow::open(const std::string &file_name) {
         float space_y=comp_volume_space.at(1);
         float space_z=comp_volume_space.at(2);
 
+        PrintCUDAMemInfo("in open before load comp volume");
         this->m_slice_render_widget->loadVolume(
                 comp_volume_path.c_str(),
                 {space_x,space_y,space_z}
         );
+        PrintCUDAMemInfo("in open after load comp volume");
 
         auto raw_volume_info=j["raw_volume"];
         std::string raw_volume_path=raw_volume_info.at("raw_volume_path");
@@ -73,22 +76,31 @@ void VolumeSlicerMainWindow::open(const std::string &file_name) {
         space_x=raw_volume_space.at(0);
         space_y=raw_volume_space.at(1);
         space_z=raw_volume_space.at(2);
+
+        PrintCUDAMemInfo("in open before load raw volume");
         this->m_volume_render_widget->loadVolume(
                 raw_volume_path.c_str(),
                 {dim_x,dim_y,dim_z},{space_x,space_y,space_z}
         );
+        PrintCUDAMemInfo("in open after load raw volume");
     }
     catch (const std::exception& err) {
         QMessageBox::critical(NULL,"Error","Config file format error!",QMessageBox::Yes);
     }
 
-
+    PrintCUDAMemInfo("after open comp and raw volume");
     m_volume_render_widget->setSlicer(m_slice_render_widget->getSlicer());
+    PrintCUDAMemInfo("after m_volume_render_widget setSlicer");
     m_slice_zoom_widget->setRawVolume(m_volume_render_widget->getRawVolume());
+    PrintCUDAMemInfo("after m_slice_zoom_widget setRawVolume");
     m_slice_zoom_widget->setSlicer(m_slice_render_widget->getSlicer());
+    PrintCUDAMemInfo("after m_slice_zoom_widget setSlicer");
     m_volume_setting_widget->volumeLoaded();
+    PrintCUDAMemInfo("after m_volume_setting_widget volumeLoaded");
     m_volume_render_setting_widget->volumeLoaded();
+    PrintCUDAMemInfo("after m_volume_render_setting_widget volumeLoaded");
     m_slice_setting_widget->volumeLoaded();
+    PrintCUDAMemInfo("after m_slice_setting_widget volumeLoaded");
 }
 void VolumeSlicerMainWindow::createMenu() {
     m_file_menu=menuBar()->addMenu("File");
@@ -96,8 +108,20 @@ void VolumeSlicerMainWindow::createMenu() {
     m_file_menu->addAction(m_open_action);
     m_file_menu->addSeparator();
 
-    m_file_menu->addAction(tr("Close"),this,[](){
-        std::cout<<"Close"<<std::endl;
+    m_file_menu->addAction(tr("Close"),this,[this](){
+        PrintCUDAMemInfo("start close");
+        m_slice_render_widget->volumeClose();
+        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+        m_volume_render_widget->volumeClose();
+        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+        m_slice_zoom_widget->volumeClose();
+        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+        m_slice_setting_widget->volumeClose();
+        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+        m_volume_render_setting_widget->volumeClose();
+        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+        m_volume_setting_widget->volumeClose();
+        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
     });
     m_view_menu=menuBar()->addMenu("View");
 

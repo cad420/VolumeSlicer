@@ -10,7 +10,7 @@
 #include <iostream>
 #include <QScrollArea>
 #include "TrivalVolume.hpp"
-
+#include <VolumeSlicer/utils.hpp>
 VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget, QWidget *parent)
 :m_volume_render_widget(widget)
 {
@@ -65,6 +65,7 @@ VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget,
     this->setLayout(widget_layout);
 }
 void VolumeRenderSettingWidget::volumeLoaded() {
+    PrintCUDAMemInfo("before VolumeRenderSettingWidget::volumeLoaded");
     auto raw_volume=m_volume_render_widget->getRawVolume();
     if(raw_volume){
         trival_volume=std::make_unique<TrivalVolume>(raw_volume->GetData(),raw_volume->GetVolumeDimX(),
@@ -73,6 +74,7 @@ void VolumeRenderSettingWidget::volumeLoaded() {
         tf_editor_widget->setFixedHeight(400);
         tf.resize(256*4,0.f);
     }
+    PrintCUDAMemInfo("after VolumeRenderSettingWidget::volumeLoaded");
 }
 void VolumeRenderSettingWidget::volumeClose() {
     spdlog::info("{0}.",__FUNCTION__ );

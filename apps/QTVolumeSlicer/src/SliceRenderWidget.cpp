@@ -17,7 +17,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent) {
 
 void SliceRenderWidget::paintEvent(QPaintEvent *event) {
 
-    std::cout<<"slice paint event"<<std::endl;
+//    std::cout<<"slice paint event"<<std::endl;
     if(!slicer || !volume || !volume_sampler) return;
     START_CPU_TIMER
     QPainter p(this);
@@ -158,8 +158,13 @@ std::shared_ptr<Slicer> SliceRenderWidget::getSlicer() {
 bool SliceRenderWidget::loadVolume(const char *file_path,const std::array<float,3>& space) {
     SetCUDACtx(0);
 
+    PrintCUDAMemInfo("before comp volume load");
     volume=CompVolume::Load(file_path);
+    PrintCUDAMemInfo("after comp volume load");
+
+    PrintCUDAMemInfo("before comp volume sampler create");
     volume_sampler=VolumeSampler::CreateVolumeSampler(volume);
+    PrintCUDAMemInfo("after comp volume sampler create");
     volume->SetSpaceX(space[0]);
     volume->SetSpaceY(space[1]);
     volume->SetSpaceZ(space[2]);

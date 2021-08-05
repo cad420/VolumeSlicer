@@ -130,13 +130,13 @@ void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
                 }
             }
         }
-        std::cout<<"intersect pts cnt: "<<intersect_pts_cnt<<std::endl;
+//        std::cout<<"intersect pts cnt: "<<intersect_pts_cnt<<std::endl;
         intersect_pts={intersect_pts[0]/intersect_pts_cnt,
                        intersect_pts[1]/intersect_pts_cnt,
                        intersect_pts[2]/intersect_pts_cnt};
-        std::cout<<"intersect pt pos: "<<intersect_pts[0]<<" "
-                                       <<intersect_pts[1]<<" "
-                                       <<intersect_pts[2]<<std::endl;
+//        std::cout<<"intersect pt pos: "<<intersect_pts[0]<<" "
+//                                       <<intersect_pts[1]<<" "
+//                                       <<intersect_pts[2]<<std::endl;
         slice.origin={intersect_pts[0],
                       intersect_pts[1],
                       intersect_pts[2],1.f};
@@ -161,7 +161,7 @@ void SliceZoomWidget::drawSliceLine( QImage& image) {
     auto slice=slicer->GetSlice();
     assert(slice.voxel_per_pixel_height==slice.voxel_per_pixel_width);
     float p=slice.voxel_per_pixel_height/64.f;
-    std::cout<<image.width()<<" "<<image.height()<<std::endl;
+//    std::cout<<image.width()<<" "<<image.height()<<std::endl;
     auto max_zoom_slice=max_zoom_slicer->GetSlice();
     glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
     glm::vec3 up={slice.up[0],slice.up[1],slice.up[2]};
