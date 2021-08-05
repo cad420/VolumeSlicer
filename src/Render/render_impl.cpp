@@ -128,6 +128,8 @@ void MultiVolumeRender::resize(int w, int h) noexcept{
         MoveWindow(window,0,0,w,h,false);
         this->window_width=w;
         this->window_height=h;
+        glViewport(0,0,w,h);
+        setPosFrameBuffer();
     }
 }
 
@@ -431,6 +433,14 @@ void MultiVolumeRender::setVisibleBoard() {
 
 void MultiVolumeRender::setPosFrameBuffer() {
     wglMakeCurrent(window_handle,gl_context);
+
+    glDeleteFramebuffers(1,&raycast_pos_fbo);
+    glDeleteRenderbuffers(1,&raycast_pos_rbo);
+    glDeleteTextures(1,&raycast_entry_pos_tex);
+    glDeleteTextures(1,&raycast_exit_pos_tex);
+    glDeleteTextures(1,&slice_color_tex);
+    glDeleteTextures(1,&slice_pos_tex);
+
     glGenFramebuffers(1,&raycast_pos_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER,raycast_pos_fbo);
 

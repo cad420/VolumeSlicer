@@ -110,9 +110,9 @@ void SliceRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
     }
     else if(event->button()==Qt::MouseButton::RightButton){
         right_mouse_button_pressed=false;
-        auto cur_pos=event->pos();
-        auto delta=last_pos-cur_pos;
-        slicer->RotateByZ(90.0/180.0*3.141592627);
+//        auto cur_pos=event->pos();
+//        auto delta=last_pos-cur_pos;
+//        slicer->RotateByZ(90.0/180.0*3.141592627);
 //        slicer->RotateByY(delta.y());
     }
     event->accept();
@@ -213,8 +213,16 @@ auto SliceRenderWidget::getCompVolume() -> std::shared_ptr<CompVolume> {
 }
 
 void SliceRenderWidget::resizeEvent(QResizeEvent *event) {
-
-    QWidget::resizeEvent(event);
+    if(!volume || ! volume_sampler || !slicer) return;
+    slicer->resize(event->size().width(),event->size().height());
+    color_image=QImage(slicer->GetImageW(),slicer->GetImageH(),QImage::Format_RGBA8888);
+    color_table.resize(256*4);
+    for(int i=0;i<256;i++){
+        color_table[i*4]=color_table[i*4+1]=color_table[i*4+2]=i/255.f;
+        color_table[i*4+3]=1.f;
+    }
+    emit sliceModified();
+//    QWidget::resizeEvent(event);
 }
 
 void SliceRenderWidget::volumeLoaded() {

@@ -174,7 +174,14 @@ void VolumeRenderWidget::resetTransferFunc1D(float *data, int dim) {
 
 
 void VolumeRenderWidget::resizeEvent(QResizeEvent *event) {
-    QWidget::resizeEvent(event);
+
+
+    if(!multi_volume_renderer) return;
+
+    multi_volume_renderer->resize(event->size().width(),event->size().height());
+    this->trackball_camera->setScreenSize(event->size().width(),event->size().height());
+
+//    QWidget::resizeEvent(event);
 }
 
 void VolumeRenderWidget::volumeLoaded() {

@@ -206,7 +206,12 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_volume_render_dock_widget->setWidget(m_volume_render_widget);
     m_volume_render_dock_widget->setAllowedAreas( Qt::RightDockWidgetArea | Qt::TopDockWidgetArea);
     m_volume_render_dock_widget->setMinimumSize(400,400);
-    m_volume_render_dock_widget->setMaximumSize(400,400);
+    m_volume_render_dock_widget->setMaximumSize(900,900);
+//    QSizePolicy qsp(QSizePolicy::Preferred,QSizePolicy::Preferred);
+//    qsp.setHeightForWidth(true);
+//    m_volume_render_widget->setSizePolicy(qsp);
+//    m_volume_render_dock_widget->setSizePolicy(qsp);
+
     addDockWidget(Qt::RightDockWidgetArea,m_volume_render_dock_widget);
     m_view_menu->addAction(m_volume_render_dock_widget->toggleViewAction());
 
