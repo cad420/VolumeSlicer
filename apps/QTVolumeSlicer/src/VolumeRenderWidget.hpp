@@ -40,8 +40,6 @@ public Q_SLOTS:
     void setVisible(bool volume,bool slice);
     void volumeLoaded();
 private:
-    void initTest();
-private:
     std::shared_ptr<Slicer> slicer;
     std::shared_ptr<Slicer> dummy_slicer;
     std::shared_ptr<RawVolume> raw_volume;

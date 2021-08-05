@@ -13,13 +13,6 @@
 #include <omp.h>
 SliceRenderWidget::SliceRenderWidget(QWidget *parent) {
 
-//    initTest();
-//    color_image=QImage(slicer->GetImageW(),slicer->GetImageH(),QImage::Format_RGBA8888);
-//    color_table.resize(256*4);
-//    for(int i=0;i<256;i++){
-//        color_table[i*4]=color_table[i*4+1]=color_table[i*4+2]=i/255.f;
-//        color_table[i*4+3]=1.f;
-//    }
 }
 
 void SliceRenderWidget::paintEvent(QPaintEvent *event) {
@@ -162,30 +155,6 @@ std::shared_ptr<Slicer> SliceRenderWidget::getSlicer() {
     return this->slicer;
 }
 
-void SliceRenderWidget::initTest() {
-    Slice slice;
-    slice.origin={9765.f,8434.f,4500.f,1.f};
-    slice.right={1.f,0.f,0.f,0.f};
-    slice.up={0.f,0.f,-1.f,0.f};
-    slice.normal={0.f,1.f,0.f,0.f};
-    slice.n_pixels_width=900;
-    slice.n_pixels_height=900;
-    slice.voxel_per_pixel_height=2.f;
-    slice.voxel_per_pixel_width=2.f;
-    slicer=Slicer::CreateSlicer(slice);
-
-    SetCUDACtx(0);
-    volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
-    volume_sampler=VolumeSampler::CreateVolumeSampler(volume);
-    volume->SetSpaceX(0.00032f);
-    volume->SetSpaceY(0.00032f);
-    volume->SetSpaceZ(0.001f);
-    slicer->SetSliceSpaceRatio({1,1,0.001f/0.00032f});
-    auto block_length=volume->GetBlockLength();
-    std::cout<<"block length: "<<block_length[0]<<" "<<block_length[1]<<std::endl;
-    auto block_dim=volume->GetBlockDim(0);
-    std::cout<<"block dim: "<<block_dim[0]<<" "<<block_dim[1]<<" "<<block_dim[2]<<std::endl;
-}
 bool SliceRenderWidget::loadVolume(const char *file_path,const std::array<float,3>& space) {
     SetCUDACtx(0);
 

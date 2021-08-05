@@ -24,7 +24,6 @@ public:
     std::shared_ptr<Slicer> getSlicer();
 
 public:
-    void initTest();
     bool loadVolume(const char* file_path,const std::array<float,3>&);
     auto getCompVolume()->std::shared_ptr<CompVolume>;
 Q_SIGNALS:

@@ -38,25 +38,15 @@ public:
 
 public:
     void open(const std::string& file_name);
-protected:
-    void paintEvent(QPaintEvent* event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void wheelEvent(QWheelEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
+
 private:
 
     void createActions();
     void createMenu();
     void createWidgets();
     void createToolBar();
-
     void setModulePanel(QWidget* widget);
-private:
 
-    void initTest();
-    void drawVolume();
 private:
     //menu
     QMenu* m_file_menu;
