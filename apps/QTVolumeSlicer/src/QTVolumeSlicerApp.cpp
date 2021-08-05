@@ -36,11 +36,12 @@ VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
 :QMainWindow(parent)
 {
     setWindowTitle("VolumeSlicer");
-    resize(1920,1080);
+    resize(1600,900);
     createActions();
     createMenu();
     createWidgets();
     createToolBar();
+    showMaximized();
 }
 void VolumeSlicerMainWindow::open(const std::string &file_name) {
     PrintCUDAMemInfo("start open");
@@ -252,8 +253,8 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Panned"),this);
 
     m_setting_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea);
-    m_setting_dock_widget->setMinimumSize(500,900);
-    m_setting_dock_widget->setMaximumSize(500,1200);
+    m_setting_dock_widget->setMinimumSize(400,800);
+    m_setting_dock_widget->setMaximumSize(500,1080);
     m_view_menu->addAction(m_setting_dock_widget->toggleViewAction());
     addDockWidget(Qt::LeftDockWidgetArea,m_setting_dock_widget);
 
