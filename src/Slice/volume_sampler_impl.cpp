@@ -14,7 +14,7 @@ std::unique_ptr<VolumeSampler> VolumeSampler::CreateVolumeSampler(const std::sha
     return std::make_unique<VolumeSamplerImpl<RawVolume>>(volume);
 }
 VolumeSamplerImpl<RawVolume>::VolumeSamplerImpl(const std::shared_ptr<RawVolume> &volume):raw_volume(volume){
-    this->cuda_raw_volume_sampler=std::make_unique<CUDARawVolumeSampler>();
+    this->cuda_raw_volume_sampler=std::make_unique<CUDARawVolumeSampler>(GetCUDACtx());
     this->cuda_raw_volume_sampler->SetVolumeData(raw_volume->GetData(),
                                                  raw_volume->GetVolumeDimX(),
                                                  raw_volume->GetVolumeDimY(),
