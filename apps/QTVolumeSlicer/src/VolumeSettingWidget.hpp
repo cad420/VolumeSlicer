@@ -20,6 +20,21 @@ public Q_SLOTS:
 private:
     SliceRenderWidget* m_slice_render_widget;
     VolumeRenderWidget* m_volume_render_widget;
+
+    QLineEdit* comp_volume_dim_x_line_edit;
+    QLineEdit* comp_volume_dim_y_line_edit;
+    QLineEdit* comp_volume_dim_z_line_edit;
+    QLineEdit* comp_volume_space_x_line_edit;
+    QLineEdit* comp_volume_space_y_line_edit;
+    QLineEdit* comp_volume_space_z_line_edit;
+
+    QLineEdit* raw_volume_dim_x_line_edit;
+    QLineEdit* raw_volume_dim_y_line_edit;
+    QLineEdit* raw_volume_dim_z_line_edit;
+    QLineEdit* raw_volume_space_x_line_edit;
+    QLineEdit* raw_volume_space_y_line_edit;
+    QLineEdit* raw_volume_space_z_line_edit;
+
 };
 
 #endif //VOLUMESLICER_VOLUMESETTINGWIDGET_HPP
