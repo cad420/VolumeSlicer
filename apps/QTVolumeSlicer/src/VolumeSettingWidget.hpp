@@ -9,6 +9,8 @@
 class SliceRenderWidget;
 class VolumeRenderWidget;
 
+class QLineEdit;
+
 class VolumeSettingWidget: public QWidget{
     Q_OBJECT
 public:
