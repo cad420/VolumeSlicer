@@ -138,7 +138,7 @@ namespace control{
         :TrackBall(radius,screen_w,screen_h),ball_center_pos(ball_center_pos)
         {
             cur_quat=pre_quat={1.f,0.f,0.f,0.f};
-            eye_pos=glm::vec3(ball_center_pos)+glm::vec3(0.f,0.f,radius*2);
+            eye_pos=glm::vec3(ball_center_pos)+glm::vec3(0.f,0.f,radius*4);
             look_at=ball_center_pos;
             up={0.f,1.f,0.f};
 

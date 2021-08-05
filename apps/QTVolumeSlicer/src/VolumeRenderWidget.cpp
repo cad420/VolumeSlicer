@@ -79,46 +79,55 @@ void VolumeRenderWidget::mouseReleaseEvent(QMouseEvent *event) {
 void VolumeRenderWidget::loadVolume(const char * path,
                                     const std::array<uint32_t,3>& dim,
                                     const std::array<float,3>& space) {
-    Slice slice;
-    slice.origin={128.f,128.f,128.f,1.f};
-    slice.right={1.f,0.f,0.f,0.f};
-    slice.up={0.f,1.f,-1.f,0.f};
-    slice.normal={0.f,1.f,1.f,0.f};
-    slice.n_pixels_width=400;
-    slice.n_pixels_height=400;
-    slice.voxel_per_pixel_height=1.f;
-    slice.voxel_per_pixel_width=1.f;
-    slicer=Slicer::CreateSlicer(slice);
-    raw_volume=RawVolume::Load(
-            path,
-            VoxelType::UInt8,
-            dim,
-            space);
-    multi_volume_renderer=CreateRenderer(slice.n_pixels_width,slice.n_pixels_height);
+    raw_volume=RawVolume::Load(path,VoxelType::UInt8,dim,space);
+
+//    Slice slice;
+//    slice.origin={raw_volume->GetVolumeDimX()/2.f,
+//                  raw_volume->GetVolumeDimY()/2.f,
+//                  raw_volume->GetVolumeDimZ()/2.f,1.f};
+//    slice.right={1.f,0.f,0.f,0.f};
+//    slice.up={0.f,1.f,-1.f,0.f};
+//    slice.normal={0.f,1.f,1.f,0.f};
+//    slice.n_pixels_width=400;
+//    slice.n_pixels_height=400;
+//    slice.voxel_per_pixel_height=1.f;
+//    slice.voxel_per_pixel_width=1.f;
+//    slicer=Slicer::CreateSlicer(slice);
+
+    multi_volume_renderer=CreateRenderer(this->width(),this->height());
     multi_volume_renderer->SetVolume(raw_volume);
 //    multi_volume_renderer->SetSlicer(slicer);
 
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.0,0.0,0.0,0.0});
-    tf.points.emplace_back(114,std::array<double,4>{0.5,0.25,0.11,0.0});
-    tf.points.emplace_back(165,std::array<double,4>{0.5,0.25,0.11,0.6});
-    tf.points.emplace_back(216,std::array<double,4>{0.5,0.25,0.11,0.3});
-    tf.points.emplace_back(255,std::array<double,4>{0.0,0.0,0.0,0.0});
+//    tf.points.emplace_back(114,std::array<double,4>{0.5,0.25,0.11,0.0});
+//    tf.points.emplace_back(165,std::array<double,4>{0.5,0.25,0.11,0.6});
+//    tf.points.emplace_back(216,std::array<double,4>{0.5,0.25,0.11,0.3});
+    tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,1.0,1.0});
     multi_volume_renderer->SetTransferFunction(std::move(tf));
 
+    this->trackball_camera=std::make_unique<control::TrackBallCamera>(
+            raw_volume->GetVolumeDimZ()*raw_volume->GetVolumeSpaceZ()/2.f,
+            this->width(),this->height(),
+            glm::vec3{raw_volume->GetVolumeDimX()*raw_volume->GetVolumeSpaceX()/2.f,
+                      raw_volume->GetVolumeDimY()*raw_volume->GetVolumeSpaceY()/2.f,
+                      raw_volume->GetVolumeDimZ()*raw_volume->GetVolumeSpaceZ()/2.f}
+    );
+
     base_camera=std::make_unique<vs::Camera>();
-    base_camera->pos={1.83f,2.315f,2.415f+6.f};
+    base_camera->pos={trackball_camera->getCameraPos().x,
+                      trackball_camera->getCameraPos().y,
+                      trackball_camera->getCameraPos().z};
     base_camera->up={0.f,1.f,0.f};
-    base_camera->look_at={1.83f,2.315f,2.415f};
+    base_camera->look_at={raw_volume->GetVolumeDimX()*raw_volume->GetVolumeSpaceX()/2.f,
+                          raw_volume->GetVolumeDimY()*raw_volume->GetVolumeSpaceY()/2.f,
+                          raw_volume->GetVolumeDimZ()*raw_volume->GetVolumeSpaceZ()/2.f};
     base_camera->zoom=60.f;
     base_camera->n=0.01f;
-    base_camera->f=20.f;
+    base_camera->f=raw_volume->GetVolumeDimZ()*raw_volume->GetVolumeSpaceZ()*10.f;
     multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->SetVisible(true,true);
-    this->trackball_camera=std::make_unique<control::TrackBallCamera>(
-            3.f,slice.n_pixels_width,slice.n_pixels_height,
-            glm::vec3{1.83f,2.315f,2.415f}
-    );
+
 
     redraw();
 }
