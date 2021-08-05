@@ -54,7 +54,7 @@ class VolumeSamplerImpl<CompVolume>: public VolumeSampler{
 public:
     explicit VolumeSamplerImpl(const std::shared_ptr<CompVolume>& volume);
 
-    ~VolumeSamplerImpl();
+    ~VolumeSamplerImpl() override;
     //data is host ptr
     bool Sample(const Slice& slice,uint8_t* data) override;
 

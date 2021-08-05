@@ -29,7 +29,7 @@ public:
  * endless wait for push_back.
  */
     ConcurrentQueue() {}
-
+    ~ConcurrentQueue()=default;
     ConcurrentQueue(size_t size) : maxSize(size) {}
     ConcurrentQueue(const ConcurrentQueue&) = delete;
     ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
