@@ -14,6 +14,7 @@
 #include <VolumeSlicer/utils.hpp>
 //std
 #include <iostream>
+#include <fstream>
 //qt
 #include <QMenuBar>
 #include <QPainter>
@@ -26,6 +27,10 @@
 #include <QToolBar>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QMessageBox>
+//json
+#include "json.hpp"
+using nlohmann::json;
 
 VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
 :QMainWindow(parent)
@@ -39,14 +44,55 @@ VolumeSlicerMainWindow::VolumeSlicerMainWindow(QWidget *parent)
     initTest();
 }
 void VolumeSlicerMainWindow::open(const std::string &file_name) {
-    this->m_slice_render_widget->loadVolume(
-            "E:/MouseNeuronData/mouse_file_config.json",
-            {0.00032f,0.00032f,0.001f}
-    );
-    this->m_volume_render_widget->loadVolume(
-            "E:\\mouse_23389_29581_10296_512_2_lod6/mouselod6_366_463_161_uint8.raw",
-            {366,463,161},{0.01f,0.01f,0.03f}
-            );
+    json j;
+    std::ifstream in(file_name);
+    if(!in.is_open()){
+        QMessageBox::critical(NULL,"Error","File open failed!",QMessageBox::Yes);
+        return;
+    }
+    try{
+        in>>j;
+        auto comp_volume_info=j["comp_volume"];
+        std::string comp_volume_path=comp_volume_info.at("comp_config_file_path");
+        auto comp_volume_space=comp_volume_info.at("comp_volume_space");
+        float space_x=comp_volume_space.at(0);
+        float space_y=comp_volume_space.at(1);
+        float space_z=comp_volume_space.at(2);
+
+        this->m_slice_render_widget->loadVolume(
+                comp_volume_path.c_str(),
+                {space_x,space_y,space_z}
+        );
+
+        auto raw_volume_info=j["raw_volume"];
+        std::string raw_volume_path=raw_volume_info.at("raw_volume_path");
+        auto raw_volume_dim=raw_volume_info.at("raw_volume_dim");
+        auto raw_volume_space=raw_volume_info.at("raw_volume_space");
+        uint32_t dim_x=raw_volume_dim.at(0);
+        uint32_t dim_y=raw_volume_dim.at(1);
+        uint32_t dim_z=raw_volume_dim.at(2);
+        space_x=raw_volume_space.at(0);
+        space_y=raw_volume_space.at(1);
+        space_z=raw_volume_space.at(2);
+        this->m_volume_render_widget->loadVolume(
+                raw_volume_path.c_str(),
+                {dim_x,dim_y,dim_z},{space_x,space_y,space_z}
+        );
+    }
+    catch (const std::exception& err) {
+        QMessageBox::critical(NULL,"Error","Config file format error!",QMessageBox::Yes);
+    }
+
+
+
+//    this->m_slice_render_widget->loadVolume(
+//            "E:/MouseNeuronData/mouse_file_config.json",
+//            {0.00032f,0.00032f,0.001f}
+//    );
+//    this->m_volume_render_widget->loadVolume(
+//            "E:\\mouse_23389_29581_10296_512_2_lod6/mouselod6_366_463_161_uint8.raw",
+//            {366,463,161},{0.01f,0.01f,0.03f}
+//            );
     m_volume_render_widget->setSlicer(m_slice_render_widget->getSlicer());
     m_slice_zoom_widget->setRawVolume(m_volume_render_widget->getRawVolume());
     m_slice_zoom_widget->setSlicer(m_slice_render_widget->getSlicer());
@@ -77,7 +123,7 @@ void VolumeSlicerMainWindow::createActions() {
                 QFileDialog::getOpenFileName(this,
                                      QStringLiteral("OpenFile"),
                                      QStringLiteral("."),
-                                     QStringLiteral("raw files(*.raw);;comp files(*.h264)")
+                                     QStringLiteral("config files(*.json)")
                                      ).toStdString()
                                      );
     });
