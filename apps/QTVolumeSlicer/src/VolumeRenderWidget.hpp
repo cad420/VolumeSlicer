@@ -39,6 +39,7 @@ public Q_SLOTS:
     void redraw();
     void setVisible(bool volume,bool slice);
     void volumeLoaded();
+    void volumeClose();
 private:
     std::shared_ptr<Slicer> slicer;
     std::shared_ptr<Slicer> dummy_slicer;

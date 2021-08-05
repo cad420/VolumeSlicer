@@ -22,6 +22,7 @@ template<>
 class VolumeImpl<VolumeType::Raw>: public Volume<VolumeType::Raw>{
 public:
     VolumeImpl(std::vector<uint8_t>&& data):raw_volume_data(std::move(data)){};
+    ~VolumeImpl() override{}
     VolumeType GetVolumeType() const override{return VolumeType::Raw;}
 
     uint8_t* GetData() override{return raw_volume_data.data();};

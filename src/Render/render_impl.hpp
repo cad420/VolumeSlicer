@@ -25,6 +25,8 @@ class MultiVolumeRender: public RawVolumeRenderer {
 public:
     MultiVolumeRender(int w,int h);
 
+    ~MultiVolumeRender() override;
+
     void SetCamera(Camera camera) noexcept override;
 
     void SetTransferFunction(TransferFunc&& tf) noexcept override;

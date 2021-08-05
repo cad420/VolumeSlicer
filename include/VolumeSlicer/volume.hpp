@@ -102,6 +102,9 @@ public:
         bool operator==(const std::array<uint32_t,4>& idx) const{
             return index==idx;
         }
+        ~VolumeBlock(){
+            block_data.reset();
+        }
         void Release(){
             block_data->Release();
             valid=false;

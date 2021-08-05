@@ -546,3 +546,12 @@ void SliceSettingWidget::volumeLoaded() {
     }
     this->slicer=m_slice_render_widget->getSlicer();
 }
+void SliceSettingWidget::volumeClose() {
+    spdlog::info("{0}.",__FUNCTION__ );
+    slicer.reset();
+    origin_x_spin_box->cleanText();
+    origin_y_spin_box->cleanText();
+    origin_z_spin_box->cleanText();
+    offset_spin_box->cleanText();
+    initRotation();
+}

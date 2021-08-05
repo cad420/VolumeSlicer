@@ -67,7 +67,14 @@ void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float
     spdlog::info("Finish CUDA raw volume sample.");
 }
 
-__global__ void CUDARawVolumeSample(uint8_t *image, cudaTextureObject_t volume_data) {
+CUDARawVolumeSampler::~CUDARawVolumeSampler() {
+    spdlog::info("Call ~CUDARawVolumeSampler destructor.");
+    cudaFree(cu_sample_result);
+    cudaDestroyTextureObject(volume_texture);
+    cudaFreeArray(cu_volume_data);
+}
+
+    __global__ void CUDARawVolumeSample(uint8_t *image, cudaTextureObject_t volume_data) {
     int image_x=blockIdx.x*blockDim.x+threadIdx.x;
     int image_y=blockIdx.y*blockDim.y+threadIdx.y;
     if(image_x>=sampleParameter.image_w || image_y>=sampleParameter.image_h) return;

@@ -207,6 +207,14 @@ bool CUDAVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &targe
                                        cu_array_shape[2]};
     }
 
+CUDAVolumeBlockCacheImpl::~CUDAVolumeBlockCacheImpl() {
+    spdlog::info("Call ~CUDAVolumeBlockCacheImpl destructor.");
+    for(auto tex:cu_textures)
+        cudaDestroyTextureObject(tex);
+    for(auto arr:cu_arrays)
+        cudaFreeArray(arr);
+}
+
 
 VS_END
 

@@ -216,4 +216,12 @@ void SliceRenderWidget::volumeLoaded() {
 
 }
 
+void SliceRenderWidget::volumeClose() {
+    spdlog::info("{0}.",__FUNCTION__ );
+    slicer.reset();
+    volume.reset();
+    volume_sampler.reset();
+    repaint();
+}
+
 

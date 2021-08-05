@@ -218,4 +218,13 @@ void SliceZoomWidget::volumeLoaded() {
 
 }
 
+void SliceZoomWidget::volumeClose() {
+    spdlog::info("{0}.",__FUNCTION__ );
+    slicer.reset();
+    max_zoom_slicer.reset();
+    raw_volume_sampler.reset();
+    raw_volume.reset();
+    repaint();
+}
+
 

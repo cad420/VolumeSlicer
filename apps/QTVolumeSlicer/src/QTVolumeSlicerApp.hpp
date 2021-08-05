@@ -96,12 +96,12 @@ private:
 
 
     //volume and render test
-    std::shared_ptr<RawVolume> raw_volume;
-    std::unique_ptr<RawVolumeRenderer> multi_renderer;
-    std::shared_ptr<Slicer> slicer;
-    std::unique_ptr<VolumeSampler> volume_sampler;
-    std::shared_ptr<CompVolume> comp_volume;
-    std::unique_ptr<VolumeSampler> comp_volume_sampler;
+//    std::shared_ptr<RawVolume> raw_volume;
+//    std::unique_ptr<RawVolumeRenderer> multi_renderer;
+//    std::shared_ptr<Slicer> slicer;
+//    std::unique_ptr<VolumeSampler> volume_sampler;
+//    std::shared_ptr<CompVolume> comp_volume;
+//    std::unique_ptr<VolumeSampler> comp_volume_sampler;
 
     bool left_mouse_button_pressed;
     QPoint last_pos;

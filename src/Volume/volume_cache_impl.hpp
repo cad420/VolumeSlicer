@@ -13,6 +13,8 @@ class CUDAVolumeBlockCacheImpl: public CUDAVolumeBlockCache{
 public:
     explicit CUDAVolumeBlockCacheImpl(CUcontext ctx);
 
+    ~CUDAVolumeBlockCacheImpl() override;
+
     void SetCacheBlockLength(uint32_t) override;
 
     void SetCacheCapacity(uint32_t num,uint32_t x,uint32_t y,uint32_t z) override;

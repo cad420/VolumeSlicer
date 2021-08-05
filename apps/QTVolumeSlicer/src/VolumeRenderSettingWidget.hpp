@@ -18,6 +18,7 @@ public:
 
 public Q_SLOTS:
     void volumeLoaded();
+    void volumeClose();
 private:
     VolumeRenderWidget* m_volume_render_widget;
     TransferFunctionWidget* tf_widget;

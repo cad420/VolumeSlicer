@@ -322,6 +322,10 @@ void SlicerImpl::resize(int w,int h) {
     SetStatus(true);
 }
 
+SlicerImpl::~SlicerImpl() {
+    image.clear();
+}
+
 
     std::unique_ptr<Slicer> Slicer::CreateSlicer(const Slice& slice) noexcept{
 try{

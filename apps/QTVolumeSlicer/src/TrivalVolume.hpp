@@ -5,6 +5,7 @@
 #ifndef VOLUMESLICER_TRIVALVOLUME_HPP
 #define VOLUMESLICER_TRIVALVOLUME_HPP
 #include <iostream>
+#include <spdlog/spdlog.h>
 enum TVoxelType { UInt8, Float32 };
 enum TVoxelFormat { Grayscale, RGB, RGBA };
 struct VolumeFormat
@@ -27,6 +28,11 @@ public:
            size_t zSize,
            const VolumeFormat & fmt = VolumeFormat()
     );
+    virtual ~TrivalVolume(){
+        spdlog::info("Call ~TrivalVolume destructor.");
+        m_data.reset();
+        m_isoStat.reset();
+    }
     TrivalVolume(const TrivalVolume & vol);
     TrivalVolume & operator=(const TrivalVolume & vol);
 

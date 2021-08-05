@@ -19,6 +19,7 @@ public:
                                  QWidget* parent= nullptr);
 public Q_SLOTS:
     void volumeLoaded();
+    void volumeClose();
 private:
     SliceRenderWidget* m_slice_render_widget;
     VolumeRenderWidget* m_volume_render_widget;

@@ -126,3 +126,21 @@ void VolumeSettingWidget::volumeLoaded() {
         raw_volume_space_z_line_edit->setText(std::to_string(raw_volume->GetVolumeSpaceZ()).c_str());
     }
 }
+void VolumeSettingWidget::volumeClose() {
+    spdlog::info("{0}.",__FUNCTION__ );
+
+    comp_volume_dim_x_line_edit->clear();
+    comp_volume_dim_y_line_edit->clear();
+    comp_volume_dim_z_line_edit->clear();
+    comp_volume_space_x_line_edit->clear();
+    comp_volume_space_y_line_edit->clear();
+    comp_volume_space_z_line_edit->clear();
+
+    raw_volume_dim_x_line_edit->clear();
+    raw_volume_dim_y_line_edit->clear();
+    raw_volume_dim_z_line_edit->clear();
+    raw_volume_space_x_line_edit->clear();
+    raw_volume_space_y_line_edit->clear();
+    raw_volume_space_z_line_edit->clear();
+
+}

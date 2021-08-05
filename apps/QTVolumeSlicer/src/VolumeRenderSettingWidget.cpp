@@ -74,3 +74,7 @@ void VolumeRenderSettingWidget::volumeLoaded() {
         tf.resize(256*4,0.f);
     }
 }
+void VolumeRenderSettingWidget::volumeClose() {
+    spdlog::info("{0}.",__FUNCTION__ );
+    trival_volume.reset();
+}

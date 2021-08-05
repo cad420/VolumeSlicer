@@ -22,6 +22,7 @@ VS_START
                 color_setting[it.key]=it.value;
             }
         }
+        ~TransferFuncImpl()=default;
         auto getTransferFunction()->std::vector<float>&{
             if(transfer_func.empty())
                 generateTransferFunc();

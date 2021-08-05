@@ -23,6 +23,8 @@ class VolumeSamplerImpl<RawVolume>: public VolumeSampler{
 public:
     explicit VolumeSamplerImpl(const std::shared_ptr<RawVolume>& volume);
 
+    ~VolumeSamplerImpl() override;
+
     bool Sample(const Slice& slice,uint8_t* data) override;
 
 private:

@@ -125,6 +125,13 @@ void VolumeRenderWidget::loadVolume(const char * path,
     base_camera->zoom=60.f;
     base_camera->n=0.01f;
     base_camera->f=raw_volume->GetVolumeDimZ()*raw_volume->GetVolumeSpaceZ()*10.f;
+
+    if(!multi_volume_renderer)
+        multi_volume_renderer=CreateRenderer(this->width(),this->height());
+    else
+        multi_volume_renderer->resize(this->width(),this->height());
+    multi_volume_renderer->SetVolume(raw_volume);
+    multi_volume_renderer->SetTransferFunction(std::move(tf));
     multi_volume_renderer->SetCamera(*base_camera);
     multi_volume_renderer->SetVisible(true,true);
 
@@ -173,4 +180,15 @@ void VolumeRenderWidget::resizeEvent(QResizeEvent *event) {
 
 void VolumeRenderWidget::volumeLoaded() {
 
+}
+
+void VolumeRenderWidget::volumeClose() {
+    spdlog::info("{0}.",__FUNCTION__ );
+    slicer.reset();
+    dummy_slicer.reset();
+    raw_volume.reset();
+//    multi_volume_renderer.reset();
+    trackball_camera.reset();
+    base_camera.reset();
+    repaint();
 }

@@ -29,7 +29,10 @@ bool VolumeSamplerImpl<RawVolume>::Sample(const Slice &slice, uint8_t *data) {
                                     raw_volume->GetVolumeSpaceZ());
     return true;
 }
-
+VolumeSamplerImpl<RawVolume>::~VolumeSamplerImpl(){
+    spdlog::info("Call ~VolumeSamplerImpl<RawVolume> destructor.");
+    raw_volume.reset();
+}
 
 /**************************************************************************************************
  * API for CompVolumeSamplerImpl

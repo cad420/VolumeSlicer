@@ -23,6 +23,7 @@ private:
 public Q_SLOTS:
     void redraw();
     void volumeLoaded();
+    void volumeClose();
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

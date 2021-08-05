@@ -56,6 +56,7 @@ public:
         }
 
     }
+    ~CUDACompVolumeSampler();
     void SetCUDACtx(){
         CUDA_DRIVER_API_CALL(cuCtxSetCurrent(cu_ctx));
     }
@@ -84,10 +85,10 @@ private:
     int old_w,old_h;
     uint8_t* cu_sample_result;//image
 
-    uint32_t cu_array_num;
-    std::array<uint32_t,3> cu_array_size;
-    std::vector<cudaArray*> cu_arrays;
-    std::vector<cudaTextureObject_t> cache_volumes;
+//    uint32_t cu_array_num;
+//    std::array<uint32_t,3> cu_array_size;
+//    std::vector<cudaArray*> cu_arrays;
+//    std::vector<cudaTextureObject_t> cache_volumes;
 
 
     uint32_t min_lod,max_lod;

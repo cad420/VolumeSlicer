@@ -27,6 +27,7 @@ Q_SIGNALS:
 public Q_SLOTS:
     void updateSliceSettings(bool slice_update);
     void volumeLoaded();
+    void volumeClose();
 private:
     void updateOrigin();
     void updateOffset();

@@ -30,6 +30,7 @@ Q_SIGNALS:
     void sliceModified();
 public Q_SLOTS:
     void volumeLoaded();
+    void volumeClose();
 public :
     void redraw();
     void resetColorTable(float*,int dim=256);

@@ -175,6 +175,11 @@ void CUDACompVolumeSampler::SetCUDATextureObject(cudaTextureObject_t *textures, 
     CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cacheVolumes,textures,size*sizeof(cudaTextureObject_t)));
 }
 
+CUDACompVolumeSampler::~CUDACompVolumeSampler() {
+    spdlog::info("Call ~CUDACompVolumeSampler destructor.");
+    cudaFree(cu_sample_result);
+}
+
 
 VS_END
 

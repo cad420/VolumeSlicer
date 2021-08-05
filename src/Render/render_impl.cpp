@@ -647,7 +647,46 @@ void MultiVolumeRender::setSlice() {
     }
 }
 
+    MultiVolumeRender::~MultiVolumeRender() {
+        spdlog::info("Call ~MultiVolumeRender destructor.");
+        slicer.reset();
 
+        glDeleteTextures(1,&volume_tex);
+
+        glDeleteVertexArrays(1,&volume_board_vao);
+        glDeleteBuffers(1,&volume_board_vbo);
+        glDeleteBuffers(1,&volume_board_ebo);
+
+        glDeleteVertexArrays(1,&volume_board_line_vao);
+        glDeleteBuffers(1,&volume_board_line_vbo);
+        glDeleteBuffers(1,&volume_board_line_ebo);
+
+        glDeleteVertexArrays(1,&volume_visible_board_vao);
+        glDeleteBuffers(1,&volume_visible_board_vbo);
+        glDeleteBuffers(1,&volume_visible_board_ebo);
+
+        glDeleteVertexArrays(1,&slice_vao);
+        glDeleteBuffers(1,&slice_vbo);
+
+        glDeleteTextures(1,&transfer_func_tex);
+        glDeleteTextures(1,&preInt_tf_tex);
+
+        glDeleteVertexArrays(1,&screen_quad_vao);
+        glDeleteBuffers(1,&screen_quad_vbo);
+
+        glDeleteFramebuffers(1,&raycast_pos_fbo);
+        glDeleteRenderbuffers(1,&raycast_pos_rbo);
+        glDeleteTextures(1,&raycast_entry_pos_tex);
+        glDeleteTextures(1,&raycast_exit_pos_tex);
+        glDeleteTextures(1,&slice_color_tex);
+        glDeleteTextures(1,&slice_pos_tex);
+
+        wglDeleteContext(gl_context);
+        auto window=WindowFromDC(window_handle);
+        ReleaseDC(window,window_handle);
+//        DestroyWindow(window);
+
+    }
 
 
 VS_END
