@@ -250,7 +250,7 @@ void VolumeSlicerMainWindow::createWidgets() {
     });
 
 
-    m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Panned"),this);
+    m_setting_dock_widget=new QDockWidget(QStringLiteral("Control Pannel"),this);
 
     m_setting_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea);
     m_setting_dock_widget->setMinimumSize(400,800);
