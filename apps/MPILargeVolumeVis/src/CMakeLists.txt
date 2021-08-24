@@ -25,3 +25,4 @@ target_include_directories(
         ${MPI_INCLUDE_DIR}
         ${PROJECT_SOURCE_DIR}/third_party/glad/include
 )
+target_compile_features(MPILargeVolumeVisApp PRIVATE cxx_std_17)

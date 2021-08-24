@@ -366,7 +366,7 @@ void MultiVolumeRender::setVolumeBoard() {
         glGenBuffers(1,&volume_board_line_ebo);
 
         glBindVertexArray(volume_board_line_vao);
-        glBindBuffer(GL_ARRAY_BUFFER,volume_board_line_vao);
+        glBindBuffer(GL_ARRAY_BUFFER,volume_board_line_vbo);
         glBufferData(GL_ARRAY_BUFFER,sizeof(volume_board_vertices),volume_board_vertices.data(),GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,volume_board_line_ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(volume_board_line_indices),volume_board_line_indices.data(),GL_STATIC_DRAW);

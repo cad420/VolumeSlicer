@@ -72,7 +72,7 @@ public:
 
 using RawVolumeRenderer=Renderer<RawVolume>;
 
-std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
+VS_EXPORT std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
 
 class VS_EXPORT IVolumeRenderer{
 public:
