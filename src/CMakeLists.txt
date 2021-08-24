@@ -23,10 +23,11 @@ list(
         Render/opengl_raw_render_impl.cpp
         Render/cpu_raw_render_impl.cpp
         IO/reader_impl.cpp
+        Common/cuda_context.cpp
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
 )
-add_library(VS_CORE ${VS_SRCS})
+add_library(VS_CORE SHARED ${VS_SRCS})
 
 
 set_target_properties(VS_CORE PROPERTIES PUBLIC_HEAD
@@ -41,6 +42,7 @@ target_include_directories(VS_CORE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
         ${PROJECT_SOURCE_DIR}/third_party
+#        ${PROJECT_SOURCE_DIR}/third_party/glad/include
         )
 
 target_link_libraries(VS_CORE
@@ -48,10 +50,8 @@ target_link_libraries(VS_CORE
 
         spdlog::spdlog
         glm::glm
-        PRIVATE
-
-
         ${CUDA_CUDA_LIBRARY}
+        PRIVATE
         voxel_uncompress
         ${OPENGL_LIBRARIES}
         ${CMAKE_DL_LIBS}

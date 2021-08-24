@@ -6,7 +6,7 @@
 #define VOLUMESLICER_CUDA_CONTEXT_HPP
 
 #include <VolumeSlicer/helper.hpp>
-#include <VolumeSlicer/singleton.hpp>
+
 class CUDACtx{
 public:
     CUDACtx(CUdevice d){
@@ -26,21 +26,13 @@ public:
 private:
     CUcontext  cu_ctx;
 };
-inline void SetCUDACtx(CUdevice d){
-    Singleton<CUDACtx>::init(d);
-}
-inline CUcontext GetCUDACtx(){
-    return Singleton<CUDACtx>::get()->GetCUDACtx();
-}
-inline size_t GetCUDAFreeMem(){
-    size_t free,total;
-    cudaMemGetInfo(&free,&total);
-    return free;
-}
-inline size_t GetCUDAUsedMem(){
-    size_t free,total;
-    cudaMemGetInfo(&free,&total);
-    return total-free;
-}
+
+VS_EXPORT void SetCUDACtx(CUdevice d);
+
+VS_EXPORT CUcontext GetCUDACtx();
+
+VS_EXPORT size_t GetCUDAFreeMem();
+
+VS_EXPORT size_t GetCUDAUsedMem();
 
 #endif //VOLUMESLICER_CUDA_CONTEXT_HPP

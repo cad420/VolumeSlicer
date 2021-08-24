@@ -10,7 +10,7 @@
 #include <iostream>
 typedef HGLRC WINAPI wglCreateContextAttribsARB_type(HDC hdc, HGLRC hShareContext,
                                                      const int *attribList);
-wglCreateContextAttribsARB_type *wglCreateContextAttribsARB;
+inline wglCreateContextAttribsARB_type *wglCreateContextAttribsARB;
 
 // See https://www.opengl.org/registry/specs/ARB/wgl_create_context.txt for all values
 #define WGL_CONTEXT_MAJOR_VERSION_ARB             0x2091
@@ -21,7 +21,7 @@ wglCreateContextAttribsARB_type *wglCreateContextAttribsARB;
 
 typedef BOOL WINAPI wglChoosePixelFormatARB_type(HDC hdc, const int *piAttribIList,
                                                  const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
-wglChoosePixelFormatARB_type *wglChoosePixelFormatARB;
+inline wglChoosePixelFormatARB_type *wglChoosePixelFormatARB;
 
 // See https://www.opengl.org/registry/specs/ARB/wgl_pixel_format.txt for all values
 #define WGL_DRAW_TO_WINDOW_ARB                    0x2001
@@ -36,7 +36,7 @@ wglChoosePixelFormatARB_type *wglChoosePixelFormatARB;
 #define WGL_FULL_ACCELERATION_ARB                 0x2027
 #define WGL_TYPE_RGBA_ARB                         0x202B
 
-static void
+inline static void
 init_opengl_extensions(void)
 {
     // Before we can load extensions, we need a dummy OpenGL context, created using a dummy window.
@@ -142,7 +142,7 @@ init_opengl_extensions(void)
     UnregisterClassA(window_class.lpszClassName,window_class.hInstance);
 }
 
-static HGLRC
+inline static HGLRC
 create_opengl_context(HDC real_dc)
 {
     init_opengl_extensions();
@@ -200,7 +200,7 @@ create_opengl_context(HDC real_dc)
     return gl_context;
 }
 
-static LRESULT CALLBACK
+inline static LRESULT CALLBACK
 window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     LRESULT result = 0;
@@ -217,7 +217,7 @@ window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
     return result;
 }
 
-static HWND
+inline static HWND
 create_window(HINSTANCE inst,LPCSTR name,int width,int height)
 {
     WNDCLASSA window_class = {
