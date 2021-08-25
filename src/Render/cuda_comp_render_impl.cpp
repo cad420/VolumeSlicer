@@ -144,7 +144,7 @@ void CUDACompVolumeRendererImpl::render() {
     cudaCompRenderParameter.w=window_w;
     cudaCompRenderParameter.h=window_h;
     cudaCompRenderParameter.fov=camera.zoom;
-    cudaCompRenderParameter.step=0.00032f;
+    cudaCompRenderParameter.step=0.00016f;
     cudaCompRenderParameter.view_pos=make_float3(camera.pos[0],camera.pos[1],camera.pos[2]);
     cudaCompRenderParameter.view_direction=normalize(make_float3(camera.look_at[0]-camera.pos[0],
                                                        camera.look_at[1]-camera.pos[1],
@@ -156,12 +156,6 @@ void CUDACompVolumeRendererImpl::render() {
                                               comp_volume->GetVolumeSpaceZ());
     CUDARenderer::UploadCUDACompRenderParameter(cudaCompRenderParameter);
 
-
-//    START_CUDA_RUNTIME_TIMER
-
-    CUDARenderer::CUDACalcBlock(missed_blocks_pool.data(),missed_blocks_pool.size(),window_w,window_h);
-
-//    STOP_CUDA_RUNTIME_TIMER
 
 //    START_CPU_TIMER
     calcMissedBlocks();
@@ -176,14 +170,18 @@ void CUDACompVolumeRendererImpl::render() {
     auto& m=this->cuda_volume_block_cache->GetMappingTable();
     CUDARenderer::UploadMappingTable(m.data(),m.size());
 
-//    START_CUDA_RUNTIME_TIMER
+    START_CUDA_RUNTIME_TIMER
     CUDARenderer::CUDARender(window_w,window_h,image.data.data());
-//    STOP_CUDA_RUNTIME_TIMER
+    STOP_CUDA_RUNTIME_TIMER
 
 }
 
 void CUDACompVolumeRendererImpl::calcMissedBlocks() {
+
     std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> cur_missed_blocks;
+    START_CUDA_RUNTIME_TIMER
+    CUDARenderer::CUDACalcBlock(missed_blocks_pool.data(),missed_blocks_pool.size(),window_w,window_h);
+    STOP_CUDA_RUNTIME_TIMER
     for(uint32_t lod=0;lod<block_offset.size();lod++){
         auto lod_block_dim=comp_volume->GetBlockDim(lod);
         int cnt=0;
