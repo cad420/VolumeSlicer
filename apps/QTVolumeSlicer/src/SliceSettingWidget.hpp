@@ -15,12 +15,14 @@ class QDoubleSpinBox;
 class QSlider;
 class SliceRenderWidget;
 class TF1DEditor;
+class VolumeRenderWidget;
+class TrivalVolume;
 
 class SliceSettingWidget: public QWidget{
     Q_OBJECT
 public:
     explicit SliceSettingWidget(SliceRenderWidget* widget,QWidget* parent= nullptr);
-
+    void SetVolumeRenderWidget(VolumeRenderWidget* widget);
 Q_SIGNALS:
     void sliceModified();
 
@@ -70,6 +72,8 @@ private:
 
     QScrollArea* m_slice_setting_scroll_area;
     SliceRenderWidget* m_slice_render_widget;
+    VolumeRenderWidget* m_volume_render_widget;
+    std::unique_ptr<TrivalVolume> trival_volume;
     TF1DEditor* tf_editor_widget;
     std::vector<float> tf;
     std::shared_ptr<Slicer> slicer;

@@ -27,7 +27,9 @@ list(
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
 )
-add_library(VS_CORE SHARED ${VS_SRCS})
+add_library(VS_CORE
+#        SHARED
+        ${VS_SRCS})
 
 
 set_target_properties(VS_CORE PROPERTIES PUBLIC_HEAD

@@ -96,10 +96,10 @@ void VolumeSlicerMainWindow::open(const std::string &file_name) {
     PrintCUDAMemInfo("after m_slice_zoom_widget setRawVolume");
     m_slice_zoom_widget->setSlicer(m_slice_render_widget->getSlicer());
     PrintCUDAMemInfo("after m_slice_zoom_widget setSlicer");
-    m_volume_setting_widget->volumeLoaded();
-    PrintCUDAMemInfo("after m_volume_setting_widget volumeLoaded");
-    m_volume_render_setting_widget->volumeLoaded();
-    PrintCUDAMemInfo("after m_volume_render_setting_widget volumeLoaded");
+//    m_volume_setting_widget->volumeLoaded();
+//    PrintCUDAMemInfo("after m_volume_setting_widget volumeLoaded");
+//    m_volume_render_setting_widget->volumeLoaded();
+//    PrintCUDAMemInfo("after m_volume_render_setting_widget volumeLoaded");
     m_slice_setting_widget->volumeLoaded();
     PrintCUDAMemInfo("after m_slice_setting_widget volumeLoaded");
 }
@@ -119,10 +119,10 @@ void VolumeSlicerMainWindow::createMenu() {
         PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
         m_slice_setting_widget->volumeClose();
         PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
-        m_volume_render_setting_widget->volumeClose();
-        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
-        m_volume_setting_widget->volumeClose();
-        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+//        m_volume_render_setting_widget->volumeClose();
+//        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
+//        m_volume_setting_widget->volumeClose();
+//        PrintCUDAMemInfo("after m_slice_render_widget volumeClose");
     });
     m_view_menu=menuBar()->addMenu("View");
 
@@ -163,26 +163,23 @@ void VolumeSlicerMainWindow::createToolBar() {
     m_tool_bar->addAction(m_open_action);
     m_module_panel=new QComboBox();
 
-    m_module_panel->addItem("Volume");
-    m_module_panel->addItem("Slice");
-    m_module_panel->addItem("Volume Render");
-    connect(m_module_panel,&QComboBox::currentTextChanged,[this](const QString& text){
-        std::cout<<text.toStdString()<<std::endl;
-        if(text=="Volume"){
-            setModulePanel(m_volume_setting_widget);
-        }
-        else if(text=="Slice"){
-            setModulePanel(m_slice_setting_widget);
-        }
-        else if(text=="Volume Render"){
-            setModulePanel(m_volume_render_setting_widget);
-        }
-    });
-    emit m_module_panel->currentTextChanged("Volume");
-    m_tool_bar->addWidget(m_module_panel);
-
-
-
+//    m_module_panel->addItem("Volume");
+//    m_module_panel->addItem("Slice");
+//    m_module_panel->addItem("Volume Render");
+//    connect(m_module_panel,&QComboBox::currentTextChanged,[this](const QString& text){
+//        std::cout<<text.toStdString()<<std::endl;
+//        if(text=="Volume"){
+//            setModulePanel(m_volume_setting_widget);
+//        }
+//        else if(text=="Slice"){
+//            setModulePanel(m_slice_setting_widget);
+//        }
+//        else if(text=="Volume Render"){
+//            setModulePanel(m_volume_render_setting_widget);
+//        }
+//    });
+//    emit m_module_panel->currentTextChanged("Volume");
+//    m_tool_bar->addWidget(m_module_panel);
 }
 void VolumeSlicerMainWindow::setModulePanel(QWidget* widget) {
     m_setting_dock_widget->setWidget(widget);
@@ -230,10 +227,11 @@ void VolumeSlicerMainWindow::createWidgets() {
     splitDockWidget(m_volume_render_dock_widget,m_slice_zoom_dock_widget,Qt::Vertical);
 
     m_slice_setting_widget=new SliceSettingWidget(m_slice_render_widget,this);
-    m_volume_render_setting_widget=new VolumeRenderSettingWidget(m_volume_render_widget,this);
-    m_volume_setting_widget=new VolumeSettingWidget(m_slice_render_widget,
-                                                    m_volume_render_widget,
-                                                    this);
+//    m_volume_render_setting_widget=new VolumeRenderSettingWidget(m_volume_render_widget,this);
+//    m_volume_setting_widget=new VolumeSettingWidget(m_slice_render_widget,
+//                                                    m_volume_render_widget,
+//                                                    this);
+    m_slice_setting_widget->SetVolumeRenderWidget(m_volume_render_widget);
     //if slice setting changed, notice slice render to emit and redraw
     connect(m_slice_setting_widget,&SliceSettingWidget::sliceModified,[this](){
 //       emit m_slice_render_widget->sliceModified();//m_slice_setting_widget will receive this signal
@@ -255,10 +253,14 @@ void VolumeSlicerMainWindow::createWidgets() {
     m_setting_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea);
     m_setting_dock_widget->setMinimumSize(400,800);
     m_setting_dock_widget->setMaximumSize(500,1080);
+
+    m_setting_dock_widget->setWidget(m_slice_setting_widget);
+
     m_view_menu->addAction(m_setting_dock_widget->toggleViewAction());
     addDockWidget(Qt::LeftDockWidgetArea,m_setting_dock_widget);
 
     splitDockWidget(m_setting_dock_widget,m_slice_render_dock_widget,Qt::Horizontal);
+
 
 
     {

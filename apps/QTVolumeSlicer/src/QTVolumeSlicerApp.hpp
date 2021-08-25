@@ -86,8 +86,8 @@ private:
     QDockWidget* m_slice_zoom_dock_widget;
 
     SliceSettingWidget* m_slice_setting_widget;
-    VolumeSettingWidget* m_volume_setting_widget;
-    VolumeRenderSettingWidget* m_volume_render_setting_widget;
+//    VolumeSettingWidget* m_volume_setting_widget;
+//    VolumeRenderSettingWidget* m_volume_render_setting_widget;
 
 
 
