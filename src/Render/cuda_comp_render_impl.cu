@@ -156,6 +156,19 @@ namespace {
      */
     __device__ float3 PhongShading(int lod,int lod_t,const float3& samplePos, float3 diffuseColor,const float3& view_direction){
         float3 N;
+#undef CUBIC
+#ifndef CUBIC
+        float x1,x2;
+        VirtualSample(lod,lod_t,samplePos+make_float3(lod_t,0,0),x1);
+        VirtualSample(lod,lod_t,samplePos+make_float3(-lod_t,0,0),x2);
+        N.x=x1-x2;
+        VirtualSample(lod,lod_t,samplePos+make_float3(0,lod_t,0),x1);
+        VirtualSample(lod,lod_t,samplePos+make_float3(0,-lod_t,0),x2);
+        N.y=x1-x2;
+        VirtualSample(lod,lod_t,samplePos+make_float3(0,0,lod_t),x1);
+        VirtualSample(lod,lod_t,samplePos+make_float3(0,0,-lod_t),x2);
+        N.z=x1-x2;
+#else
         float value[27];
         float t1[9];
         float t2[3];
@@ -200,7 +213,7 @@ namespace {
         for(y=0;y<3;y++)
             t2[y]=(t1[y*3+0]+4*t1[y*3+1]+t1[y*3+2])/6;
         N.z=(t2[0]+t2[1]*4+t2[2])/6;
-
+#endif
         N=normalize(-N);
 
         float3 L={-view_direction.x,-view_direction.y,-view_direction.z};
@@ -249,7 +262,7 @@ namespace {
         float3 lod_sample_pos=start_pos;
         float last_scalar=0.f;
         int cur_lod;
-        while(steps++<10000){
+        while(steps++<6000){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
                || ray_pos.y<0.f || ray_pos.y>compVolumeParameter.volume_board.y
                || ray_pos.z<0.f || ray_pos.z>compVolumeParameter.volume_board.z){
@@ -268,30 +281,31 @@ namespace {
             }
             if(cur_lod>6)
                 break;
-            float sample_scalar=1.f;
+            float sample_scalar=0.f;
 
             int flag=VirtualSample(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,sample_scalar);
 
             if (flag > 0)
             {
 
-//            sample_scalar=0.32f;
                 if (sample_scalar > 0.3f) {
 
 //                    sample_color = tex1D<float4>(transferFunc, sample_scalar);
                     sample_color=tex2D<float4>(preIntTransferFunc,last_scalar,sample_scalar);
-                    last_scalar=sample_scalar;
+                    if(sample_color.w>0.f){
+                      last_scalar=sample_scalar;
 //                    color=sample_color;
 //                    break;
-                auto shading_color = PhongShading(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,make_float3(sample_color),ray_direction);
-                sample_color.x=shading_color.x;
-                sample_color.y=shading_color.y;
-                sample_color.z=shading_color.z;
-                    color = color + sample_color * make_float4(sample_color.w, sample_color.w, sample_color.w, 1.f) *
-                                    (1.f - color.w);
+                      auto shading_color = PhongShading(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,make_float3(sample_color),ray_direction);
+                      sample_color.x=shading_color.x;
+                      sample_color.y=shading_color.y;
+                      sample_color.z=shading_color.z;
+                      color = color + sample_color * make_float4(sample_color.w, sample_color.w, sample_color.w, 1.f) *
+                                      (1.f - color.w);
+                      if (color.w > 0.9f)
+                        break;
+                    }
                 }
-                if (color.w > 0.9f)
-                    break;
             }
             else
             {
@@ -302,11 +316,9 @@ namespace {
             }
             ray_pos = lod_sample_pos+ (steps-lod_steps)*ray_direction * cur_step;
         }
-//        color=tex1D<float4>(transferFunc,0.32f);
+
         image[image_idx]=rgbaFloatToUInt(color);
-//        image[image_idx]=rgbaFloatToUInt(make_float4(image_x*1.f/cudaCompRenderParameter.w,
-//                                         image_y*1.f/cudaCompRenderParameter.h,
-//                                         0.f,1.f));
+
     }
 
 }//end of namespace for device and global function and variable
