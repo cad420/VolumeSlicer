@@ -180,9 +180,9 @@ void LargeVolumeVisGUI::show() {
     SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
     SDL_CHECK
 
-
+    auto last_frame_t=SDL_GetTicks();
     while(!exit){
-
+        last_frame_t=SDL_GetTicks();
         process_event();
 
 
@@ -194,7 +194,9 @@ void LargeVolumeVisGUI::show() {
         SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
         SDL_RenderPresent(sdl_renderer);
 
+        while(SDL_GetTicks()<last_frame_t+100){
 
+        }
 //        render_imgui();
 
 //        SDL_GL_SwapWindow(sdl_window);
