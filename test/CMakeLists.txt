@@ -10,3 +10,11 @@ target_link_libraries(test_pyramid_intersect_aabb
 target_include_directories(test_pyramid_intersect_aabb
         PRIVATE
         ${PROJECT_SOURCE_DIR}/src)
+
+add_executable(test_texture test_texture.cpp)
+target_link_libraries(test_texture
+        PRIVATE
+        VS_CORE)
+target_include_directories(test_texture
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/src)
