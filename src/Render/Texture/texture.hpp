@@ -10,7 +10,8 @@
 #include <functional>
 VS_START
 
-template <typename TexType, uint32_t DIM> class TextureBase
+template <typename TexType, uint32_t DIM>
+class TextureBase
 {
     struct UnInit
     {
@@ -247,6 +248,23 @@ class Texture1D : public TextureBase<TexType, 1>
     {
         return Base::At(CoordType{idx});
     }
+    void UpdateTextureData(TexType* data,SizeType size) noexcept(::memcpy){
+        if(!Base::IsAvailable()){
+            return ;
+        }
+        size=(std::min)(size,this->GetLength());
+        ::memcpy(Base::RawData(),data,size*sizeof(TexType));
+    }
+    void UpdateTextureSubData(SizeType offset,SizeType length,TexType* data) noexcept(::memcpy){
+        if(!Base::IsAvailable()){
+            return ;
+        }
+        if(offset >= GetLength()){
+            return ;
+        }
+        length=(std::min)(length,GetLength()-offset);
+        ::memcpy(Base::RawData()+offset,data,length*sizeof(TexType));
+    }
 };
 
 template <typename TexType> class Texture2D : public TextureBase<TexType, 2>
@@ -312,6 +330,31 @@ template <typename TexType> class Texture2D : public TextureBase<TexType, 2>
     Texel &At(uint32_t x, uint32_t y) noexcept(false)
     {
         return Base::At(CoordType{x, y});
+    }
+    void UpdateTextureData(TexType* data,SizeType width,SizeType height) noexcept(::memcpy){
+        if(!Base::IsAvailable()){
+            return ;
+        }
+        width=(std::min)(width,GetWidth());
+        height=(std::min)(height,GetHeight());
+        ::memcpy(Base::RawData(),data,sizeof(TexType)*width*height);
+
+    }
+    void UpdateTextureSubData(SizeType offset_x,SizeType offset_y,SizeType length_x,SizeType length_y,TexType* data) noexcept(::memcpy){
+        if(!Base::IsAvailable()){
+            return ;
+        }
+        if(offset_x>=GetWidth() || offset_y>=GetHeight()){
+            return ;
+        }
+        length_x=(std::min)(length_x,GetWidth()-offset_x);
+        length_y=(std::min)(length_y,GetHeight()-offset_y);
+        //todo use multi-threads to speed up
+        for(SizeType row=offset_y;row<offset_y+length_y;row++){
+            ::memcpy(Base::RawData()+row*GetWidth()+offset_x,
+                     data+(row-offset_y)*length_x,
+                     length_x*sizeof(TexType));
+        }
     }
 };
 
@@ -382,6 +425,35 @@ template <typename TexType> class Texture3D : public TextureBase<TexType, 3>
     Texel &At(uint32_t x, uint32_t y, uint32_t z) noexcept(false)
     {
         return Base::At(CoordType{x, y, z});
+    }
+    void UpdateTextureData(TexType*data, SizeType length_x,SizeType length_y,SizeType length_z) noexcept(::memcpy){
+        if(!Base::IsAvailable()){
+            return ;
+        }
+        length_x=(std::min)(length_x,GetXSize());
+        length_y=(std::min)(length_y,GetYSize());
+        length_z=(std::min)(length_z,GetZSize());
+        ::memcpy(Base::RawData(),data,sizeof(TexType)*length_x*length_y*length_z);
+    }
+    void UpdateTextureSubData(SizeType offset_x,SizeType offset_y,SizeType offset_z,
+                              SizeType length_x,SizeType length_y,SizeType length_z,TexType* data) noexcept(::memcpy){
+        if(!Base::IsAvailable()){
+            return ;
+        }
+        if(offset_x>= GetXSize() || offset_y >= GetYSize() || offset_z >= GetZSize()){
+            return;
+        }
+        length_x=(std::min)(length_x,GetXSize()-offset_x);
+        length_y=(std::min)(length_y,GetYSize()-offset_y);
+        length_z=(std::min)(length_z,GetZSize()-offset_z);
+        //todo use multi-threads to speed up
+        for(SizeType depth=offset_z;depth<offset_z+length_z;depth++){
+            for(SizeType row=offset_y;row<offset_y+length_y;row++){
+                ::memcpy(Base::RawData()+depth*GetXSize()*GetYSize()+row*GetXSize()+offset_x,
+                         data+(depth-offset_z)*length_x*length_y+(row-offset_y)*length_x,
+                         length_x*sizeof(TexType));
+            }
+        }
     }
 };
 

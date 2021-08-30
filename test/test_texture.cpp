@@ -56,8 +56,23 @@ int main(){
             }
         }
     }
-    glm::vec<4,double> v{10,20,30,255};
-    v= v * 1.2;
+    std::vector<Color4b> tex_3d_color4b_sub(8);
+    for(int i=0;i<8;i++){
+        tex_3d_color4b_sub[i]={1,1,1,0};
+    }
+    tex_3d_color4b.UpdateTextureSubData(2,2,2,2,2,2,tex_3d_color4b_sub.data());
+    std::cout<<"after update 3d texture sub data"<<std::endl;
+    for(int i=2;i<4;i++){
+        for(int j=2;j<4;j++){
+            for(int k=2;k<4;k++){
+//                auto res=LinearSampler::Sample3D(tex_3d_color4b,0.12*i,0.15*j,0.25*k);
+                auto res=tex_3d_color4b.At(i,j,k);
+                std::cout<<i<<" "<<j<<" "<<k<<" "<<(int)res.r<<" "<<(int)res.g<<" "<<(int)res.b<<" "<<(int)res.a<<std::endl;
+            }
+        }
+    }
+
+
     return 0;
 
 }
