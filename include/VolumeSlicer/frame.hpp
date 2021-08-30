@@ -7,9 +7,11 @@
 #include<VolumeSlicer/export.hpp>
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
+#include<VolumeSlicer/color.hpp>
 #include<array>
 #include<cassert>
-
+#include<vector>
+#include<stdexcept>
 
 VS_START
 /**
@@ -78,6 +80,111 @@ public:
     uint8_t channels = 0;
     std::vector<T> data = {};
 };
+
+template<>
+class Image<Color4b>{
+    struct UnInit{
+
+    };
+  public:
+    using Self=Image<Color4b>;
+    Image()=default;
+
+    Image(uint32_t width,uint32_t height,const Color4b& init_value=Color4b{})
+    :Image(width,height,UnInit())
+    {
+        for(size_t i=0;i<num;i++)
+            new(data+i) Color4b(init_value);
+    }
+    Image(uint32_t width,uint32_t height,UnInit)
+    :width(width),height(height),num(width*height)
+    {
+        data=static_cast<Color4b*>(::operator new(sizeof(Color4b)*width*height));
+    }
+
+    Image(const Image& other)
+    :width(other.width),height(other.height),num(other.num)
+    {
+        if(other.IsAvailable()){
+            data=static_cast<Color4b*>(::operator new(sizeof(Color4b)*num));
+            for(size_t i=0;i<num;i++){
+                new(data+i) Color4b(other.data[i]);
+            }
+        }
+        else
+            Destroy();
+    }
+    Self& operator=(const Self& other){
+        Destroy();
+        new(this) Self(other);
+        return *this;
+    }
+    Image(Image&& other) noexcept
+        :width(other.width),height(other.height),num(other.num)
+    {
+        other.data=nullptr;
+    }
+    Self& operator=(Image&& other) noexcept{
+        Destroy();
+        new(this) Self(std::move(other));
+        return *this;
+    }
+
+    void ReadFromMemory(const Color4b* data,uint32_t width,uint32_t height){
+        if(!data || !width || !height)
+            return;
+        if(width!=this->width || height!=this->height){
+            Destroy();
+            new(this) Self(width,height);
+        }
+        memcpy(this->data,data,sizeof(Color4b)*width*height);
+    }
+    void SaveToFile(const char* file_name);
+
+    Color4b& Fetch(uint32_t x,uint32_t y){
+        return data[ToLinearIndex(x,y)];
+    }
+    const Color4b& Fetch(uint32_t x,uint32_t y) const{
+        return data[ToLinearIndex(x,y)];
+    }
+    Color4b& At(uint32_t x,uint32_t y){
+        if(x>=width || y>=height || ToLinearIndex(x,y)>=num)
+            throw std::out_of_range("Image At out of range");
+        return data[ToLinearIndex(x,y)];
+    }
+    const Color4b& At(uint32_t x,uint32_t y) const{
+        if(x>=width || y>=height || ToLinearIndex(x,y)>=num)
+            throw std::out_of_range("Image At out of range");
+        return data[ToLinearIndex(x,y)];
+    }
+    size_t ToLinearIndex(uint32_t x,uint32_t y) const{
+        return y*width+x;
+    }
+    Color4b& operator[](size_t idx){
+        return data[idx];
+    }
+    Color4b* GetData(){
+        return data;
+    }
+    const Color4b* GetData() const{
+        return data;
+    }
+    bool IsAvailable() const {
+        return data!=nullptr;
+    };
+    void Destroy(){
+        if(IsAvailable()){
+            ::operator delete(data);
+            data=nullptr;
+        }
+        width=height=num=0;
+    }
+  private:
+    uint32_t num;
+    uint32_t width,height;
+    Color4b* data;
+};
+
 
 VS_END
 #endif //VOLUMESLICER_FRAME_HPP

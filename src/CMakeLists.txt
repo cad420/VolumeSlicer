@@ -24,6 +24,7 @@ list(
         Render/cpu_raw_render_impl.cpp
         IO/reader_impl.cpp
         Common/cuda_context.cpp
+        Common/image.cpp
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
 )
