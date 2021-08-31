@@ -6,9 +6,70 @@
 #include <VolumeSlicer/color.hpp>
 #include <iostream>
 #include <vector>
-using namespace vs;
 
+#include <Utils/block_array.hpp>
+#include <Utils/linear_array.hpp>
+#include <cuda_runtime.h>
+using namespace vs;
+void test_texture();
+void test_block_array();
+void test_linear_array();
 int main(){
+//    test_texture();
+    test_block_array();
+//    test_linear_array();
+    return 0;
+}
+void test_linear_array(){
+    struct alignas(8) A{
+        char a;
+        int b;
+    };
+    std::cout<<alignof(A)<<" "<<sizeof(A)<<std::endl;
+    std::cout<<typeid(std::aligned_storage<111,8>::type).name()
+              <<" "<<sizeof(std::aligned_storage<111,alignof(A)>::type)<<std::endl;
+    std::cout<<typeid(sizeof(int)).name()<<std::endl;
+    class B{
+        int* b;
+        int a;
+      public:
+        B(){
+
+        }
+        B(int a):a(a){
+
+        }
+        B(const B& b){}
+    };
+    std::cout<<"B: "<<std::is_class_v<uint8_t><<std::endl;
+    std::cout<<std::is_default_constructible_v<B><<std::endl;
+    std::cout<<std::is_trivially_copy_constructible_v<B><<std::endl;
+    Linear3DArray<Color4b> arr_3d_color4b(5,5,5);
+    for(int i=0;i<5;i++){
+        for(int j=0;j<5;j++){
+            for(int z=0;z<5;z++){
+                arr_3d_color4b(i,j,z)={i,j,z,0};
+            }
+        }
+    }
+
+}
+void test_block_array(){
+    std::cout<<"test Block3DArray......"<<std::endl;
+    Block3DArray<uint8_t,3> block_3d_array(64,64,64,2);
+    std::cout<<block_3d_array.BlockNumX()<<" "<<block_3d_array.BlockNumY()<<" "<<block_3d_array.BlockNumZ()<<std::endl;
+    Linear3DArray<uint8_t> linear3DArray(64,64,64,3);
+
+    Block3DArray<uint8_t,3> block_3d_array2(64,64,64,linear3DArray.RawData());
+    auto ptr=block_3d_array2.GetBlockData(0,0,0);
+    block_3d_array.SetBlockData(1,1,1,ptr);
+    ptr=block_3d_array.GetBlockData(1,1,1);
+    for(int i=0;i<8*8*8;i++)
+        std::cout<<i<<" "<<(int)ptr[i]<<std::endl;
+    std::cout<<"sample ret: "<<(int)block_3d_array.Sample(1,1,1,0.5,0.5,0.5)<<std::endl;
+    std::cout<<"sample ret: "<<(int)block_3d_array.Sample(1,1,0,0.5,0.5,0.5)<<std::endl;
+}
+void test_texture(){
     std::vector<float> d(256,0.f);
     for(auto i=0;i<256;i++){
         d[i]=1.f*i;
@@ -71,8 +132,5 @@ int main(){
             }
         }
     }
-
-
-    return 0;
 
 }
