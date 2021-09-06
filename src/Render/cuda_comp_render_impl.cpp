@@ -117,6 +117,11 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
     CUDARenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
 
+void CUDACompVolumeRendererImpl::SetMPIViewOffset(float x_offset, float y_offset)
+{
+
+}
+
 void CUDACompVolumeRendererImpl::SetCamera(Camera camera) {
     this->camera=camera;
 }
@@ -290,9 +295,6 @@ void CUDACompVolumeRendererImpl::resize(int w, int h) {
 void CUDACompVolumeRendererImpl::clear() {
 
 }
-
-
-
 
 VS_END
 

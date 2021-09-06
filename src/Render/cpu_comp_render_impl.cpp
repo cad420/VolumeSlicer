@@ -15,6 +15,11 @@ void CPUCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volum
 
 }
 
+void CPUCompVolumeRendererImpl::SetMPIViewOffset(float, float)
+{
+
+}
+
 void CPUCompVolumeRendererImpl::SetCamera(Camera camera) {
 
 }

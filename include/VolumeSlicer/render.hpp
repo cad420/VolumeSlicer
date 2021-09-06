@@ -121,6 +121,8 @@ class VS_EXPORT ICompVolumeRenderer: public IVolumeRenderer{
 public:
     virtual void SetVolume(std::shared_ptr<CompVolume> comp_volume) = 0;
 
+    virtual void SetMPIViewOffset(float x_offset,float y_offset) = 0;
+
     void SetCamera(Camera camera) override = 0;
 
     void SetTransferFunc(TransferFunc tf) override = 0;
