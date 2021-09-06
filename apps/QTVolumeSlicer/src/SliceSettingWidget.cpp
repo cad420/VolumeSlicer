@@ -29,6 +29,42 @@ last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
     slice_args->setLayout(groupbox_layout);
 
 
+    auto zoom_label=new QLabel("Zoom");
+    groupbox_layout->addWidget(zoom_label);
+
+    auto lod_label=new QLabel("Lod");
+    auto voxel_label=new QLabel("Voxel per pixel");
+    lod_spin_box=new QSpinBox;
+    lod_spin_box->setReadOnly(true);
+    zoom_spin_box=new QDoubleSpinBox;
+    zoom_spin_box->setDecimals(2);
+    zoom_spin_box->setSingleStep(0.01);
+
+    connect(zoom_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+        auto slice=slicer->GetSlice();
+        slice.voxel_per_pixel_width=slice.voxel_per_pixel_height=value;
+        slicer->SetSlice(slice);
+        slicer->SetStatus(true);
+        lod_spin_box->setValue(std::log2(slice.voxel_per_pixel_width));
+        emit sliceModified();
+    });
+
+
+    auto zoom_layout=new QHBoxLayout;
+    zoom_layout->addWidget(lod_label);
+    zoom_layout->setStretchFactor(lod_label,1);
+    zoom_layout->addWidget(lod_spin_box);
+    zoom_layout->setStretchFactor(lod_spin_box,3);
+    zoom_layout->addWidget(voxel_label);
+    zoom_layout->setStretchFactor(voxel_label,3);
+    zoom_layout->addWidget(zoom_spin_box);
+    zoom_layout->setStretchFactor(zoom_spin_box,5);
+    zoom_layout->setAlignment(Qt::Alignment::enum_type::AlignCenter);
+    groupbox_layout->addLayout(zoom_layout);
+
+
+
     auto origin_label=new QLabel("Origin");
 
     groupbox_layout->addWidget(origin_label);
@@ -476,13 +512,20 @@ void SliceSettingWidget::updateSliceSettings(bool slice_update) {
     spdlog::info("update slice settings.");
     if(!slicer) return;
     this->update=slice_update;
+    updateZoom();
     updateOrigin();
     updateOffset();
     updateNormal();
     updateRotation();
     this->update=false;
 }
-
+void SliceSettingWidget::updateZoom()
+{
+    auto slice=slicer->GetSlice();
+    assert(slice.voxel_per_pixel_width==slice.voxel_per_pixel_height);
+    zoom_spin_box->setValue(slice.voxel_per_pixel_width);
+    lod_spin_box->setValue(std::log2(slice.voxel_per_pixel_width));
+}
 void SliceSettingWidget::updateOrigin() {
     auto slice=slicer->GetSlice();
 

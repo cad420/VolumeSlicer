@@ -12,6 +12,7 @@ using namespace vs;
 class QGroupBox;
 class QScrollArea;
 class QDoubleSpinBox;
+class QSpinBox;
 class QSlider;
 class SliceRenderWidget;
 class TF1DEditor;
@@ -31,6 +32,7 @@ public Q_SLOTS:
     void volumeLoaded();
     void volumeClose();
 private:
+    void updateZoom();
     void updateOrigin();
     void updateOffset();
     void updateNormal();
@@ -38,6 +40,10 @@ private:
     void initRotation();
 private:
     bool update;
+
+    QSpinBox* lod_spin_box;
+    QDoubleSpinBox* zoom_spin_box;
+
     QDoubleSpinBox* origin_x_spin_box ;
     QDoubleSpinBox* origin_y_spin_box ;
     QDoubleSpinBox* origin_z_spin_box ;
