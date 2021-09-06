@@ -74,8 +74,19 @@ using RawVolumeRenderer=Renderer<RawVolume>;
 
 VS_EXPORT std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
 
+struct MPIRenderParameter{
+    float mpi_node_x_offset;
+    float mpi_node_y_offset;
+    int mpi_world_window_w;
+    int mpi_world_window_h;
+};
+
 class VS_EXPORT IVolumeRenderer{
 public:
+    virtual void SetMPIRender(MPIRenderParameter) = 0;
+
+    virtual void SetStep(double step,int steps) = 0;
+
     virtual void SetCamera(Camera camera) = 0;
 
     virtual void SetTransferFunc(TransferFunc tf) = 0;
@@ -91,6 +102,10 @@ public:
 class VS_EXPORT IRawVolumeRenderer: public IVolumeRenderer{
 public:
     virtual void SetVolume(std::shared_ptr<RawVolume> raw_volume) = 0;
+
+    void SetMPIRender(MPIRenderParameter) override = 0;
+
+    void SetStep(double step,int steps) override = 0;
 
     void SetCamera(Camera camera) override = 0;
 
@@ -121,7 +136,9 @@ class VS_EXPORT ICompVolumeRenderer: public IVolumeRenderer{
 public:
     virtual void SetVolume(std::shared_ptr<CompVolume> comp_volume) = 0;
 
-    virtual void SetMPIViewOffset(float x_offset,float y_offset) = 0;
+    void SetMPIRender(MPIRenderParameter) override = 0;
+
+    void SetStep(double step,int steps) override = 0;
 
     void SetCamera(Camera camera) override = 0;
 

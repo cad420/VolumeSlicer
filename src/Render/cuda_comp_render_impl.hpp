@@ -15,7 +15,9 @@ public:
 
     void SetVolume(std::shared_ptr<CompVolume> comp_volume) override;
 
-    void SetMPIViewOffset(float x_offset,float y_offset) override;
+    void SetMPIRender(MPIRenderParameter) override ;
+
+    void SetStep(double step,int steps) override;
 
     void SetCamera(Camera camera) override;
 

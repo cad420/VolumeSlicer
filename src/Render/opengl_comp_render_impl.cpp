@@ -16,10 +16,7 @@ void OpenGLCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_vo
 
 }
 
-void OpenGLCompVolumeRendererImpl::SetMPIViewOffset(float, float)
-{
 
-}
 
 void OpenGLCompVolumeRendererImpl::SetCamera(vs::Camera camera) {
 
@@ -42,6 +39,14 @@ void OpenGLCompVolumeRendererImpl::resize(int w, int h) {
 }
 
 void OpenGLCompVolumeRendererImpl::clear() {
+
+}
+void OpenGLCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
+{
+
+}
+void OpenGLCompVolumeRendererImpl::SetStep(double step, int steps)
+{
 
 }
 
