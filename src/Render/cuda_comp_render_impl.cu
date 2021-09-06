@@ -252,17 +252,13 @@ namespace {
 //        color={ray_direction.x,ray_direction.y,ray_direction.z,1.f};
 //        image[image_idx]=rgbaFloatToUInt(color);
 //        return;
-        if(image_x==480 || image_y==540){
-            color={1.f,1.f,1.f,1.f};
-            image[image_idx]=rgbaFloatToUInt(color);
-            return;
-        }
+
         int steps=0;
         int lod_steps=0;
         float3 lod_sample_pos=start_pos;
         float last_scalar=0.f;
         int cur_lod;
-        while(steps++<6000){
+        while(steps++<10000){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
                || ray_pos.y<0.f || ray_pos.y>compVolumeParameter.volume_board.y
                || ray_pos.z<0.f || ray_pos.z>compVolumeParameter.volume_board.z){
@@ -288,10 +284,11 @@ namespace {
             if (flag > 0)
             {
 
-                if (sample_scalar > 0.3f) {
+                if (sample_scalar > 0.0f) {
 
 //                    sample_color = tex1D<float4>(transferFunc, sample_scalar);
                     sample_color=tex2D<float4>(preIntTransferFunc,last_scalar,sample_scalar);
+//                    sample_color=tex1D<float4>(transferFunc,sample_scalar);
                     if(sample_color.w>0.f){
                       last_scalar=sample_scalar;
 //                    color=sample_color;

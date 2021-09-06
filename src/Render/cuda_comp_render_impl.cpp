@@ -144,7 +144,7 @@ void CUDACompVolumeRendererImpl::render() {
     cudaCompRenderParameter.w=window_w;
     cudaCompRenderParameter.h=window_h;
     cudaCompRenderParameter.fov=camera.zoom;
-    cudaCompRenderParameter.step=0.00016f;
+    cudaCompRenderParameter.step=0.00010f;
     cudaCompRenderParameter.view_pos=make_float3(camera.pos[0],camera.pos[1],camera.pos[2]);
     cudaCompRenderParameter.view_direction=normalize(make_float3(camera.look_at[0]-camera.pos[0],
                                                        camera.look_at[1]-camera.pos[1],

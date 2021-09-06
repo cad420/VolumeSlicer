@@ -77,6 +77,7 @@ void LargeVolumeVisGUI::init(const char * config_file) {
 void LargeVolumeVisGUI::show() {
     bool exit=false;
     bool motion;
+
     auto process_event=[&exit,this,&motion](){
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
@@ -183,35 +184,45 @@ void LargeVolumeVisGUI::show() {
     SDL_EXPR(sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED));
     SDL_Rect rect{0,0,(int)window_w,(int)window_h};
     SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
+
+    SDL_Texture* low_texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w/4,window_h/4);
     SDL_CHECK
 
     auto cur_frame_t=SDL_GetTicks();
+    uint32_t interval;
+
     while(!exit){
         motion=false;
         cur_frame_t=SDL_GetTicks();
         process_event();
 
 
-        comp_volume_renderer->render();
+        if(motion){
+            interval=50;
+            comp_volume_renderer->resize(window_w/4,window_h/4);
+            comp_volume_renderer->render();
+            SDL_UpdateTexture(low_texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w );
+            SDL_RenderClear(sdl_renderer);
+            SDL_RenderCopy(sdl_renderer, low_texture, nullptr, &rect);
+            SDL_RenderPresent(sdl_renderer);
 
-
-        SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w * 4);
-        SDL_RenderClear(sdl_renderer);
-        SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
-        SDL_RenderPresent(sdl_renderer);
+        }
+        else{
+            interval=750;
+            comp_volume_renderer->resize(window_w,window_h);
+            comp_volume_renderer->render();
+            SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w * 4);
+            SDL_RenderClear(sdl_renderer);
+            SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
+            SDL_RenderPresent(sdl_renderer);
+        }
 
 
 //        render_imgui();
 
-//        SDL_GL_SwapWindow(sdl_window);
         SDL_CHECK
-        uint32_t interval;
-        if(motion)
-            interval=100;
-        else
-            interval=500;
-        while(SDL_GetTicks()<cur_frame_t+interval){
 
+        while(SDL_GetTicks()<cur_frame_t+interval){
         }
     }
 }
@@ -295,6 +306,7 @@ void LargeVolumeVisGUI::initRendererResource() {
 
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
+    tf.points.emplace_back(25,std::array<double,4>{0.1,0.0,0.0,0.0});
     tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.9});
     tf.points.emplace_back(64,std::array<double,4>{1.0,0.75,0.7,0.9});
     tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.5,0.9});
