@@ -76,7 +76,8 @@ void LargeVolumeVisGUI::init(const char * config_file) {
 
 void LargeVolumeVisGUI::show() {
     bool exit=false;
-    auto process_event=[&exit,this](){
+    bool motion;
+    auto process_event=[&exit,this,&motion](){
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
         //camera pos according to volume dim count in voxel
@@ -99,12 +100,12 @@ void LargeVolumeVisGUI::show() {
                     switch (event.key.keysym.sym) {
                         case SDLK_ESCAPE:{exit=true;break;}
                         case SDLK_LCTRL:{;break;}
-                        case SDLK_a:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Left,0.0001);break;}
-                        case SDLK_d:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Right,0.0001);break;}
-                        case SDLK_w:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Forward,0.0001);break;}
-                        case SDLK_s:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Backward,0.0001);break;}
-                        case SDLK_q:{ fpsCamera.processKeyEvent(control::CameraDefinedKey::Up,0.0001);break;}
-                        case SDLK_e:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Bottom,0.0001);break;}
+                        case SDLK_a:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Left,0.0001);motion=true;break;}
+                        case SDLK_d:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Right,0.0001);motion=true;break;}
+                        case SDLK_w:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Forward,0.0001);motion=true;break;}
+                        case SDLK_s:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Backward,0.0001);motion=true;break;}
+                        case SDLK_q:{ fpsCamera.processKeyEvent(control::CameraDefinedKey::Up,0.0001);motion=true;break;}
+                        case SDLK_e:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Bottom,0.0001);motion=true;break;}
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
 
@@ -131,9 +132,11 @@ void LargeVolumeVisGUI::show() {
                 case SDL_MOUSEWHEEL:{
                     if(event.wheel.y>0){
                         fpsCamera.processMouseScroll(1.f);
+                        motion=true;
                     }
                     else{
                         fpsCamera.processMouseScroll(-1.f);
+                        motion=true;
                     }
                     break;
                 }
@@ -142,6 +145,7 @@ void LargeVolumeVisGUI::show() {
                     if(event.button.button==1){
                         right_mouse_press=true;
                         fpsCamera.processMouseButton(control::CameraDefinedMouseButton::Left,true,event.button.x,event.button.y);
+                        motion=true;
                     }
                     break;
                 }
@@ -157,6 +161,7 @@ void LargeVolumeVisGUI::show() {
                 case SDL_MOUSEMOTION:{
                     if(right_mouse_press){
                         fpsCamera.processMouseMove(event.button.x,event.button.y);
+                        motion=true;
                     }
                     break;
                 }
@@ -180,9 +185,10 @@ void LargeVolumeVisGUI::show() {
     SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
     SDL_CHECK
 
-    auto last_frame_t=SDL_GetTicks();
+    auto cur_frame_t=SDL_GetTicks();
     while(!exit){
-        last_frame_t=SDL_GetTicks();
+        motion=false;
+        cur_frame_t=SDL_GetTicks();
         process_event();
 
 
@@ -194,13 +200,19 @@ void LargeVolumeVisGUI::show() {
         SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
         SDL_RenderPresent(sdl_renderer);
 
-        while(SDL_GetTicks()<last_frame_t+100){
 
-        }
 //        render_imgui();
 
 //        SDL_GL_SwapWindow(sdl_window);
         SDL_CHECK
+        uint32_t interval;
+        if(motion)
+            interval=100;
+        else
+            interval=500;
+        while(SDL_GetTicks()<cur_frame_t+interval){
+
+        }
     }
 }
 void LargeVolumeVisGUI::render_imgui() {
