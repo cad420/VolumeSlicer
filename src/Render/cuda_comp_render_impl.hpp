@@ -44,6 +44,8 @@ private:
     int window_w,window_h;
     CUcontext cu_context;
     std::shared_ptr<CompVolume> comp_volume;
+    float step;
+    int steps;
     Camera camera;
     Image<uint32_t> image;
     std::unique_ptr<CUDAVolumeBlockCache> cuda_volume_block_cache;

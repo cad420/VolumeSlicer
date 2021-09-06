@@ -124,7 +124,8 @@ void CUDACompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 
 void CUDACompVolumeRendererImpl::SetStep(double step, int steps)
 {
-
+    this->step=step;
+    this->steps=steps;
 }
 
 void CUDACompVolumeRendererImpl::SetCamera(Camera camera) {
@@ -154,7 +155,8 @@ void CUDACompVolumeRendererImpl::render() {
     cudaCompRenderParameter.w=window_w;
     cudaCompRenderParameter.h=window_h;
     cudaCompRenderParameter.fov=camera.zoom;
-    cudaCompRenderParameter.step=0.00010f;
+    cudaCompRenderParameter.step=this->step;
+    cudaCompRenderParameter.steps=this->steps;
     cudaCompRenderParameter.view_pos=make_float3(camera.pos[0],camera.pos[1],camera.pos[2]);
     cudaCompRenderParameter.view_direction=normalize(make_float3(camera.look_at[0]-camera.pos[0],
                                                        camera.look_at[1]-camera.pos[1],

@@ -9,12 +9,14 @@
 #include "Algorithm/helper_math.h"
 #include "Common/cuda_utils.hpp"
 #include <iostream>
+#include <VolumeSlicer/render.hpp>
 using namespace CUDARenderer;
-
+using namespace vs;
 namespace {
     __constant__ CUDACompRenderParameter cudaCompRenderParameter;
     __constant__ CompVolumeParameter compVolumeParameter;
     __constant__ LightParameter lightParameter;
+    __constant__ MPIRenderParameter mpiRenderParameter;
     __constant__ uint4 *mappingTable;
     __constant__ uint lodMappingTableOffset[10];
     __constant__ cudaTextureObject_t cacheVolumes[10];
@@ -81,8 +83,7 @@ namespace {
                 -y_offset * cudaCompRenderParameter.up;
         float3 ray_direction=normalize(pixel_view_pos-cudaCompRenderParameter.view_pos);
 
-//        if(x_offset==0.f || y_offset==0.f)
-//            ray_direction=make_float3(0.0,0.0,-1.0);
+
         float3 start_pos=cudaCompRenderParameter.view_pos;
         float3 ray_pos=start_pos;
         int last_lod=0;
@@ -91,7 +92,8 @@ namespace {
         int3 block_dim=compVolumeParameter.block_dim;
         int no_padding_block_length=compVolumeParameter.no_padding_block_length;
         int steps=0;
-        while(steps++<2000){
+        int nsteps=cudaCompRenderParameter.steps;
+        while(steps++<nsteps/4){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
                || ray_pos.y<0.f || ray_pos.y>compVolumeParameter.volume_board.y
                || ray_pos.z<0.f || ray_pos.z>compVolumeParameter.volume_board.z){
@@ -243,6 +245,7 @@ namespace {
         float3 ray_direction=normalize(pixel_view_pos-cudaCompRenderParameter.view_pos);
 
         float3 start_pos=cudaCompRenderParameter.view_pos;
+//        start_pos+=sin((image_x*12.9898+image_y*78.233)*3.141592627/180.0) * cudaCompRenderParameter.space * ray_direction;
         float3 ray_pos=start_pos;
         int last_lod=0;
         int lod_t=1;
@@ -258,7 +261,8 @@ namespace {
         float3 lod_sample_pos=start_pos;
         float last_scalar=0.f;
         int cur_lod;
-        while(steps++<10000){
+        int nsteps=cudaCompRenderParameter.steps;
+        while(steps++<nsteps){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
                || ray_pos.y<0.f || ray_pos.y>compVolumeParameter.volume_board.y
                || ray_pos.z<0.f || ray_pos.z>compVolumeParameter.volume_board.z){

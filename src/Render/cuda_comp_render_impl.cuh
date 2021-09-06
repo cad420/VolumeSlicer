@@ -11,6 +11,7 @@ namespace CUDARenderer{
         int w,h;
         float fov;
         float step;//0.0001
+        int steps;
         float3 view_direction;
         float3 up;
         float3 right;
