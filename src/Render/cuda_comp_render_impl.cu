@@ -9,12 +9,14 @@
 #include "Algorithm/helper_math.h"
 #include "Common/cuda_utils.hpp"
 #include <iostream>
+
 using namespace CUDARenderer;
 
 namespace {
     __constant__ CUDACompRenderParameter cudaCompRenderParameter;
     __constant__ CompVolumeParameter compVolumeParameter;
     __constant__ LightParameter lightParameter;
+    __constant__ MPIRenderParameter mpiRenderParameter;
     __constant__ uint4 *mappingTable;
     __constant__ uint lodMappingTableOffset[10];
     __constant__ cudaTextureObject_t cacheVolumes[10];
@@ -71,18 +73,24 @@ namespace {
         int image_x=blockIdx.x*blockDim.x+threadIdx.x;
         int image_y=blockIdx.y*blockDim.y+threadIdx.y;
         if(image_x>=cudaCompRenderParameter.w || image_y>=cudaCompRenderParameter.h) return;
-        float x_offset=(image_x-cudaCompRenderParameter.w/2)*2.f/cudaCompRenderParameter.w
-                *tanf(radians(cudaCompRenderParameter.fov/2))*cudaCompRenderParameter.w/cudaCompRenderParameter.h;
-        float y_offset=(image_y-cudaCompRenderParameter.h/2)*2.f/cudaCompRenderParameter.h
-                *tanf(radians(cudaCompRenderParameter.fov/2));
+
+        float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov / 2)) / cudaCompRenderParameter.h;
+        float x_offset = (image_x - cudaCompRenderParameter.w / 2) * scale
+                         * cudaCompRenderParameter.w / cudaCompRenderParameter.h;//ratio
+        float y_offset = (image_y - cudaCompRenderParameter.h / 2) * scale;
+        if(cudaCompRenderParameter.mpi_render)//mpi_node_x_offset is measured in pixel
+        {
+            x_offset += mpiRenderParameter.mpi_node_x_offset * scale * cudaCompRenderParameter.w / cudaCompRenderParameter.h;
+            y_offset += mpiRenderParameter.mpi_node_y_offset * scale;
+        }
+
         float3 pixel_view_pos=cudaCompRenderParameter.view_pos
                 +cudaCompRenderParameter.view_direction
                 +x_offset * cudaCompRenderParameter.right
                 -y_offset * cudaCompRenderParameter.up;
         float3 ray_direction=normalize(pixel_view_pos-cudaCompRenderParameter.view_pos);
 
-//        if(x_offset==0.f || y_offset==0.f)
-//            ray_direction=make_float3(0.0,0.0,-1.0);
+
         float3 start_pos=cudaCompRenderParameter.view_pos;
         float3 ray_pos=start_pos;
         int last_lod=0;
@@ -91,7 +99,8 @@ namespace {
         int3 block_dim=compVolumeParameter.block_dim;
         int no_padding_block_length=compVolumeParameter.no_padding_block_length;
         int steps=0;
-        while(steps++<2000){
+        int nsteps=cudaCompRenderParameter.steps;
+        while(steps++<nsteps/4){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
                || ray_pos.y<0.f || ray_pos.y>compVolumeParameter.volume_board.y
                || ray_pos.z<0.f || ray_pos.z>compVolumeParameter.volume_board.z){
@@ -232,10 +241,17 @@ namespace {
         int image_y=blockIdx.y*blockDim.y+threadIdx.y;
         if(image_x>=cudaCompRenderParameter.w || image_y>=cudaCompRenderParameter.h) return;
         uint64_t image_idx=(uint64_t)image_y*cudaCompRenderParameter.w+image_x;
-        float x_offset=(image_x-cudaCompRenderParameter.w/2)*2.f/cudaCompRenderParameter.w
-                       *tanf(radians(cudaCompRenderParameter.fov/2))*cudaCompRenderParameter.w/cudaCompRenderParameter.h;
-        float y_offset=(image_y-cudaCompRenderParameter.h/2)*2.f/cudaCompRenderParameter.h
-                       *tanf(radians(cudaCompRenderParameter.fov/2));
+
+        float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov / 2)) / cudaCompRenderParameter.h;
+        float x_offset = (image_x - cudaCompRenderParameter.w / 2) * scale
+                         * cudaCompRenderParameter.w / cudaCompRenderParameter.h;//ratio
+        float y_offset = (image_y - cudaCompRenderParameter.h / 2) * scale;
+        if(cudaCompRenderParameter.mpi_render)//mpi_node_x_offset is measured in pixel
+        {
+            x_offset += mpiRenderParameter.mpi_node_x_offset * cudaCompRenderParameter.w * scale * cudaCompRenderParameter.w / cudaCompRenderParameter.h;
+            y_offset += mpiRenderParameter.mpi_node_y_offset * cudaCompRenderParameter.h * scale;
+        }
+
         float3 pixel_view_pos=cudaCompRenderParameter.view_pos
                               +cudaCompRenderParameter.view_direction
                               +x_offset*cudaCompRenderParameter.right
@@ -243,6 +259,7 @@ namespace {
         float3 ray_direction=normalize(pixel_view_pos-cudaCompRenderParameter.view_pos);
 
         float3 start_pos=cudaCompRenderParameter.view_pos;
+//        start_pos+=sin((image_x*12.9898+image_y*78.233)*3.141592627/180.0) * cudaCompRenderParameter.space * ray_direction;
         float3 ray_pos=start_pos;
         int last_lod=0;
         int lod_t=1;
@@ -252,17 +269,14 @@ namespace {
 //        color={ray_direction.x,ray_direction.y,ray_direction.z,1.f};
 //        image[image_idx]=rgbaFloatToUInt(color);
 //        return;
-        if(image_x==480 || image_y==540){
-            color={1.f,1.f,1.f,1.f};
-            image[image_idx]=rgbaFloatToUInt(color);
-            return;
-        }
+
         int steps=0;
         int lod_steps=0;
         float3 lod_sample_pos=start_pos;
         float last_scalar=0.f;
         int cur_lod;
-        while(steps++<6000){
+        int nsteps=cudaCompRenderParameter.steps;
+        while(steps++<nsteps){
             if(ray_pos.x<0.f || ray_pos.x>compVolumeParameter.volume_board.x
                || ray_pos.y<0.f || ray_pos.y>compVolumeParameter.volume_board.y
                || ray_pos.z<0.f || ray_pos.z>compVolumeParameter.volume_board.z){
@@ -288,10 +302,11 @@ namespace {
             if (flag > 0)
             {
 
-                if (sample_scalar > 0.3f) {
+                if (sample_scalar > 0.0f) {
 
 //                    sample_color = tex1D<float4>(transferFunc, sample_scalar);
                     sample_color=tex2D<float4>(preIntTransferFunc,last_scalar,sample_scalar);
+//                    sample_color=tex1D<float4>(transferFunc,sample_scalar);
                     if(sample_color.w>0.f){
                       last_scalar=sample_scalar;
 //                    color=sample_color;
@@ -413,6 +428,10 @@ namespace CUDARenderer{
     void UploadCUDACompRenderParameter(const CUDACompRenderParameter &comp_render) {
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cudaCompRenderParameter,&comp_render,sizeof(CUDACompRenderParameter)));
     }
+    void UploadMPIRenderParameter(const MPIRenderParameter& mpi_render){
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(mpiRenderParameter,&mpi_render,sizeof(MPIRenderParameter)));
+    }
+
 
     void SetCUDATextureObject(cudaTextureObject_t *textures, size_t size) {
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cacheVolumes,textures,size*sizeof(cudaTextureObject_t)));

@@ -15,6 +15,10 @@ public:
 
     void SetVolume(std::shared_ptr<CompVolume> comp_volume) override;
 
+    void SetMPIRender(MPIRenderParameter) override ;
+
+    void SetStep(double step,int steps) override;
+
     void SetCamera(Camera camera) override;
 
     void SetTransferFunc(TransferFunc tf) override;
@@ -40,6 +44,9 @@ private:
     int window_w,window_h;
     CUcontext cu_context;
     std::shared_ptr<CompVolume> comp_volume;
+    float step;
+    int steps;
+    bool mpi_render;
     Camera camera;
     Image<uint32_t> image;
     std::unique_ptr<CUDAVolumeBlockCache> cuda_volume_block_cache;

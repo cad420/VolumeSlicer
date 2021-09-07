@@ -15,6 +15,7 @@ void CPUCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volum
 
 }
 
+
 void CPUCompVolumeRendererImpl::SetCamera(Camera camera) {
 
 }
@@ -38,7 +39,14 @@ void CPUCompVolumeRendererImpl::resize(int w, int h) {
 void CPUCompVolumeRendererImpl::clear() {
 
 }
+void CPUCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
+{
 
+}
+void CPUCompVolumeRendererImpl::SetStep(double step, int steps)
+{
+
+}
 
 VS_END
 

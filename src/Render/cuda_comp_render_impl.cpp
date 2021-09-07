@@ -53,7 +53,7 @@ std::unique_ptr<CUDACompVolumeRenderer> CUDACompVolumeRenderer::Create(int w, in
 }
 
 CUDACompVolumeRendererImpl::CUDACompVolumeRendererImpl(int w, int h, CUcontext ctx)
-:window_w(w),window_h(h)
+:window_w(w),window_h(h),steps(0),step(0.f),mpi_render(false)
 {
     if(ctx){
         this->cu_context=ctx;
@@ -117,6 +117,18 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
     CUDARenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
 
+void CUDACompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpiRenderParameter)
+{
+    CUDARenderer::UploadMPIRenderParameter(mpiRenderParameter);
+    this->mpi_render=true;
+}
+
+void CUDACompVolumeRendererImpl::SetStep(double step, int steps)
+{
+    this->step=step;
+    this->steps=steps;
+}
+
 void CUDACompVolumeRendererImpl::SetCamera(Camera camera) {
     this->camera=camera;
 }
@@ -144,7 +156,8 @@ void CUDACompVolumeRendererImpl::render() {
     cudaCompRenderParameter.w=window_w;
     cudaCompRenderParameter.h=window_h;
     cudaCompRenderParameter.fov=camera.zoom;
-    cudaCompRenderParameter.step=0.00016f;
+    cudaCompRenderParameter.step=this->step;
+    cudaCompRenderParameter.steps=this->steps;
     cudaCompRenderParameter.view_pos=make_float3(camera.pos[0],camera.pos[1],camera.pos[2]);
     cudaCompRenderParameter.view_direction=normalize(make_float3(camera.look_at[0]-camera.pos[0],
                                                        camera.look_at[1]-camera.pos[1],
@@ -154,6 +167,7 @@ void CUDACompVolumeRendererImpl::render() {
     cudaCompRenderParameter.space=make_float3(comp_volume->GetVolumeSpaceX(),
                                               comp_volume->GetVolumeSpaceY(),
                                               comp_volume->GetVolumeSpaceZ());
+    cudaCompRenderParameter.mpi_render=this->mpi_render;
     CUDARenderer::UploadCUDACompRenderParameter(cudaCompRenderParameter);
 
 
@@ -290,8 +304,6 @@ void CUDACompVolumeRendererImpl::resize(int w, int h) {
 void CUDACompVolumeRendererImpl::clear() {
 
 }
-
-
 
 
 VS_END
