@@ -46,6 +46,7 @@ private:
     std::shared_ptr<CompVolume> comp_volume;
     float step;
     int steps;
+    bool mpi_render;
     Camera camera;
     Image<uint32_t> image;
     std::unique_ptr<CUDAVolumeBlockCache> cuda_volume_block_cache;

@@ -53,7 +53,7 @@ std::unique_ptr<CUDACompVolumeRenderer> CUDACompVolumeRenderer::Create(int w, in
 }
 
 CUDACompVolumeRendererImpl::CUDACompVolumeRendererImpl(int w, int h, CUcontext ctx)
-:window_w(w),window_h(h)
+:window_w(w),window_h(h),steps(0),step(0.f),mpi_render(false)
 {
     if(ctx){
         this->cu_context=ctx;
@@ -117,9 +117,10 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
     CUDARenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
 
-void CUDACompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
+void CUDACompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpiRenderParameter)
 {
-
+    CUDARenderer::UploadMPIRenderParameter(mpiRenderParameter);
+    this->mpi_render=true;
 }
 
 void CUDACompVolumeRendererImpl::SetStep(double step, int steps)
@@ -166,6 +167,7 @@ void CUDACompVolumeRendererImpl::render() {
     cudaCompRenderParameter.space=make_float3(comp_volume->GetVolumeSpaceX(),
                                               comp_volume->GetVolumeSpaceY(),
                                               comp_volume->GetVolumeSpaceZ());
+    cudaCompRenderParameter.mpi_render=this->mpi_render;
     CUDARenderer::UploadCUDACompRenderParameter(cudaCompRenderParameter);
 
 

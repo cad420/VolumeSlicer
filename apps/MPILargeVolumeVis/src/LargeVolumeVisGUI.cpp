@@ -171,12 +171,22 @@ void LargeVolumeVisGUI::show() {
             }
         }//end of SDL_PollEvent
         MPI_Bcast(&fpsCamera,28,MPI_FLOAT,0,MPI_COMM_WORLD);
-
+        MPI_Bcast(&motion,1,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Bcast(&exit,1,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
         auto camera_pos=fpsCamera.getCameraPos();
         auto camera_up=fpsCamera.getCameraUp();
         auto camera_look_at=fpsCamera.getCameraLookAt();
         auto camera_zoom=fpsCamera.getZoom();
         auto camera_right=fpsCamera.getCameraRight();
+        MPIRenderParameter mpiRenderParameter;
+        mpiRenderParameter.mpi_world_window_w=window_manager->GetWorldWindowWidth();
+        mpiRenderParameter.mpi_world_window_h=window_manager->GetWorldWindowHeight();
+        static float center_x=window_manager->GetWindowColNum()*1.f/2-0.5f;
+        static float center_y=window_manager->GetWindowRowNum()*1.f/2-0.5f;
+        mpiRenderParameter.mpi_node_x_offset=(window_manager->GetWorldRankOffsetX()-center_x);
+        mpiRenderParameter.mpi_node_y_offset=(window_manager->GetWorldRankOffsetY()-center_y);
+        comp_volume_renderer->SetMPIRender(mpiRenderParameter);
         Camera camera{};
         camera.pos={camera_pos.x,camera_pos.y,camera_pos.z};
         camera.up={camera_up.x,camera_up.y,camera_up.z};
@@ -190,7 +200,7 @@ void LargeVolumeVisGUI::show() {
     SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
     SDL_Texture* low_texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w/2,window_h/2);
     SDL_CHECK
-    auto cur_frame_t=SDL_GetTicks();
+    decltype(SDL_GetTicks()) cur_frame_t;
     uint32_t interval;
     bool motioned=false;
     while(!exit){

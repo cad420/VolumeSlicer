@@ -9,9 +9,9 @@
 #include "Algorithm/helper_math.h"
 #include "Common/cuda_utils.hpp"
 #include <iostream>
-#include <VolumeSlicer/render.hpp>
+
 using namespace CUDARenderer;
-using namespace vs;
+
 namespace {
     __constant__ CUDACompRenderParameter cudaCompRenderParameter;
     __constant__ CompVolumeParameter compVolumeParameter;
@@ -73,10 +73,17 @@ namespace {
         int image_x=blockIdx.x*blockDim.x+threadIdx.x;
         int image_y=blockIdx.y*blockDim.y+threadIdx.y;
         if(image_x>=cudaCompRenderParameter.w || image_y>=cudaCompRenderParameter.h) return;
-        float x_offset=(image_x-cudaCompRenderParameter.w/2)*2.f/cudaCompRenderParameter.w
-                *tanf(radians(cudaCompRenderParameter.fov/2))*cudaCompRenderParameter.w/cudaCompRenderParameter.h;
-        float y_offset=(image_y-cudaCompRenderParameter.h/2)*2.f/cudaCompRenderParameter.h
-                *tanf(radians(cudaCompRenderParameter.fov/2));
+
+        float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov / 2)) / cudaCompRenderParameter.h;
+        float x_offset = (image_x - cudaCompRenderParameter.w / 2) * scale
+                         * cudaCompRenderParameter.w / cudaCompRenderParameter.h;//ratio
+        float y_offset = (image_y - cudaCompRenderParameter.h / 2) * scale;
+        if(cudaCompRenderParameter.mpi_render)//mpi_node_x_offset is measured in pixel
+        {
+            x_offset += mpiRenderParameter.mpi_node_x_offset * scale * cudaCompRenderParameter.w / cudaCompRenderParameter.h;
+            y_offset += mpiRenderParameter.mpi_node_y_offset * scale;
+        }
+
         float3 pixel_view_pos=cudaCompRenderParameter.view_pos
                 +cudaCompRenderParameter.view_direction
                 +x_offset * cudaCompRenderParameter.right
@@ -234,10 +241,17 @@ namespace {
         int image_y=blockIdx.y*blockDim.y+threadIdx.y;
         if(image_x>=cudaCompRenderParameter.w || image_y>=cudaCompRenderParameter.h) return;
         uint64_t image_idx=(uint64_t)image_y*cudaCompRenderParameter.w+image_x;
-        float x_offset=(image_x-cudaCompRenderParameter.w/2)*2.f/cudaCompRenderParameter.w
-                       *tanf(radians(cudaCompRenderParameter.fov/2))*cudaCompRenderParameter.w/cudaCompRenderParameter.h;
-        float y_offset=(image_y-cudaCompRenderParameter.h/2)*2.f/cudaCompRenderParameter.h
-                       *tanf(radians(cudaCompRenderParameter.fov/2));
+
+        float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov / 2)) / cudaCompRenderParameter.h;
+        float x_offset = (image_x - cudaCompRenderParameter.w / 2) * scale
+                         * cudaCompRenderParameter.w / cudaCompRenderParameter.h;//ratio
+        float y_offset = (image_y - cudaCompRenderParameter.h / 2) * scale;
+        if(cudaCompRenderParameter.mpi_render)//mpi_node_x_offset is measured in pixel
+        {
+            x_offset += mpiRenderParameter.mpi_node_x_offset * cudaCompRenderParameter.w * scale * cudaCompRenderParameter.w / cudaCompRenderParameter.h;
+            y_offset += mpiRenderParameter.mpi_node_y_offset * cudaCompRenderParameter.h * scale;
+        }
+
         float3 pixel_view_pos=cudaCompRenderParameter.view_pos
                               +cudaCompRenderParameter.view_direction
                               +x_offset*cudaCompRenderParameter.right
@@ -414,6 +428,10 @@ namespace CUDARenderer{
     void UploadCUDACompRenderParameter(const CUDACompRenderParameter &comp_render) {
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cudaCompRenderParameter,&comp_render,sizeof(CUDACompRenderParameter)));
     }
+    void UploadMPIRenderParameter(const MPIRenderParameter& mpi_render){
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(mpiRenderParameter,&mpi_render,sizeof(MPIRenderParameter)));
+    }
+
 
     void SetCUDATextureObject(cudaTextureObject_t *textures, size_t size) {
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cacheVolumes,textures,size*sizeof(cudaTextureObject_t)));

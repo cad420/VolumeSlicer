@@ -5,6 +5,8 @@
 #ifndef VOLUMESLICER_CUDA_COMP_RENDER_IMPL_CUH
 #define VOLUMESLICER_CUDA_COMP_RENDER_IMPL_CUH
 #include <VolumeSlicer/cuda_context.hpp>
+#include <VolumeSlicer/render.hpp>
+using namespace vs;
 namespace CUDARenderer{
     struct CUDACompRenderParameter{
         float3 view_pos;
@@ -16,6 +18,7 @@ namespace CUDARenderer{
         float3 up;
         float3 right;
         float3 space;//0.00032 0.00032 0.001 um
+        bool mpi_render;
     };
 
 //not changed while start rendering
@@ -48,6 +51,8 @@ namespace CUDARenderer{
     void SetCUDATextureObject(cudaTextureObject_t* textures,size_t size);
 
     void UploadCUDACompRenderParameter(const CUDACompRenderParameter&);
+
+    void UploadMPIRenderParameter(const MPIRenderParameter& mpi_render);
 
     void UploadCompVolumeParameter(const CompVolumeParameter&);
 
