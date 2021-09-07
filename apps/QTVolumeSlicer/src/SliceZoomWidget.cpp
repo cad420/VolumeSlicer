@@ -80,16 +80,18 @@ void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
         float y0=slice.origin[1];
         float z0=slice.origin[2];
         float D=A*x0+B*y0+C*z0;
-
+        static float dim_x=raw_volume->GetVolumeDimX();
+        static float dim_y=raw_volume->GetVolumeDimY();
+        static float dim_z=raw_volume->GetVolumeDimZ();
         static std::array< std::array<float,3> ,8> pts={
                 std::array<float,3>{0.f,0.f,0.f},
-                std::array<float,3>{366.f,0.f,0.f},
-                std::array<float,3>{366.f,463.f,0.f},
-                std::array<float,3>{0.f,463.f,0.f},
-                std::array<float,3>{0.f,0.f,161.f},
-                std::array<float,3>{366.f,0.f,161.f},
-                std::array<float,3>{366.f,463.f,161.f},
-                std::array<float,3>{0.f,463.f,161.f}
+                std::array<float,3>{dim_x,0.f,0.f},
+                std::array<float,3>{dim_x,dim_y,0.f},
+                std::array<float,3>{0.f,dim_y,0.f},
+                std::array<float,3>{0.f,0.f,dim_z},
+                std::array<float,3>{dim_x,0.f,dim_z},
+                std::array<float,3>{dim_x,dim_y,dim_z},
+                std::array<float,3>{0.f,dim_y,dim_z}
         };
         //total 12 lines
         static std::array<std::array<int,2>,12> line_index={
@@ -130,7 +132,7 @@ void SliceZoomWidget::setSlicer(const std::shared_ptr<Slicer> &slicer) {
                 }
             }
         }
-//        std::cout<<"intersect pts cnt: "<<intersect_pts_cnt<<std::endl;
+        std::cout<<"intersect pts cnt: "<<intersect_pts_cnt<<std::endl;
         intersect_pts={intersect_pts[0]/intersect_pts_cnt,
                        intersect_pts[1]/intersect_pts_cnt,
                        intersect_pts[2]/intersect_pts_cnt};

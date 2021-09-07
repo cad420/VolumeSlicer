@@ -3,6 +3,8 @@
 //
 #include "SliceSettingWidget.hpp"
 #include "SliceRenderWidget.hpp"
+#include "VolumeRenderWidget.hpp"
+#include "TrivalVolume.hpp"
 #include "tf1deditor.h"
 #include <iostream>
 
@@ -25,6 +27,42 @@ last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
 
     auto slice_args=new QGroupBox("Slice Setting");
     slice_args->setLayout(groupbox_layout);
+
+
+    auto zoom_label=new QLabel("Zoom");
+    groupbox_layout->addWidget(zoom_label);
+
+    auto lod_label=new QLabel("Lod");
+    auto voxel_label=new QLabel("Voxel per pixel");
+    lod_spin_box=new QSpinBox;
+    lod_spin_box->setReadOnly(true);
+    zoom_spin_box=new QDoubleSpinBox;
+    zoom_spin_box->setDecimals(2);
+    zoom_spin_box->setSingleStep(0.01);
+
+    connect(zoom_spin_box,&QDoubleSpinBox::valueChanged,[this](double value){
+        if(update) return;
+        auto slice=slicer->GetSlice();
+        slice.voxel_per_pixel_width=slice.voxel_per_pixel_height=value;
+        slicer->SetSlice(slice);
+        slicer->SetStatus(true);
+        lod_spin_box->setValue(std::log2(slice.voxel_per_pixel_width));
+        emit sliceModified();
+    });
+
+
+    auto zoom_layout=new QHBoxLayout;
+    zoom_layout->addWidget(lod_label);
+    zoom_layout->setStretchFactor(lod_label,1);
+    zoom_layout->addWidget(lod_spin_box);
+    zoom_layout->setStretchFactor(lod_spin_box,3);
+    zoom_layout->addWidget(voxel_label);
+    zoom_layout->setStretchFactor(voxel_label,3);
+    zoom_layout->addWidget(zoom_spin_box);
+    zoom_layout->setStretchFactor(zoom_spin_box,5);
+    zoom_layout->setAlignment(Qt::Alignment::enum_type::AlignCenter);
+    groupbox_layout->addLayout(zoom_layout);
+
 
 
     auto origin_label=new QLabel("Origin");
@@ -186,6 +224,30 @@ last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
     slice_args->setFixedHeight(500);
     widget_layout->addWidget(slice_args);
 
+  auto visible_layout=new QHBoxLayout;
+  auto volume_visible_check_box=new QCheckBox("volume");
+  volume_visible_check_box->setChecked(true);
+  auto slice_visible_check_box=new QCheckBox("slice");
+  slice_visible_check_box->setChecked(true);
+  connect(volume_visible_check_box,&QCheckBox::stateChanged,
+          [this,volume_visible_check_box,slice_visible_check_box](int state){
+            bool volume_visible=volume_visible_check_box->isChecked();
+            bool slice_visible=slice_visible_check_box->isChecked();
+            m_volume_render_widget->setVisible(volume_visible,slice_visible);
+          });
+  connect(slice_visible_check_box,&QCheckBox::stateChanged,
+          [this,volume_visible_check_box,slice_visible_check_box](int state){
+            bool volume_visible=volume_visible_check_box->isChecked();
+            bool slice_visible=slice_visible_check_box->isChecked();
+            std::cout<<"slice change: "<<slice_visible<<std::endl;
+            m_volume_render_widget->setVisible(volume_visible,slice_visible);
+          });
+
+  visible_layout->addWidget(volume_visible_check_box);
+  visible_layout->addWidget(slice_visible_check_box);
+
+  widget_layout->addLayout(visible_layout);
+
     tf_editor_widget=new TF1DEditor;
     tf_editor_widget->setFixedHeight(300);
     widget_layout->addWidget(tf_editor_widget);
@@ -194,6 +256,8 @@ last_lr_spin_value(0.0),last_fb_spin_value(0.0),last_ud_spin_value(0.0)
         tf_editor_widget->getTransferFunction(tf.data(),256,1.0);
         m_slice_render_widget->resetColorTable(tf.data(),256);
         m_slice_render_widget->redraw();
+        m_volume_render_widget->resetTransferFunc1D(tf.data(),256);
+        m_volume_render_widget->redraw();
     });
 //    m_slice_setting_scroll_area=new QScrollArea(this);
 //    m_slice_setting_scroll_area->setWidget(slice_args);
@@ -448,13 +512,20 @@ void SliceSettingWidget::updateSliceSettings(bool slice_update) {
     spdlog::info("update slice settings.");
     if(!slicer) return;
     this->update=slice_update;
+    updateZoom();
     updateOrigin();
     updateOffset();
     updateNormal();
     updateRotation();
     this->update=false;
 }
-
+void SliceSettingWidget::updateZoom()
+{
+    auto slice=slicer->GetSlice();
+    assert(slice.voxel_per_pixel_width==slice.voxel_per_pixel_height);
+    zoom_spin_box->setValue(slice.voxel_per_pixel_width);
+    lod_spin_box->setValue(std::log2(slice.voxel_per_pixel_width));
+}
 void SliceSettingWidget::updateOrigin() {
     auto slice=slicer->GetSlice();
 
@@ -546,6 +617,15 @@ void SliceSettingWidget::volumeLoaded() {
         space_ratio_z=space_z/base_ratio;
     }
     this->slicer=m_slice_render_widget->getSlicer();
+
+  auto raw_volume=m_volume_render_widget->getRawVolume();
+  if(raw_volume){
+    trival_volume=std::make_unique<TrivalVolume>(raw_volume->GetData(),raw_volume->GetVolumeDimX(),
+                                                 raw_volume->GetVolumeDimY(),raw_volume->GetVolumeDimZ());
+    tf_editor_widget->setVolumeInformation(trival_volume.get());
+    tf_editor_widget->setFixedHeight(400);
+    tf.resize(256*4,0.f);
+  }
 }
 void SliceSettingWidget::volumeClose() {
     spdlog::info("{0}.",__FUNCTION__ );
@@ -555,4 +635,7 @@ void SliceSettingWidget::volumeClose() {
     origin_z_spin_box->cleanText();
     offset_spin_box->cleanText();
     initRotation();
+}
+void SliceSettingWidget::SetVolumeRenderWidget(VolumeRenderWidget* widget) {
+  m_volume_render_widget=widget;
 }
