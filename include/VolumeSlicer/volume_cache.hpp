@@ -7,6 +7,7 @@
 #include <VolumeSlicer/define.hpp>
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/cuda_memory.hpp>
+#include <Utils/block_array.hpp>
 #include <cstdint>
 #include <map>
 #include <array>
@@ -62,19 +63,19 @@ public:
 
 };
 
-
-
 class VS_EXPORT OpenGLVolumeBlockCache: public VolumeBlockCache{
 public:
 
 };
 
+template <typename Block3DArray>
 class VS_EXPORT CPUVolumeBlockCache: public VolumeBlockCache{
 public:
-    static std::unique_ptr<CPUVolumeBlockCache> Create();
+    static std::unique_ptr<CPUVolumeBlockCache> Create(const std::shared_ptr<Block3DArray>&);
 
-//    virtual float Sample(uint32_t idx,double x,double y,double z);
+
 };
+
 VS_END
 
 

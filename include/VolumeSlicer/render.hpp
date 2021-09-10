@@ -83,6 +83,8 @@ struct MPIRenderParameter{
 
 class VS_EXPORT IVolumeRenderer{
 public:
+    virtual ~IVolumeRenderer(){}
+
     virtual void SetMPIRender(MPIRenderParameter) = 0;
 
     virtual void SetStep(double step,int steps) = 0;
@@ -130,6 +132,11 @@ public:
 class VS_EXPORT CPURawVolumeRenderer: public IRawVolumeRenderer{
 public:
     static std::unique_ptr<CPURawVolumeRenderer> Create(int w,int h);
+    virtual auto GetImage()->const Image<Color4b>& = 0;
+    struct RenderParameter{
+        double step;
+
+    };
 };
 
 class VS_EXPORT ICompVolumeRenderer: public IVolumeRenderer{
@@ -163,11 +170,21 @@ public:
     static std::unique_ptr<OpenGLCompVolumeRenderer> Create(int w,int h);
 };
 
+class VS_EXPORT IOffScreenCompVolumeRenderer: public ICompVolumeRenderer{
+  public:
+    virtual auto GetImage()->const Image<Color4b>& = 0;
+};
 /**
  * suitable for off-screen render
  */
-class VS_EXPORT CPUCompVolumeRenderer: public ICompVolumeRenderer{
-    static std::unique_ptr<CPUCompVolumeRenderer> Create(int w,int h);
+class VS_EXPORT CPUOffScreenCompVolumeRenderer: public IOffScreenCompVolumeRenderer{
+  public:
+    static std::unique_ptr<CPUOffScreenCompVolumeRenderer> Create(int w,int h);
+};
+
+class VS_EXPORT CUDAOffScreenCompVolumeRenderer: public IOffScreenCompVolumeRenderer{
+  public:
+    static std::unique_ptr<CUDAOffScreenCompVolumeRenderer> Create(int w,int h);
 };
 
 VS_END

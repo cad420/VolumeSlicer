@@ -3,6 +3,7 @@ include(${PROJECT_SOURCE_DIR}/third_party/glm.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/VolumeCompression.cmake)
 find_package(CUDA REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(OpenMP)
 list(
         APPEND
         VS_SRCS
@@ -10,6 +11,7 @@ list(
         Volume/volume_impl.cpp
         Volume/block_loader.cpp
         Volume/volume_cache_impl.cpp
+        Volume/cpu_volume_cache_impl.cpp
         Slice/volume_sampler_impl.cpp
         Slice/raw_volume_sample.cu
         Slice/comp_volume_sample.cu
@@ -58,6 +60,7 @@ target_link_libraries(VS_CORE
         voxel_uncompress
         ${OPENGL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        OpenMP::OpenMP_CXX
         )
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)

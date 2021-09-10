@@ -8,6 +8,7 @@
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
 #include<VolumeSlicer/color.hpp>
+#include<VolumeSlicer/vec.hpp>
 #include<array>
 #include<cassert>
 #include<vector>
@@ -81,6 +82,114 @@ public:
     std::vector<T> data = {};
 };
 
+
+template <typename T,int len>
+class Image<Vec<T,len>>{
+    struct UnInit{
+
+    };
+  public:
+    using Self = Image<Vec<T,len>>;
+    using Ele  = Vec<T,len>;
+
+    Image()
+        :num(0),width(0),height(0),data(nullptr){};
+
+    Image(uint32_t width,uint32_t height,const Ele& init_value=Ele{})
+        :Image(width,height,UnInit())
+    {
+        for(size_t i=0;i<num;i++)
+            new(data+i) Ele(init_value);
+    }
+    Image(uint32_t width,uint32_t height,UnInit)
+        :width(width),height(height),num(width*height)
+    {
+        data=static_cast<Ele*>(::operator new(sizeof(Ele)*width*height));
+    }
+
+    Image(const Image& other)
+        :width(other.width),height(other.height),num(other.num)
+    {
+        if(other.IsAvailable()){
+            data=static_cast<Ele*>(::operator new(sizeof(Ele)*num));
+            for(size_t i=0;i<num;i++){
+                new(data+i) Ele(other.data[i]);
+            }
+        }
+        else
+            Destroy();
+    }
+    Self& operator=(const Self& other){
+        Destroy();
+        new(this) Self(other);
+        return *this;
+    }
+    Image(Image&& other) noexcept
+        :width(other.width),height(other.height),num(other.num),data(other.data)
+    {
+        other.data=nullptr;
+    }
+    Self& operator=(Image&& other) noexcept{
+        Destroy();
+        new(this) Self(std::move(other));
+        return *this;
+    }
+
+    void ReadFromMemory(const Ele* data,uint32_t width,uint32_t height){
+        if(!data || !width || !height)
+            return;
+        if(width!=this->width || height!=this->height){
+            Destroy();
+            new(this) Self(width,height);
+        }
+        memcpy(this->data,data,sizeof(Ele)*width*height);
+    }
+    void SaveToFile(const char* file_name);
+
+    Ele& Fetch(uint32_t x,uint32_t y){
+        return data[ToLinearIndex(x,y)];
+    }
+    const Ele& Fetch(uint32_t x,uint32_t y) const{
+        return data[ToLinearIndex(x,y)];
+    }
+    Ele& At(uint32_t x,uint32_t y){
+        if(x>=width || y>=height || ToLinearIndex(x,y)>=num)
+            throw std::out_of_range("Image At out of range");
+        return data[ToLinearIndex(x,y)];
+    }
+    const Ele& At(uint32_t x,uint32_t y) const{
+        if(x>=width || y>=height || ToLinearIndex(x,y)>=num)
+            throw std::out_of_range("Image At out of range");
+        return data[ToLinearIndex(x,y)];
+    }
+    size_t ToLinearIndex(uint32_t x,uint32_t y) const{
+        return y*width+x;
+    }
+    Ele& operator[](size_t idx){
+        return data[idx];
+    }
+    Ele* GetData(){
+        return data;
+    }
+    const Ele* GetData() const{
+        return data;
+    }
+    bool IsAvailable() const {
+        return data!=nullptr;
+    };
+    void Destroy(){
+        if(IsAvailable()){
+            ::operator delete(data);
+            data=nullptr;
+        }
+        width=height=num=0;
+    }
+  private:
+    uint32_t num;
+    uint32_t width,height;
+    Ele* data;
+};
+
 template<>
 class Image<Color4b>{
     struct UnInit{
@@ -88,7 +197,9 @@ class Image<Color4b>{
     };
   public:
     using Self=Image<Color4b>;
-    Image()=default;
+
+    Image()
+    :num(0),width(0),height(0),data(nullptr){};
 
     Image(uint32_t width,uint32_t height,const Color4b& init_value=Color4b{})
     :Image(width,height,UnInit())
@@ -120,7 +231,7 @@ class Image<Color4b>{
         return *this;
     }
     Image(Image&& other) noexcept
-        :width(other.width),height(other.height),num(other.num)
+        :width(other.width),height(other.height),num(other.num),data(other.data)
     {
         other.data=nullptr;
     }

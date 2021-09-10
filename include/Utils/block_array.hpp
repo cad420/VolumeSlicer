@@ -16,10 +16,13 @@ VS_START
  */
 template <typename T,uint32_t nLogBlockLength>
 class Block3DArray{
-    using Self=Block3DArray<T,nLogBlockLength>;
-    using SizeType=std::size_t ;
+  public:
+    using Self     = Block3DArray<T,nLogBlockLength>;
+    using SizeType = std::size_t ;
+    using DataType = T;
     constexpr static SizeType block_length=1<<nLogBlockLength;//1<<nLogBlockLength
     constexpr static SizeType block_size=block_length*block_length*block_length;//block_length^3
+  private:
     T* data;
     const SizeType nx,ny,nz;//block num for x y z
     SizeType x,y,z;//valid data dim
@@ -71,10 +74,12 @@ class Block3DArray{
 
     }
     void SetBlockData(SizeType x_block,SizeType y_block,SizeType z_block,const T* block_data){
-        ::memcpy(GetBlockData(x_block,y_block,z_block),block_data,BlockSizeInByte());
+//        ::memcpy(GetBlockData(x_block,y_block,z_block),block_data,BlockSizeInByte());
+        cudaMemcpy(GetBlockData(x_block,y_block,z_block),block_data,BlockSizeInByte(),cudaMemcpyDefault);
     }
     void SetBlockData(SizeType flat_block_idx,const T* block_data){
-        ::memcpy(GetBlockData(flat_block_idx),block_data,BlockSizeInByte());
+//        ::memcpy(GetBlockData(flat_block_idx),block_data,BlockSizeInByte());
+        cudaMemcpy(GetBlockData(flat_block_idx),block_data,BlockSizeInByte(),cudaMemcpyDefault);
     }
     T* GetBlockData(SizeType flat_block_idx){
         if(flat_block_idx >= BlockNum()) return nullptr;
@@ -249,5 +254,8 @@ class Block3DArray{
         return data;
     }
 };
+
+using BlockArray9b = Block3DArray<uint8_t,9>;
+//using BlockArray8b = Block3DArray<uint8_t,8>;
 
 VS_END
