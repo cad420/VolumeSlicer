@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include "Utils/math.hpp"
 #include "texture.hpp"
-#include "Common/math.hpp"
+#include <Utils/block_array.hpp>
+#include <VolumeSlicer/color.hpp>
 VS_START
 class LinearSampler{
   public:
@@ -16,7 +18,7 @@ class LinearSampler{
         int u0=Clamp(static_cast<int>(u),0,static_cast<int>(tex.GetLength()-1));
         int u1=Clamp(u0+1,0,static_cast<int>(tex.GetLength()-1));
         double d_u=u-u0;
-        return tex(u0)*(1.0-d_u)+tex(u1)*d_u;
+        return tex(u0)*(1-d_u)+tex(u1)*d_u;
     }
 
     template<typename Texel>
@@ -48,6 +50,11 @@ class LinearSampler{
         double d_k=k-k0;
         return ((tex(u0,v0,k0)*(1.0-d_u)+tex(u1,v0,k0)*d_u)*(1.0-d_v)+(tex(u0,v1,k0)*(1.0-d_u)+tex(u1,v1,k0)*d_u)*d_v)*(1.0-d_k)
               +((tex(u0,v0,k1)*(1.0-d_u)+tex(u1,v0,k1)*d_u)*(1.0-d_v)+(tex(u0,v1,k1)*(1.0-d_u)+tex(u1,v1,k1)*d_u)*d_v)*d_k;
+    }
+
+    template <typename T,uint32_t nLogBlockLength>
+    static auto Sample3D(const Block3DArray<T,nLogBlockLength>& block3d_array,double u,double v,double k)->T{
+        return block3d_array.Sample(u,v,k);
     }
 };
 VS_END

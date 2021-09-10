@@ -75,7 +75,7 @@ class TextureBase
         new (this) Self(std::move(other));
         return *this;
     }
-    ~TextureBase()
+    virtual ~TextureBase()
     {
         if (IsAvailable())
             ReleaseData();
@@ -150,6 +150,8 @@ class TextureBase
     {
         return num;
     }
+
+  protected:
     Texel *RawData() noexcept
     {
         return data;
@@ -177,6 +179,7 @@ class TextureBase
     }
     void ReleaseData()
     {
+        //todo call ~T() ?
         ::operator delete(data);
         data = nullptr;
     }

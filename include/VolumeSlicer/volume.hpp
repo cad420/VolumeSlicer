@@ -68,7 +68,7 @@ struct VolumeData{
 
 template<VolumeType type>
 class Volume;
-
+//todo enable_shared_from_this ?
 template<>
 class VS_EXPORT Volume<VolumeType::Raw>: public VolumeBase,public std::true_type {
 public:

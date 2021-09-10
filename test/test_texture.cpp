@@ -9,16 +9,22 @@
 
 #include <Utils/block_array.hpp>
 #include <Utils/linear_array.hpp>
+#include <Utils/block_cache.hpp>
 #include <cuda_runtime.h>
 using namespace vs;
 void test_texture();
 void test_block_array();
 void test_linear_array();
+void test_block_cache();
 int main(){
 //    test_texture();
-    test_block_array();
+//    test_block_array();
 //    test_linear_array();
+    test_block_cache();
     return 0;
+}
+void test_block_cache(){
+
 }
 void test_linear_array(){
     struct alignas(8) A{
@@ -56,6 +62,8 @@ void test_linear_array(){
 }
 void test_block_array(){
     std::cout<<"test Block3DArray......"<<std::endl;
+
+
     Block3DArray<uint8_t,3> block_3d_array(64,64,64,2);
     std::cout<<block_3d_array.BlockNumX()<<" "<<block_3d_array.BlockNumY()<<" "<<block_3d_array.BlockNumZ()<<std::endl;
     Linear3DArray<uint8_t> linear3DArray(64,64,64,3);
