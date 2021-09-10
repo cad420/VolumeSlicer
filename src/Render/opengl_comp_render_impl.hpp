@@ -6,7 +6,7 @@
 #define VOLUMESLICER_OPENGL_COMP_RENDER_IMPL_HPP
 
 #include <VolumeSlicer/render.hpp>
-
+#include "Render/wgl_wrap.hpp"
 VS_START
 
 
@@ -31,8 +31,24 @@ public:
     void resize(int w,int h) override ;
 
     void clear() override ;
+
+private:
+    void calcMissedBlocks();
+
+    void filterMissedBlocks();
+
+    void sendRequests();
+
+    void fetchBlocks();
+
+private:
+    void setCurrentCtx(){wglMakeCurrent(window_handle,gl_context);}
 private:
     Image<uint32_t> image;
+    HDC window_handle;
+    HGLRC gl_context;
+    int window_w,window_h;
+
 };
 
 
