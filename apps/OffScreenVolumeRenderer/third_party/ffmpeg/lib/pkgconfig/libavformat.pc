@@ -1,0 +1,14 @@
+prefix=C:/msys64/home/wyz/c/FFmpeg/install
+exec_prefix=${prefix}
+libdir=C:/msys64/home/wyz/c/FFmpeg/install/lib
+includedir=C:/msys64/home/wyz/c/FFmpeg/install/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 59.5.100
+Requires: 
+Requires.private: libavcodec >= 59.7.103, libswresample >= 4.0.100, libavutil >= 57.5.100
+Conflicts:
+Libs: -L${libdir}  -lavformat 
+Libs.private: secur32.lib ws2_32.lib
+Cflags: -I${includedir}

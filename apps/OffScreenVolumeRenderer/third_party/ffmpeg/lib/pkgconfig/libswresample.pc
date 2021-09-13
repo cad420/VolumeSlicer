@@ -1,0 +1,14 @@
+prefix=C:/msys64/home/wyz/c/FFmpeg/install
+exec_prefix=${prefix}
+libdir=C:/msys64/home/wyz/c/FFmpeg/install/lib
+includedir=C:/msys64/home/wyz/c/FFmpeg/install/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 4.0.100
+Requires: 
+Requires.private: libavutil >= 57.5.100
+Conflicts:
+Libs: -L${libdir}  -lswresample 
+Libs.private: 
+Cflags: -I${includedir}

@@ -10,3 +10,5 @@ add_subdirectory(QTVolumeSlicer)
 add_subdirectory(MPIVolumeSlicer)
 
 add_subdirectory(MPILargeVolumeVis)
+
+add_subdirectory(OffScreenVolumeRenderer)

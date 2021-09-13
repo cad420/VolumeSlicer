@@ -1,0 +1,14 @@
+prefix=C:/msys64/home/wyz/c/FFmpeg/install
+exec_prefix=${prefix}
+libdir=C:/msys64/home/wyz/c/FFmpeg/install/lib
+includedir=C:/msys64/home/wyz/c/FFmpeg/install/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 57.5.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: user32.lib bcrypt.lib
+Cflags: -I${includedir}
