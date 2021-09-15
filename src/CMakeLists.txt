@@ -1,7 +1,9 @@
 include(${PROJECT_SOURCE_DIR}/third_party/spdlog.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/glm.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/VolumeCompression.cmake)
+include(${PROJECT_SOURCE_DIR}/third_party/stdgpu.cmake)
 find_package(CUDA REQUIRED)
+#find_package(CUDAToolkit REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenMP)
 list(
@@ -24,6 +26,8 @@ list(
         Render/cuda_raw_render_impl.cu
         Render/opengl_raw_render_impl.cpp
         Render/cpu_raw_render_impl.cpp
+        Render/cuda_offscreen_comp_render_impl.cpp
+        Render/cuda_offscreen_comp_render_impl.cu
         IO/reader_impl.cpp
         Common/cuda_context.cpp
         Common/image.cpp
@@ -61,6 +65,8 @@ target_link_libraries(VS_CORE
         ${OPENGL_LIBRARIES}
         ${CMAKE_DL_LIBS}
         OpenMP::OpenMP_CXX
+#        CUDA::nvrtc
+        stdgpu::stdgpu
         )
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)

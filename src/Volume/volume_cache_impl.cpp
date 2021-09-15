@@ -107,6 +107,23 @@ auto CUDAVolumeBlockCacheImpl::GetBlockStatus(const std::array<uint32_t, 4> &tar
     }
 }
 
+int CUDAVolumeBlockCacheImpl::GetRemainEmptyBlock() const
+{
+    int cnt=0;
+    for(auto& it:block_cache_table){
+        if(!it.valid)
+            cnt++;
+    }
+    return cnt;
+}
+
+void CUDAVolumeBlockCacheImpl::clear()
+{
+    for(auto& it:block_cache_table){
+        it.valid=false;
+    }
+    mapping_table.assign(mapping_table.size(),0);
+}
 bool CUDAVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 4> &target) {
     for(auto& it:block_cache_table){
         if(it.block_index==target && it.cached){
@@ -158,11 +175,11 @@ auto CUDAVolumeBlockCacheImpl::GetLodMappingTableOffset() -> const std::map<uint
 
 void CUDAVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4> &index,
                                                   const std::array<uint32_t, 4> &pos, bool valid){
+    size_t flat_idx;
     try{
-        size_t flat_idx=((size_t)index[2]*lod_block_dim.at(index[3])[0]*lod_block_dim.at(index[3])[1]
-                         +index[1]*lod_block_dim.at(index[3])[0]
-                         +index[0])*4+lod_mapping_table_offset.at(index[3]);
-
+        flat_idx=((size_t)index[2]*lod_block_dim.at(index[3])[0]*lod_block_dim.at(index[3])[1]
+                  +index[1]*lod_block_dim.at(index[3])[0]
+                  +index[0])*4+lod_mapping_table_offset.at(index[3]);
         mapping_table.at(flat_idx+0)=pos[0];
         mapping_table.at(flat_idx+1)=pos[1];
         mapping_table.at(flat_idx+2)=pos[2];
@@ -173,6 +190,9 @@ void CUDAVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4> 
     }
     catch (const std::exception& err) {
         spdlog::error("{0}:{1}",__FUNCTION__ ,err.what());
+        spdlog::error("index {0} {1} {2} {3}, pos {4} {5} {6} {7}, flag_idx {8}",
+                      index[0],index[1],index[2],index[3],
+                      pos[0],pos[1],pos[2],pos[3]);
     }
 }
 

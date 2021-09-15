@@ -280,12 +280,14 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
         //6009
         LOG_INFO("render finish {0}, num {1}",render_finish_num*1.0/(window_w*window_h),render_finish_num);
         //check if every pixel finish raycasting
-        if(render_finish)
+//        if(render_finish)
+//            break;
+        if(missed_blocks.empty())
             break;
 
         //wait for finishing load missed blocks
         auto dummy_missed_blocks=missed_blocks;
-        for(auto& block:dummy_missed_blocks){
+        for(auto& block : dummy_missed_blocks){
             assert(block.x >= 0 && block.y >= 0 && block.z >= 0 && block.w >= 0);
             this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
         }
@@ -303,7 +305,7 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
         if(missed_blocks.size()>block_cache_manager->GetRemainPhysicalBlockNum()){
             LOG_INFO("current missed blocks num > remain_physical_blocks num");
             block_cache_manager->InitManagerResource();
-            while(missed_blocks.size() > block_cache_manager->GetRemainPhysicalBlockNum()){
+            while(block_cache_manager->GetRemainPhysicalBlockNum() > 0 && !missed_blocks.empty()){
                 UploadMissedBlockData();
             }
         }
@@ -331,6 +333,8 @@ auto CPUOffScreenCompVolumeRendererImpl::GetImage() -> const Image<Color4b> &
 }
 
 void CPUOffScreenCompVolumeRendererImpl::resize(int w, int h) {
+    this->window_w=w;
+    this->window_h=h;
     frame.width=w;
     frame.height=h;
     frame.data.resize((size_t)w*h);

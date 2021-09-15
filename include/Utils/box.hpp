@@ -20,7 +20,7 @@ class Box{
     }
     Vec3d min_p,max_p;
 };
-Vec2d IntersectWithAABB(const Box& box,const SimpleRay& ray){
+inline Vec2d IntersectWithAABB(const Box& box,const SimpleRay& ray){
     double t_min_x=(box.min_p.x-ray.origin.x)/ray.direction.x;
     double t_max_x=(box.max_p.x-ray.origin.x)/ray.direction.x;
     if(ray.direction.x<0.0){
@@ -40,13 +40,20 @@ Vec2d IntersectWithAABB(const Box& box,const SimpleRay& ray){
     double exit_t  = (std::min)({t_max_x,t_max_y,t_max_z});
     return {enter_t,exit_t};
 }
-bool IsIntersected(double enter_t,double exit_t){
+__device__ __host__
+inline bool IsIntersected(double enter_t,double exit_t){
     if(exit_t >= 0 && enter_t<exit_t)
         return true;
     else
         return false;
 }
-
+__device__ __host__
+inline bool IsIntersected(float enter_t,float exit_t){
+    if(exit_t >= 0 && enter_t<exit_t)
+        return true;
+    else
+        return false;
+}
 
 VS_END
 #endif // VOLUMESLICER_BOX_HPP

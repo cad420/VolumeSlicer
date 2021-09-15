@@ -184,7 +184,7 @@ class VS_EXPORT CPUOffScreenCompVolumeRenderer: public IOffScreenCompVolumeRende
 
 class VS_EXPORT CUDAOffScreenCompVolumeRenderer: public IOffScreenCompVolumeRenderer{
   public:
-    static std::unique_ptr<CUDAOffScreenCompVolumeRenderer> Create(int w,int h);
+    static std::unique_ptr<CUDAOffScreenCompVolumeRenderer> Create(int w,int h,CUcontext ctx=nullptr);
 };
 
 VS_END

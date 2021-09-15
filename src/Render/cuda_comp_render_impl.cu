@@ -408,6 +408,7 @@ namespace CUDARenderer{
             CreateDeviceRenderImage(w,h);
         }
 
+
         dim3 threads_per_block={16,16};
         dim3 blocks_per_grid={(w+threads_per_block.x-1)/threads_per_block.x,(h+threads_per_block.y-1)/threads_per_block.y};
 

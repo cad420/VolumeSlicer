@@ -33,6 +33,12 @@ public:
     //std::array<bool,2>{valid,cached}
     auto GetBlockStatus(const std::array<uint32_t,4>&)->std::array<bool,2> override;
 
+    //get number of block which is not valid, and don't care of whether is cached
+    int  GetRemainEmptyBlock() const override;
+
+    //set all blocks invalid
+    void clear() override;
+
     //if target block is cached, then set it valid and return true and update mapping table
     //if target block is not cached, return false
     bool SetCachedBlockValid(const std::array<uint32_t,4>&) override;

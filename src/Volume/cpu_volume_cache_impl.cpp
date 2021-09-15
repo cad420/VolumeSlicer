@@ -54,6 +54,15 @@ class CPUVolumeBlockCacheImpl: public CPUVolumeBlockCache<Block3DArray>{
     auto GetBlockStatus(const std::array<uint32_t,4>&)->std::array<bool,2> override{
         return {};
     }
+    //get number of block which is not valid, and don't care of whether is cached
+    int  GetRemainEmptyBlock() const {
+        return 0;
+    }
+
+    //set all blocks invalid
+    void clear(){
+
+    }
 
     //if target block is cached, then set it valid and return true and update mapping table
     //if target block is not cached, return false

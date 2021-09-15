@@ -1460,5 +1460,12 @@ inline __device__ __host__ float radians(float a)
 {
     return a* 3.14159265358979323846f/180.f;
 }
-
+struct Hash_Int4{
+    __device__ __host__ size_t operator()(int4 const& v) const{
+        return ((size_t)v.w<<48) | ((size_t)v.x<<32) | ((size_t)v.y<<16) | ((size_t)v.z);
+    }
+};
+inline __device__ __host__ bool operator==(int4 const& v1,int4 const& v2){
+    return v1.x==v2.x && v1.y==v2.y && v1.z==v2.z && v1.w==v2.w;
+}
 #endif

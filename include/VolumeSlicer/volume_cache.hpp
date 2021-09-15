@@ -41,6 +41,12 @@ public:
     //std::array<bool,2>{valid,cached}
     virtual auto GetBlockStatus(const std::array<uint32_t,4>&)->std::array<bool,2> = 0;
 
+    //get number of block which is not valid, and don't care of whether is cached
+    virtual int  GetRemainEmptyBlock() const = 0;
+
+    //set all blocks invalid
+    virtual void clear() = 0;
+
     //if target block is cached, then set it valid and return true and update mapping table
     //if target block is not cached, return false
     virtual bool SetCachedBlockValid(const std::array<uint32_t,4>&) = 0;

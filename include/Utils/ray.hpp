@@ -10,7 +10,7 @@ VS_START
 
 class SimpleRay{
   public:
-    SimpleRay(const Vec3d& origin,const Vec3d& direction,double t=0.0)
+    __device__ __host__ SimpleRay(const Vec3d& origin,const Vec3d& direction,double t=0.0)
         :origin(origin),direction(Normalize(direction)),t(t)
     {}
     Vec3d origin;

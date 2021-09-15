@@ -34,3 +34,11 @@ target_link_libraries(test_comp_cpu_volume_render
 target_include_directories(test_comp_cpu_volume_render
         PRIVATE
         ${PROJECT_SOURCE_DIR}/src)
+
+add_executable(test_comp_cuda_volume_render test_comp_cuda_volume_render.cpp)
+target_link_libraries(test_comp_cuda_volume_render
+        PRIVATE
+        VS_CORE)
+target_include_directories(test_comp_cuda_volume_render
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/src)

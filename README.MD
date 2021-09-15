@@ -129,6 +129,7 @@ CPUVolumeCache应该还需要实现缓存的功能
 但是对于cpu渲染来说 它画一帧本来就是一次性的事件 不需要所有块都在纹理中 并且这可能做不到 如果全部使用原始分辨率
 因此将cached的数据块根据LRU策略进行缓存
 
+
 ## Volume Render Ambient Occlusion
 ### 方法一
 在CPU端随机生成半球方向内的M个采样点 但是半球的法向量为Z轴正方向
@@ -136,9 +137,20 @@ CPUVolumeCache应该还需要实现缓存的功能
 但是对于三维来说 旋转起码得知道两个轴的方向(另一个轴可以随机在与N垂直的平面内得到) 
 或者 一个旋转轴(可以Z轴和法向量叉乘得到)和旋转方向 这个公式比较复杂?
     
-    
-    
-    
+## CUDA-OffScreen-CompVolume-Render
+算法与CPU的类似 但是在细节处理上需要调整
+在CPU实现时 每个像素都会把VirtualSample没加载的块记录到unordered_set: missed_blocks中去 
+如果CPU实现加了并行加速 那么每次insert时还需要加锁互斥
+在GPU实现时 CUDA原生没有unordered_set这一数据结构 而且也不能直接拿来用
+因为可以在kernel里使用的数据结构需要把它的函数加个__device__前缀 显然std的都不可以直接拿来用
+第一种思路
+    每一个render pass的时候 每个像素最多只会记录一个缺失块数据 那么只需要分配w*h的数组 
+    数组可以默认设为-1 表示该像素不缺失数据块 或者存储该数据块的flat index
+    配置比较简单
+第二种思路
+    使用gpu专门的unordered_set 可以使用NVIDIA/libcudacxx垃圾 or stdgpu能用但不好用
+    如果要用到auto it:container 那么container需要有函数begin()
+    使用起来有点麻烦
     
     
     
