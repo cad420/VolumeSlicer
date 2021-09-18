@@ -107,7 +107,7 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
     auto block_dim=comp_volume->GetBlockDim(0);
     compVolumeParameter.block_dim=make_int3(block_dim[0],block_dim[1],block_dim[2]);
     compVolumeParameter.texture_shape=make_int4(1024,1024,1024,10);
-    compVolumeParameter.volume_board=make_int3(comp_volume->GetVolumeDimX()*comp_volume->GetVolumeSpaceX() ,
+    compVolumeParameter.volume_board=make_float3(comp_volume->GetVolumeDimX()*comp_volume->GetVolumeSpaceX() ,
                                                comp_volume->GetVolumeDimY()*comp_volume->GetVolumeSpaceY() ,
                                                comp_volume->GetVolumeDimZ()*comp_volume->GetVolumeSpaceZ()
                                                );

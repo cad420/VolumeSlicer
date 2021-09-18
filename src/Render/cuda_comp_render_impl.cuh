@@ -29,7 +29,7 @@ namespace CUDARenderer{
         int no_padding_block_length;
         int4 texture_shape;
         int3 block_dim;//lod 0
-        int3 volume_board;//47*508 59*508 21*508
+        float3 volume_board;//
     };
 
     struct LightParameter{
