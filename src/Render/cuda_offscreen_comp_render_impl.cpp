@@ -5,7 +5,7 @@
 #include <Utils/logger.hpp>
 #include "transfer_function_impl.hpp"
 #include "cuda_offscreen_comp_render_impl.cuh"
-
+#include "Common/hash_function.hpp"
 
 VS_START
 
@@ -129,7 +129,10 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
     //2.generate ray_start_pos and ray_stop_pos according to ray_directions and box of volume
     CUDAOffRenderer::CUDARenderPrepare(window_w,window_h);
 
+    auto block_length = comp_volume->GetBlockLength();
+    int3 center_block=make_int3(cudaOffCompRenderParameter.camera_pos/(block_length[0]-2*block_length[1]));
 
+    std::unordered_map<std::array<uint32_t,4>,int,Hash_UInt32Array4> m;
     //3.render pass
     int turn = 0;
     while(++turn){
@@ -143,10 +146,8 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
             break;
         }
         auto dummy_missed_blocks=missed_blocks;
-        for(auto& block:dummy_missed_blocks){
-            this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
-        }
-        auto UploadMissedBlockData=[this,&missed_blocks,&dummy_missed_blocks](){
+
+        auto UploadMissedBlockData=[this,&missed_blocks,&dummy_missed_blocks,&m](){
             for(auto& block:dummy_missed_blocks){
                 auto volume_block=comp_volume->GetBlock({(uint32_t)block.x,
                                                          (uint32_t)block.y,
@@ -156,6 +157,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
                     volume_block_cache->UploadVolumeBlock(volume_block.index,
                                                           volume_block.block_data->GetDataPtr(),
                                                           volume_block.block_data->GetSize());
+                    m[volume_block.index] += 1;
                     volume_block.Release();
                     missed_blocks.erase(block);
                 }
@@ -163,11 +165,33 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
         };
         if(missed_blocks.size() > volume_block_cache->GetRemainEmptyBlock()){
             volume_block_cache->clear();
+            int i=0,n=volume_block_cache->GetRemainEmptyBlock();
+            std::vector<int4> sorted_missed_blocks(missed_blocks.size());
+            std::copy(missed_blocks.begin(),missed_blocks.end(),sorted_missed_blocks.begin());
+            std::sort(sorted_missed_blocks.begin(),sorted_missed_blocks.end(),[center_block](const int4& v1,const int4& v2){
+                if(v1.w==v2.w){
+                    int d1=(v1.x-center_block.x)*(v1.x-center_block.x)+(v1.y-center_block.y)*(v1.y-center_block.y)+(v1.z-center_block.z)*(v1.z-center_block.z);
+                    int d2=(v2.x-center_block.x)*(v2.x-center_block.x)+(v2.y-center_block.y)*(v2.y-center_block.y)+(v2.z-center_block.z)*(v2.z-center_block.z);
+                    return d1 < d2;
+                }
+                else{
+                    return v1.w < v2.w;
+                }
+            });
+            for(auto& block:sorted_missed_blocks){
+                this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
+                if(++i >= n){
+                    break;
+                }
+            }
             while(!missed_blocks.empty() && volume_block_cache->GetRemainEmptyBlock()>0){
                 UploadMissedBlockData();
             }
         }
         else{
+            for(auto& block:dummy_missed_blocks){
+                this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
+            }
             while(!missed_blocks.empty()){
                 UploadMissedBlockData();
             }
@@ -181,6 +205,15 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
     }
     CUDAOffRenderer::GetRenderImage(reinterpret_cast<uint8_t*>(image.GetData()));
     LOG_INFO("CUDA comp-volume render finish.");
+    LOG_INFO("Total upload block set's size is: {0}.",m.size());
+    LOG_INFO("Print block upload info:");
+    int cnt=0;
+    for(auto &it:m){
+        LOG_INFO("block ({0},{1},{2},{3}) upload count {4}.",it.first[0],it.first[1],it.first[2],it.first[3],it.second);
+        cnt+=it.second;
+    }
+    LOG_INFO("Total upload block num is: {0}.",cnt);
+    LOG_INFO("Multi-upload block num is: {0}.",cnt-m.size());
 }
 auto CUDAOffScreenCompVolumeRendererImpl::GetImage() -> const Image<Color4b> &
 {

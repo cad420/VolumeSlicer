@@ -190,7 +190,7 @@ __device__ float3 PhongShading(stdgpu::unordered_set<int4,Hash_Int4>& missed_blo
                                float3 const& sample_pos,
                                float3 const& diffuse_color,
                                float3 const& view_direction){
-    float3 N=make_float3(0.f,0.f,1.f);
+    float3 N=make_float3(0.f);
     float x1,x2;
     VirtualSample(sample_pos+make_float3( compVolumeParameter.voxel,0.f,0.f),x1,missed_blocks);
     VirtualSample(sample_pos+make_float3(-compVolumeParameter.voxel,0.f,0.f),x2,missed_blocks);
