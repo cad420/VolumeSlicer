@@ -287,10 +287,7 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
 
         //wait for finishing load missed blocks
         auto dummy_missed_blocks=missed_blocks;
-        for(auto& block : dummy_missed_blocks){
-            assert(block.x >= 0 && block.y >= 0 && block.z >= 0 && block.w >= 0);
-            this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
-        }
+
         auto UploadMissedBlockData=[&dummy_missed_blocks,&missed_blocks,this](){
           for(auto& block:dummy_missed_blocks){
               assert(block.x >= 0 && block.y >= 0 && block.z >= 0 && block.w >= 0);
@@ -305,12 +302,23 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
         if(missed_blocks.size()>block_cache_manager->GetRemainPhysicalBlockNum()){
             LOG_INFO("current missed blocks num > remain_physical_blocks num");
             block_cache_manager->InitManagerResource();
+            int i=0,n=block_cache_manager->GetRemainPhysicalBlockNum();
+            for(auto& block:dummy_missed_blocks){
+                this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
+                if(++i >= n){
+                    break;
+                }
+            }
             while(block_cache_manager->GetRemainPhysicalBlockNum() > 0 && !missed_blocks.empty()){
                 UploadMissedBlockData();
             }
         }
         else{
             LOG_INFO("remain physical blocks num is enough");
+            for(auto& block : dummy_missed_blocks){
+                assert(block.x >= 0 && block.y >= 0 && block.z >= 0 && block.w >= 0);
+                this->comp_volume->SetRequestBlock({(uint32_t)block.x,(uint32_t)block.y,(uint32_t)block.z,(uint32_t)block.w});
+            }
             while(!missed_blocks.empty()){
                 UploadMissedBlockData();
             }
