@@ -10,7 +10,9 @@
 #include <unordered_set>
 using namespace  vs;
 namespace CUDAOffRenderer{
-
+    struct CUDAOffCompRenderPolicy{
+        double lod_dist[10];
+    };
     struct CUDAOffCompRenderParameter{
 
         int    image_w;

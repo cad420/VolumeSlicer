@@ -15,7 +15,7 @@
 using namespace CUDAOffRenderer;
 
 namespace {
-
+__constant__ CUDAOffCompRenderPolicy    cudaOffCompRenderPolicy;
 __constant__ CUDAOffCompRenderParameter cudaOffCompRenderParameter;
 __constant__ CompVolumeParameter        compVolumeParameter;
 __constant__ ShadingParameter           shadingParameter;
@@ -134,28 +134,12 @@ __device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& s
 }
 
 __device__ int EvaluateLod(float distance){
-//    return 0;
-    if(distance<0.3f){
-        return 0;
+    for(int lod=0;lod<10;lod++){
+        if(distance<cudaOffCompRenderPolicy.lod_dist[lod]){
+            return lod;
+        }
     }
-    else if(distance<0.5f){
-        return 1;
-    }
-    else if(distance<1.2f){
-        return 2;
-    }
-    else if(distance<1.6f){
-        return 3;
-    }
-    else if(distance<3.2f){
-        return 4;
-    }
-    else if(distance<6.4f){
-        return 5;
-    }
-    else{
-        return 6;
-    }
+    return 0;
 }
 
 __device__ int IntPow(int x,int y){
@@ -178,17 +162,17 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
     float3 last_ray_start_pos = ray_start_pos[image_idx];
     float3 last_ray_stop_pos  = ray_stop_pos[image_idx];
     float3 ray_direction      = last_ray_stop_pos - last_ray_start_pos;
-
-
     float3 ray_sample_pos     = last_ray_start_pos;
-    float sample_scalar;
-    int i = 0;
-    int lod_steps = 0;
-    int last_lod  = EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
-    int last_lod_t = IntPow(2,last_lod);
-    int steps      = length(ray_direction)/cudaOffCompRenderParameter.step/last_lod_t;
-    ray_direction             = normalize(ray_direction);
+
+    int i                       = 0;
+    int lod_steps               = 0;
+    int last_lod                = EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
+    int last_lod_t              = IntPow(2,last_lod);
+    int steps                   = length(ray_direction)/cudaOffCompRenderParameter.step/last_lod_t;
+    float sample_scalar         = 0.f;
     float3 lod_sample_start_pos = last_ray_start_pos;
+    ray_direction               = normalize(ray_direction);
+
     for(;i<steps;i++){
         int cur_lod=EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
         int lod_t = IntPow(2,cur_lod);
@@ -330,6 +314,10 @@ namespace CUDAOffRenderer{
         }
         UpdateCUDATexture2D(reinterpret_cast<uint8_t*>(data),preInt_tf,sizeof(float)*256*4,256,0,0);
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(preInt_transfer_func,&pre_tf_tex,sizeof(cudaTextureObject_t)));
+    }
+
+    void UploadCUDAOffCompRenderPolicy(const CUDAOffCompRenderPolicy& render_policy){
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cudaOffCompRenderPolicy,&render_policy,sizeof(CUDAOffCompRenderPolicy)));
     }
 
     void UploadCUDAOffCompRenderParameter(const CUDAOffCompRenderParameter & comp_render)

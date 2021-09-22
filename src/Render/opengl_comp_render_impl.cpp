@@ -54,6 +54,10 @@ void OpenGLCompVolumeRendererImpl::resize(int w, int h) {
 void OpenGLCompVolumeRendererImpl::clear() {
 
 }
+void OpenGLCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+{
+
+}
 void OpenGLCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 {
 

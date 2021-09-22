@@ -116,7 +116,10 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
     auto texes=this->cuda_volume_block_cache->GetCUDATextureObjects();
     CUDARenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
+void CUDACompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+{
 
+}
 void CUDACompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpiRenderParameter)
 {
     CUDARenderer::UploadMPIRenderParameter(mpiRenderParameter);

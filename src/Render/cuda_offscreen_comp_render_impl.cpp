@@ -85,6 +85,10 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     auto texes = this->volume_block_cache->GetCUDATextureObjects();
     CUDAOffRenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
+void CUDAOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+{
+
+}
 void CUDAOffScreenCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 {
     LOG_ERROR("This function is not implement for CUDA-OffScreen-CompVolume-Renderer");
@@ -240,5 +244,6 @@ void CUDAOffScreenCompVolumeRendererImpl::clear()
 {
 
 }
+
 
 VS_END

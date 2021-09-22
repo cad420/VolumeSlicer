@@ -139,9 +139,15 @@ public:
     };
 };
 
+struct CompRenderPolicy{
+    double lod_dist[10];// lod i for distance x that lod[i-1] < x <= lod[i]
+};
+
 class VS_EXPORT ICompVolumeRenderer: public IVolumeRenderer{
 public:
     virtual void SetVolume(std::shared_ptr<CompVolume> comp_volume) = 0;
+
+    virtual void SetRenderPolicy(CompRenderPolicy) = 0;
 
     void SetMPIRender(MPIRenderParameter) override = 0;
 

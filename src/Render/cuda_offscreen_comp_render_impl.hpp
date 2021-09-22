@@ -15,6 +15,8 @@ class CUDAOffScreenCompVolumeRendererImpl: public CUDAOffScreenCompVolumeRendere
 
     void SetVolume(std::shared_ptr<CompVolume> comp_volume) override;
 
+    void SetRenderPolicy(CompRenderPolicy) override;
+
     void SetMPIRender(MPIRenderParameter) override;
 
     void SetStep(double step,int steps) override;

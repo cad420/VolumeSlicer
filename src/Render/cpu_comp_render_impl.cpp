@@ -241,14 +241,7 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
                         if(sample_color.a > 0.0){
 
                             Vec3d shading_color = PhongShading(ray_pos/volume_space,Vec3d(sample_color),ray_direction);
-//                            if(shading_color.r<0.0 || shading_color.r>1.0
-//                                || shading_color.g<0.0 || shading_color.g>1.0
-//                                    || shading_color.b<0.0 || shading_color.b>1.0)
-//                            {
-//                                LOG_ERROR("shading_color rgb <0.0 or >1.0");
-//                                LOG_ERROR("sample_color: {0} {1} {2} {3}",sample_color.r,sample_color.g,sample_color.b,sample_color.a);
-//                                LOG_ERROR("shading_color: {0} {1} {2}",shading_color.r,shading_color.g,shading_color.b);
-//                            }
+
                             sample_color.x = shading_color.x;
                             sample_color.y = shading_color.y;
                             sample_color.z = shading_color.z;
@@ -353,6 +346,10 @@ void CPUOffScreenCompVolumeRendererImpl::resize(int w, int h) {
 void CPUOffScreenCompVolumeRendererImpl::clear() {
 
 }
+void CPUOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+{
+
+}
 void CPUOffScreenCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 {
 
@@ -366,6 +363,7 @@ CPUOffScreenCompVolumeRendererImpl::~CPUOffScreenCompVolumeRendererImpl()
 {
     this->comp_volume.reset();
 }
+
 
 VS_END
 
