@@ -48,6 +48,8 @@ namespace CUDAOffRenderer{
 
     void UploadPreIntTransferFunc(float* data,size_t size=65536);
 
+    void UploadCUDAOffCompRenderPolicy(const CUDAOffCompRenderPolicy&);
+
     void UploadCUDAOffCompRenderParameter(const CUDAOffCompRenderParameter&);
 
     void UploadCompVolumeParameter(const CompVolumeParameter&);

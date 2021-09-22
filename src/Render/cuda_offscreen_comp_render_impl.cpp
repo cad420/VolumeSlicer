@@ -6,7 +6,7 @@
 #include "transfer_function_impl.hpp"
 #include "cuda_offscreen_comp_render_impl.cuh"
 #include "Common/hash_function.hpp"
-
+#include <algorithm>
 VS_START
 
 std::unique_ptr<CUDAOffScreenCompVolumeRenderer> vs::CUDAOffScreenCompVolumeRenderer::Create(int w, int h,CUcontext ctx)
@@ -85,11 +85,13 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     auto texes = this->volume_block_cache->GetCUDATextureObjects();
     CUDAOffRenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
-void CUDAOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+void CUDAOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 {
-
+    CUDAOffRenderer::CUDAOffCompRenderPolicy renderPolicy;
+    std::copy(policy.lod_dist,policy.lod_dist+10,renderPolicy.lod_dist);
+    CUDAOffRenderer::UploadCUDAOffCompRenderPolicy(renderPolicy);
 }
-void CUDAOffScreenCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
+void CUDAOffScreenCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpi_render)
 {
     LOG_ERROR("This function is not implement for CUDA-OffScreen-CompVolume-Renderer");
 }
