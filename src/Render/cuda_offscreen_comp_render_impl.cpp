@@ -27,6 +27,9 @@ CUDAOffScreenCompVolumeRendererImpl::CUDAOffScreenCompVolumeRendererImpl(int w, 
         }
     }
     CUDAOffScreenCompVolumeRendererImpl::resize(w,h);
+    CompRenderPolicy default_policy;
+    default_policy.lod_dist[0]=std::numeric_limits<float>::max();
+    SetRenderPolicy(default_policy);
 }
 
 void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volume)
