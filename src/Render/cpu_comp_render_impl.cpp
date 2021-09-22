@@ -22,6 +22,7 @@ CPUOffScreenCompVolumeRendererImpl::CPUOffScreenCompVolumeRendererImpl(int w, in
 :window_w(w),window_h(h)
 {
     CPUOffScreenCompVolumeRendererImpl::resize(w,h);
+    lod_dist[0]=std::numeric_limits<double>::max();
 }
 
 void CPUOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volume) {
@@ -64,16 +65,19 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
       std::lock_guard<std::mutex> lk(mtx);
         missed_blocks.insert(idx);
     };
-    auto VirtualSample=[&AddMissedBlock,this](const Vec3d& sample_pos,double& scalar)->int{
+    auto VirtualSample=[&AddMissedBlock,this](int lod,int lod_t,const Vec3d& sample_pos,double& scalar)->int{
         Vec4i virtual_block_idx;
         virtual_block_idx.x = sample_pos.x / no_padding_block_length;
         virtual_block_idx.y = sample_pos.y / no_padding_block_length;
         virtual_block_idx.z = sample_pos.z / no_padding_block_length;
-        virtual_block_idx.w = 0;
-        if(virtual_block_idx.x<0 || virtual_block_idx.y<0 || virtual_block_idx.z<0){
+//        virtual_block_idx.w = 0;
+        if(virtual_block_idx.x<0 || virtual_block_idx.y<0 || virtual_block_idx.z<0
+            || virtual_block_idx.x >= volume_dim_x || virtual_block_idx.y >= volume_dim_y || virtual_block_idx.z >= volume_dim_z){
             scalar = 0.0;
             return 1;
         }
+        virtual_block_idx /= lod_t;
+        virtual_block_idx.w=lod;
         bool cached=block_cache_manager->IsBlockDataCached(virtual_block_idx);
         if(!cached){
             AddMissedBlock(virtual_block_idx);
@@ -88,9 +92,9 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
             return 0;
         }
         Vec3d physical_sample_pos;
-        physical_sample_pos.x = (sample_pos.x - virtual_block_idx.x * no_padding_block_length + padding) / block_length;
-        physical_sample_pos.y = (sample_pos.y - virtual_block_idx.y * no_padding_block_length + padding) / block_length;
-        physical_sample_pos.z = (sample_pos.z - virtual_block_idx.z * no_padding_block_length + padding) / block_length;
+        physical_sample_pos.x = (sample_pos.x - virtual_block_idx.x * no_padding_block_length*lod_t + padding*lod_t) / (block_length*lod_t);
+        physical_sample_pos.y = (sample_pos.y - virtual_block_idx.y * no_padding_block_length*lod_t + padding*lod_t) / (block_length*lod_t);
+        physical_sample_pos.z = (sample_pos.z - virtual_block_idx.z * no_padding_block_length*lod_t + padding*lod_t) / (block_length*lod_t);
         auto block_array      = block_cache_manager->GetBlock3DArray(physical_block_index.Index());
         scalar = block_array->Sample(physical_block_index.X(),physical_block_index.Y(),physical_block_index.Z(),
                             physical_sample_pos.x,physical_sample_pos.y,physical_sample_pos.z)/255.0;
@@ -104,17 +108,17 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
     double kd  = 0.5;
     double shininess = 100.0;
 
-    auto PhongShading=[voxel,ka,ks,kd,shininess,&VirtualSample](Vec3d const& sample_pos,Vec3d const& diffuse_color,Vec3d const& view_direction)->Vec3d{
+    auto PhongShading=[voxel,ka,ks,kd,shininess,&VirtualSample](int lod,int lod_t,Vec3d const& sample_pos,Vec3d const& diffuse_color,Vec3d const& view_direction)->Vec3d{
         Vec3d N;
         double x1,x2;
-        VirtualSample(sample_pos + Vec3d(voxel,0.0,0.0),x1);
-        VirtualSample(sample_pos + Vec3d(-voxel,0.0,0.0),x2);
+        VirtualSample(lod,lod_t,sample_pos + Vec3d(voxel*lod_t,0.0,0.0),x1);
+        VirtualSample(lod,lod_t,sample_pos + Vec3d(-voxel*lod_t,0.0,0.0),x2);
         N.x=x1-x2;
-        VirtualSample(sample_pos + Vec3d(0.0,voxel,0.0),x1);
-        VirtualSample(sample_pos + Vec3d(0.0,-voxel,0.0),x2);
+        VirtualSample(lod,lod_t,sample_pos + Vec3d(0.0,voxel*lod_t,0.0),x1);
+        VirtualSample(lod,lod_t,sample_pos + Vec3d(0.0,-voxel*lod_t,0.0),x2);
         N.y=x1-x2;
-        VirtualSample(sample_pos + Vec3d(0.0,0.0,voxel),x1);
-        VirtualSample(sample_pos + Vec3d(0.0,0.0,-voxel),x2);
+        VirtualSample(lod,lod_t,sample_pos + Vec3d(0.0,0.0,voxel*lod_t),x1);
+        VirtualSample(lod,lod_t,sample_pos + Vec3d(0.0,0.0,-voxel*lod_t),x2);
         N.z=x1-x2;
         N=-Normalize(N);
 
@@ -130,6 +134,23 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
 
         return ambient + specular + diffuse;
     };
+
+    auto EvaluateLod=[this](double distance){
+      for(int lod=0;lod<10;lod++){
+          if(distance<this->lod_dist[lod]){
+              return lod;
+          }
+      }
+      return 0;
+    };
+
+    auto IntPow=[](int x,int y){
+        int ans=1;
+        for(int i=0;i<y;i++)
+          ans *= x;
+        return ans;
+    };
+
     std::mutex image_mtx;
     auto SetPixel=[&image_mtx,this](int col,int row,Vec4d const& color)->void{
         std::lock_guard<std::mutex> lk(image_mtx);
@@ -205,7 +226,6 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
         for(int row=0;row < window_h;row++){
             if(row%(window_h/10)==0)
                 LOG_INFO("turn {0} finish {1}",turn,row*1.0/window_h);
-            AutoTimer timer;
 //#pragma omp parallel for
             for(int col=0;col < window_w;col++){
 //                if(col!=70 || row!=0) continue;
@@ -216,19 +236,26 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
                 Vec3d last_ray_start_pos = ray_start_pos.At(col,row);
                 Vec3d last_ray_stop_pos  = ray_stop_pos.At(col,row);
                 Vec3d ray_direction      = last_ray_stop_pos-last_ray_start_pos;
-                int steps                = Length(ray_direction)/step;
-                ray_direction            = Normalize(ray_direction);
+
+
                 Vec3d ray_pos            = last_ray_start_pos;
                 double sample_scalar;
                 double last_sample_scalar;
                 //raycasting for the pixel
                 int i = 0;
+                int last_lod = EvaluateLod(Length(ray_pos-view_pos));
+                int last_lod_t = IntPow(2,last_lod);
+                int steps                = Length(ray_direction)/step/last_lod_t;
+                ray_direction            = Normalize(ray_direction);
                 for(;i<steps;i++){
                     //if the block is not cached
                     //1.record current ray pos and color as next pass's ray start pos
                     //2.record missed block
                     //3.break
-                    int flag=VirtualSample(ray_pos / volume_space,sample_scalar);//record missed blocks in the function
+                    int cur_lod=EvaluateLod(Length(ray_pos-view_pos));
+                    int lod_t=IntPow(2,cur_lod);
+
+                    int flag=VirtualSample(cur_lod,lod_t,ray_pos / volume_space,sample_scalar);//record missed blocks in the function
                     if(flag == 0){
                         //record current ray pos and color
                         ray_start_pos.At(col,row) = ray_pos;
@@ -240,7 +267,7 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
                         Vec4d sample_color=LinearSampler::Sample1D(tf_1d,sample_scalar);
                         if(sample_color.a > 0.0){
 
-                            Vec3d shading_color = PhongShading(ray_pos/volume_space,Vec3d(sample_color),ray_direction);
+                            Vec3d shading_color = PhongShading(cur_lod,lod_t,ray_pos/volume_space,Vec3d(sample_color),ray_direction);
 
                             sample_color.x = shading_color.x;
                             sample_color.y = shading_color.y;
@@ -251,7 +278,7 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
                     if(color.a>0.99){
                         break;
                     }
-                    ray_pos += ray_direction * step;
+                    ray_pos += ray_direction * step * lod_t;
                 }
                 if(i>=steps || color.a>0.99){
                     render_finish_num ++;
@@ -346,9 +373,9 @@ void CPUOffScreenCompVolumeRendererImpl::resize(int w, int h) {
 void CPUOffScreenCompVolumeRendererImpl::clear() {
 
 }
-void CPUOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+void CPUOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 {
-
+    std::copy(policy.lod_dist,policy.lod_dist+10,this->lod_dist);
 }
 void CPUOffScreenCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 {

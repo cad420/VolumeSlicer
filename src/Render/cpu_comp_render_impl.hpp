@@ -40,6 +40,7 @@ private:
     Image<uint32_t> frame;
     Image<Color4b > image;
     double step;
+    double lod_dist[10];
     std::shared_ptr<CompVolume> comp_volume;
     uint32_t volume_dim_x,volume_dim_y,volume_dim_z;
     double volume_space_x,volume_space_y,volume_space_z,base_space;
