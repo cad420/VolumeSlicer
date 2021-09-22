@@ -44,10 +44,10 @@ cudaArray* preInt_tf          = nullptr;
 
 
 
-__device__ int VirtualSample(const float3& sample_pos,float& scalar,
+__device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& scalar,
                              stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks);
 
-__device__ float3 PhongShading(stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,
+__device__ float3 PhongShading(int lod,int lod_t,stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,
                                float3 const& sample_pos,
                                float3 const& diffuse_color,
                                float3 const& view_direction);
@@ -98,7 +98,7 @@ __global__ void CUDAGenRays(){
 
 }
 
-__device__ int VirtualSample(const float3& sample_pos,float& scalar,
+__device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& scalar,
                              stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks){
 
     int3 virtual_block_idx=make_int3(sample_pos / compVolumeParameter.no_padding_block_length);
@@ -109,30 +109,60 @@ __device__ int VirtualSample(const float3& sample_pos,float& scalar,
         scalar = 0.f;
         return 1;
     }
-    int3 block_dim=compVolumeParameter.block_dim;
+    virtual_block_idx = virtual_block_idx / lod_t;
+    int3 block_dim=(compVolumeParameter.block_dim+lod_t-1)/lod_t;
     size_t flat_virtual_block_idx = virtual_block_idx.z * block_dim.x * block_dim.y
                                   + virtual_block_idx.y * block_dim.x
-                                  + virtual_block_idx.x;// + lod_mapping_table_offset[0];
+                                  + virtual_block_idx.x+ lod_mapping_table_offset[lod];
 
     uint4 physical_block_idx  = mapping_table[flat_virtual_block_idx];
 
-//    missed_blocks.insert(make_int4(virtual_block_idx,physical_block_idx.w));
-//    return 0;
     uint  physical_block_flag = (physical_block_idx.w>>16)&(0x0000ffff);
     if(physical_block_flag==0){
-//        missed_blocks.insert(make_int4(virtual_block_idx,0));
-        missed_blocks.insert(make_int4(virtual_block_idx,0));
+        missed_blocks.insert(make_int4(virtual_block_idx,lod));
         scalar = 0.f;
         return 0;
     }
     uint physical_texture_idx = physical_block_idx.w & 0x0000ffff;
-    float3 offset_in_no_padding_block = (sample_pos-make_float3(virtual_block_idx* compVolumeParameter.no_padding_block_length));
+    float3 offset_in_no_padding_block = (sample_pos-make_float3(virtual_block_idx* compVolumeParameter.no_padding_block_length*lod_t))/lod_t;
     float3 physical_sample_pos = make_float3(physical_block_idx.x,physical_block_idx.y,physical_block_idx.z)* compVolumeParameter.block_length
                                  + offset_in_no_padding_block + make_float3(compVolumeParameter.padding);
     physical_sample_pos /= make_float3(compVolumeParameter.volume_texture_shape);
     scalar = tex3D<float>(cache_volumes[physical_texture_idx],physical_sample_pos.x,physical_sample_pos.y,physical_sample_pos.z);
     return 1;
 
+}
+
+__device__ int EvaluateLod(float distance){
+//    return 0;
+    if(distance<0.3f){
+        return 0;
+    }
+    else if(distance<0.5f){
+        return 1;
+    }
+    else if(distance<1.2f){
+        return 2;
+    }
+    else if(distance<1.6f){
+        return 3;
+    }
+    else if(distance<3.2f){
+        return 4;
+    }
+    else if(distance<6.4f){
+        return 5;
+    }
+    else{
+        return 6;
+    }
+}
+
+__device__ int IntPow(int x,int y){
+    int ans=1;
+    for(int i=0;i<y;i++)
+        ans *= x;
+    return ans;
 }
 
 __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_blocks){
@@ -148,14 +178,27 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
     float3 last_ray_start_pos = ray_start_pos[image_idx];
     float3 last_ray_stop_pos  = ray_stop_pos[image_idx];
     float3 ray_direction      = last_ray_stop_pos - last_ray_start_pos;
-    int steps                 = length(ray_direction)/cudaOffCompRenderParameter.step;
-    ray_direction             = normalize(ray_direction);
+
+
     float3 ray_sample_pos     = last_ray_start_pos;
     float sample_scalar;
     int i = 0;
-
+    int lod_steps = 0;
+    int last_lod  = EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
+    int last_lod_t = IntPow(2,last_lod);
+    int steps      = length(ray_direction)/cudaOffCompRenderParameter.step/last_lod_t;
+    ray_direction             = normalize(ray_direction);
+    float3 lod_sample_start_pos = last_ray_start_pos;
     for(;i<steps;i++){
-        int flag = VirtualSample(ray_sample_pos/compVolumeParameter.volume_space,sample_scalar,missed_blocks);
+        int cur_lod=EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
+        int lod_t = IntPow(2,cur_lod);
+        if(cur_lod > last_lod){
+            lod_sample_start_pos=ray_sample_pos;
+            last_lod = cur_lod;
+            lod_steps = i;
+        }
+
+        int flag = VirtualSample(cur_lod,lod_t,ray_sample_pos/compVolumeParameter.volume_space,sample_scalar,missed_blocks);
         if(flag == 0 ){
             ray_start_pos[image_idx]       = ray_sample_pos;
             intermediate_result[image_idx] = color;
@@ -165,7 +208,7 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
         if(sample_scalar > 0.f){
             float4 sample_color = tex1D<float4>(transfer_func,sample_scalar);
             if(sample_color.w > 0.f){
-                auto shading_color = make_float4(PhongShading(missed_blocks,
+                auto shading_color = make_float4(PhongShading(cur_lod,lod_t,missed_blocks,
                                                   ray_sample_pos / compVolumeParameter.volume_space,
                                                   make_float3(sample_color),
                                                   ray_direction),sample_color.w);
@@ -176,7 +219,7 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
             }
         }
 
-        ray_sample_pos = last_ray_start_pos+ (i+1)*ray_direction * cudaOffCompRenderParameter.step;
+        ray_sample_pos = lod_sample_start_pos+ (i+1-lod_steps)*ray_direction * cudaOffCompRenderParameter.step * lod_t;
     }
     if(i >= steps || color.w > 0.99f){
         color.w=1.f;
@@ -186,20 +229,20 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
     }
 }
 
-__device__ float3 PhongShading(stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,
+__device__ float3 PhongShading(int lod,int lod_t,stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,
                                float3 const& sample_pos,
                                float3 const& diffuse_color,
                                float3 const& view_direction){
     float3 N=make_float3(0.f);
     float x1,x2;
-    VirtualSample(sample_pos+make_float3( compVolumeParameter.voxel,0.f,0.f),x1,missed_blocks);
-    VirtualSample(sample_pos+make_float3(-compVolumeParameter.voxel,0.f,0.f),x2,missed_blocks);
+    VirtualSample(lod,lod_t,sample_pos+make_float3( compVolumeParameter.voxel*lod_t,0.f,0.f),x1,missed_blocks);
+    VirtualSample(lod,lod_t,sample_pos+make_float3(-compVolumeParameter.voxel*lod_t,0.f,0.f),x2,missed_blocks);
     N.x = x1 - x2;
-    VirtualSample(sample_pos+make_float3(0.f, compVolumeParameter.voxel,0.f),x1,missed_blocks);
-    VirtualSample(sample_pos+make_float3(0.f,-compVolumeParameter.voxel,0.f),x2,missed_blocks);
+    VirtualSample(lod,lod_t,sample_pos+make_float3(0.f, compVolumeParameter.voxel*lod_t,0.f),x1,missed_blocks);
+    VirtualSample(lod,lod_t,sample_pos+make_float3(0.f,-compVolumeParameter.voxel*lod_t,0.f),x2,missed_blocks);
     N.y = x1 - x2;
-    VirtualSample(sample_pos+make_float3(0.f,0.f, compVolumeParameter.voxel),x1,missed_blocks);
-    VirtualSample(sample_pos+make_float3(0.f,0.f,-compVolumeParameter.voxel),x2,missed_blocks);
+    VirtualSample(lod,lod_t,sample_pos+make_float3(0.f,0.f, compVolumeParameter.voxel*lod_t),x1,missed_blocks);
+    VirtualSample(lod,lod_t,sample_pos+make_float3(0.f,0.f,-compVolumeParameter.voxel*lod_t),x2,missed_blocks);
     N.z = x1 - x2;
     N = normalize(-N);
 
