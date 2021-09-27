@@ -13,13 +13,29 @@ VS_START
 class Box{
   public:
     Box(const Vec3d& min_p,const Vec3d& max_p):min_p(min_p),max_p(max_p){}
+    Box(const Box&) = default;
+    Box& operator=(const Box&) = default;
     friend std::ostream& operator<<(std::ostream& os,const Box& box){
         os<<"min p: ("<<box.min_p.x<<" "<<box.min_p.y<<" "<<box.min_p.z<<")\t"
           <<"max p: ("<<box.max_p.x<<" "<<box.max_p.y<<" "<<box.max_p.z<<")"<<std::endl;
         return os;
     }
+    Box Expand(int r) const{
+        if(r <= 0) return *this;
+        auto d = (max_p - min_p) * (r*1.0);
+        auto n_min_p = min_p - d;
+        auto n_max_p = max_p + d;
+        return Box(n_min_p,n_max_p);
+    }
     Vec3d min_p,max_p;
 };
+inline Box ExpandBox(int r,const Vec3d& min_p,const Vec3d& max_p){
+    if(r <= 0) return Box(min_p,max_p);
+    auto d = (max_p - min_p) * (r*1.0);
+    auto n_min_p = min_p - d;
+    auto n_max_p = max_p + d;
+    return Box(n_min_p,n_max_p);
+}
 inline Vec2d IntersectWithAABB(const Box& box,const SimpleRay& ray){
     double t_min_x=(box.min_p.x-ray.origin.x)/ray.direction.x;
     double t_max_x=(box.max_p.x-ray.origin.x)/ray.direction.x;

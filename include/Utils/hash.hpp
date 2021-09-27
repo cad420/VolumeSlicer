@@ -4,28 +4,27 @@
 
 #pragma once
 #include <array>
+#include <glm/gtx/hash.hpp>
 namespace std{
     template <size_t len>
     struct hash<array<uint32_t,len>>{
         size_t operator()(const array<uint32_t,len>& v) const{
-            size_t l = 64 / len;
-            size_t ans = 0;
+            glm::vec<len,uint32_t> t;
             for(size_t i=0;i<len;i++){
-                ans |= ((size_t)v[i] << l);
+                t[i]=v[i];
             }
-            return ans;
+            return hash<glm::vec<len,uint32_t>>()(t);
         }
     };
 
     template <size_t len>
     struct hash<array<int,len>>{
         size_t operator()(const array<int,len>& v) const{
-            size_t l = 64 / len;
-            size_t ans = 0;
+            glm::vec<len,int> t;
             for(size_t i=0;i<len;i++){
-                ans |= ((size_t)v[i] << l);
+                t[i]=v[i];
             }
-            return ans;
+            return hash<glm::vec<len,int>>()(t);
         }
     };
 

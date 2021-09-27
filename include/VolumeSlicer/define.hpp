@@ -12,4 +12,7 @@
 
 #define INVALID 0xffffffff
 
+#define FORWARD_IMPL_DECLARATION(cls) \
+class  cls##Impl
+
 #endif //VOLUMESLICER_DEFINE_HPP
