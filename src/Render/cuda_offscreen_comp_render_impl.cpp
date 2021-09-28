@@ -7,6 +7,7 @@
 #include "cuda_offscreen_comp_render_impl.cuh"
 #include "Common/hash_function.hpp"
 #include <algorithm>
+#include <Utils/timer.hpp>
 VS_START
 
 std::unique_ptr<CUDAOffScreenCompVolumeRenderer> vs::CUDAOffScreenCompVolumeRenderer::Create(int w, int h,CUcontext ctx)
@@ -148,11 +149,15 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
     //3.render pass
     int turn = 0;
     while( ++turn ){
+
         std::unordered_set<int4,Hash_Int4> missed_blocks;
         assert(missed_blocks.empty());
         //3.1 render one pass
-        CUDAOffRenderer::CUDARender(missed_blocks);
-
+        {
+            AutoTimer timer;
+            CUDAOffRenderer::CUDARender(missed_blocks);
+        }
+        spdlog::set_level(spdlog::level::err);
         //3.2 process missed blocks
         if(missed_blocks.empty()){
             break;
@@ -212,6 +217,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
             auto& m = this->volume_block_cache->GetMappingTable();
             CUDAOffRenderer::UploadMappingTable(m.data(),m.size());
         }
+        spdlog::set_level(spdlog::level::info);
         LOG_INFO("current render turn {0} load block num: {3}, total missed block num: {1}, remain missed block num: {2}, " ,
                  turn,dummy_missed_blocks.size(),missed_blocks.size(),dummy_missed_blocks.size()-missed_blocks.size());
     }

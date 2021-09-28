@@ -279,7 +279,33 @@ void CreateDeviceRenderImages(int w,int h){
     }
 
 }
-
+void InitDeviceRenderImages(){
+    {
+        if(d_ray_directions){
+            CUDA_RUNTIME_API_CALL(cudaMemset(d_ray_directions,0,sizeof(float3)*d_image_w*d_image_h));
+        }
+    }
+    {
+        if(d_ray_start_pos){
+            CUDA_RUNTIME_API_CALL(cudaMemset(d_ray_start_pos,0,sizeof(float3)*d_image_w*d_image_h));
+        }
+    }
+    {
+        if(d_ray_stop_pos){
+            CUDA_RUNTIME_API_CALL(cudaMemset(d_ray_stop_pos,0,sizeof(float3)*d_image_w*d_image_h));
+        }
+    }
+    {
+        if(d_intermediate_result){
+            CUDA_RUNTIME_API_CALL(cudaMemset(d_intermediate_result,0,sizeof(float4)*d_image_w*d_image_h));
+        }
+    }
+    {
+        if(d_color_image){
+            CUDA_RUNTIME_API_CALL(cudaMemset(d_color_image,0,sizeof(uint)*d_image_w*d_image_h));
+        }
+    }
+}
 void CreateDeviceMappingTable(const uint32_t*data,size_t size){
     if(d_mapping_table){
         CUDA_RUNTIME_API_CALL(cudaFree(d_mapping_table));
@@ -360,6 +386,8 @@ namespace CUDAOffRenderer{
         if(d_image_w != w || d_image_h != h){
             CreateDeviceRenderImages(w,h);
         }
+        InitDeviceRenderImages();
+
         dim3 threads_per_block={16,16};
         dim3 blocks_per_grid={(d_image_w+threads_per_block.x-1)/threads_per_block.x,(d_image_h+threads_per_block.y-1)/threads_per_block.y};
 
