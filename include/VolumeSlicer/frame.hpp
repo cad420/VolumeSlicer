@@ -290,6 +290,16 @@ class Image<Color4b>{
         }
         width=height=num=0;
     }
+    Image<Color3b> ToImage3b() const{
+        Image<Color3b> image(width,height);
+        for(int i=0;i<height;i++){
+            for(int j=0;j<width;j++){
+                auto color=this->At(j,i);
+                image.At(j,i) = {color.b,color.g,color.r};
+            }
+        }
+        return image;
+    }
   private:
     uint32_t num;
     uint32_t width,height;
