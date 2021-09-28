@@ -66,7 +66,7 @@ class LinearArrayBase{
             ReleaseData();
         }
     }
-    LinearArrayBase(Self&& other)
+    LinearArrayBase(Self&& other) noexcept
     :num(other.num),data(other.data)
     {
         other.data=nullptr;
@@ -78,7 +78,7 @@ class LinearArrayBase{
         new(this) Self(other);
         return *this;
     }
-    Self& operator=(Self&& other){
+    Self& operator=(Self&& other) noexcept{
         if(IsAvailable()){
             Destroy();
         }
@@ -106,6 +106,9 @@ class LinearArrayBase{
         num=0;
     }
     T& operator[](SizeType idx) noexcept{
+        return data[idx];
+    }
+    T& operator[](SizeType idx) const noexcept{
         return data[idx];
     }
     T& At(SizeType idx) noexcept(false){
@@ -245,17 +248,23 @@ class Linear3DArray: public LinearArrayBase<T>{
 
     Linear3DArray(SizeType width,SizeType height,SizeType depth,const T* copy_from)
         :Base(width*height*depth,copy_from),width(width),height(height),depth(depth)
-    {}
+    {
+    }
 
     Linear3DArray(SizeType width,SizeType height,SizeType depth,const T& init_value=T())
         :Base(width*height*depth,init_value),width(width),height(height),depth(depth)
     {}
     Linear3DArray(const Self&)=default;
     Self& operator=(const Self&)=default;
-    Linear3DArray(Self&& other) noexcept:Base(std::move(other.GetBase()))
-    {}
+    Linear3DArray(Self&& other) noexcept
+        :Base(std::move(other.GetBase())),width(other.width),height(other.height),depth(other.depth)
+    {
+    }
     Self& operator=(Self&& other) noexcept{
         Base::GetBase()=std::move(other.GetBase());
+        this->width=other.width;
+        this->height=other.height;
+        this->depth=other.depth;
         return *this;
     }
 
@@ -270,6 +279,38 @@ class Linear3DArray: public LinearArrayBase<T>{
     }
     const T& At(SizeType x,SizeType y,SizeType z) const{
         return Base::At(x+y*width+z*width*height);
+    }
+    void SafeReadRegion(SizeType src_x,SizeType src_y,SizeType src_z,SizeType len_x,SizeType len_y,SizeType len_z,T* d) const{
+        if(src_x+len_x >= GetWidth() || src_y+len_y >= GetHeight() || src_z+len_z >= GetDepth()){
+            throw std::out_of_range("Linear3DArray::ReadRegion out of range");
+        }
+        assert(d);
+        if(!d) return;
+        //omp?
+        for(int z=0;z<len_z;z++){
+            for(int y=0;y<len_y;y++){
+                for(int x=0;x<len_x;x++){
+                    auto idx = z*len_x*len_y + y*len_x +x;
+                    d[idx] = (*this)(x+src_x,y+src_y,z+src_z);
+                }
+            }
+        }
+    }
+    void ReadRegion(SizeType src_x,SizeType src_y,SizeType src_z,SizeType len_x,SizeType len_y,SizeType len_z,T* d) const{
+        assert(d);
+        if(!d) return;
+        //omp?
+        for(int z=0;z<len_z;z++){
+            for(int y=0;y<len_y;y++){
+                for(int x=0;x<len_x;x++){
+                    auto idx = z*len_x*len_y + y*len_x +x;
+                    if(x<GetWidth() && y<GetHeight() && z<GetDepth())
+                        d[idx] = (*this)(x+src_x,y+src_y,z+src_z);
+                    else
+                        d[idx] = 0;
+                }
+            }
+        }
     }
     SizeType GetWidth() const{
         return width;
