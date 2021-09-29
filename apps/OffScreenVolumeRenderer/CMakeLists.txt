@@ -25,6 +25,7 @@ list(
         OffScreenVolumeRenderer_SRCS
         src/main.cpp
         src/VideoCapture.cpp
+        src/OffScreenVolumeRenderer.cpp
 )
 add_executable(OffScreenVolumeRenderer ${OffScreenVolumeRenderer_SRCS})
 
@@ -46,3 +47,5 @@ target_link_libraries(
         VS_CORE
         ${OpenCV_LIBS}
 )
+
+add_subdirectory(test)

@@ -3,3 +3,9 @@
 //
 #pragma once
 #include "VideoCapture.hpp"
+
+class OffScreenVolumeRenderer{
+  public:
+    OffScreenVolumeRenderer()=delete;
+    static void RenderFrames(const char* config_file);
+};

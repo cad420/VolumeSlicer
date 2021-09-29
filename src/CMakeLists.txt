@@ -47,10 +47,10 @@ set_target_properties(VS_CORE PROPERTIES PUBLIC_HEAD
 target_include_directories(VS_CORE
         PUBLIC
         ${CUDA_INCLUDE_DIRS}
+        ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
-        ${PROJECT_SOURCE_DIR}/third_party
 #        ${PROJECT_SOURCE_DIR}/third_party/glad/include
         )
 
