@@ -10,7 +10,7 @@ int MPILargeVolumeVisApp::run(int argc, char **argv) {
 
     try{
         LargeVolumeVisGUI gui;
-        gui.init("slicer_config.json");
+        gui.init("../test_data/slicer_config.json");
         gui.show();
     }
     catch (const std::exception& err) {

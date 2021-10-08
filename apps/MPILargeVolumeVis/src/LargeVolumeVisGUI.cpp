@@ -1,6 +1,8 @@
 //
 // Created by wyz on 2021/7/22.
 //
+#include <Utils/plugin_loader.hpp>
+
 #include "LargeVolumeVisGUI.hpp"
 #include "camera.hpp"
 #include <SDL.h>
@@ -70,6 +72,8 @@ void LargeVolumeVisGUI::init(const char * config_file) {
     base_space=(std::min)({volume_space_x,volume_space_y,volume_space_z});
     //todo replace 0 with iGPU
     SetCUDACtx(0);
+
+    PluginLoader::LoadPlugins("./plugins");
 
     initSDL();
 
