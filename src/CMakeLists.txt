@@ -31,6 +31,9 @@ list(
         IO/reader_impl.cpp
         Common/cuda_context.cpp
         Common/image.cpp
+        Common/library.cpp
+        Common/library_reposity.cpp
+        Common/plugin_loader.cpp
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
         ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
 )
