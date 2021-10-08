@@ -24,7 +24,7 @@ static std::string GetName(const std::string& name){
     return s;
 }
 static void InitLogger(const std::string& name){
-    logger=spdlog::rotating_logger_st("offscreen_render_logger","logs/"+GetName(name)+"_logfile.txt",1024*1024*10,10);
+    logger=spdlog::rotating_logger_mt("offscreen_render_logger","logs/"+GetName(name)+"_logfile.txt",1024*1024*10,10);
 }
 static void LogInfo(std::string str){
     logger->info(str);
@@ -241,6 +241,8 @@ void OffScreenVolumeRenderer::RenderFrames(const char *config_file)
         video_capture.AddFrame(reinterpret_cast<uint8_t*>(image.ToImage3b().GetData()));
         timer.stop();
         LogInfo("render frame "+std::to_string(i)+" cost time "+timer.duration().s().fmt());
+        //for gpu take a rest
+        _sleep(2000);
     }
     LogInfo("========Last Render Finish========");
 }

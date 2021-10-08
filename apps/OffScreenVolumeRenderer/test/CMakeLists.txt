@@ -15,3 +15,9 @@ target_include_directories(
         ${OpenCV_INCLUDE_DIRS}
         ../src
 )
+
+add_executable(test_camera_sequence test_camera_sequence.cpp)
+target_include_directories(test_camera_sequence
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/third_party
+        )
