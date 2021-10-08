@@ -152,7 +152,7 @@ CPUVolumeCache应该还需要实现缓存的功能
     如果要用到auto it:container 那么container需要有函数begin()
     使用起来有点麻烦
     
-# 切比雪夫距离场 进行加速
+## 切比雪夫距离场 进行加速
 对于一个体数据 对其按block_length 进行分块
 首先根据传输函数得到每一个块是否全为空 可以改进 计算均值和方差 是否真的为空可以在运行时动态判断
 那么在加载后也要动态改变切比雪夫距离场Map
@@ -162,12 +162,92 @@ map在数据比较大的时候 遍历速度比unordered_map要快?
 因为unordered_map的hash函数自己实现的不好 导致映射到同一个bucket的很多 降低了访问速度
 map是用红黑树 所以查询一个元素的时间复杂度是logN
 设计好的hash函数 可以使unordered_map速度快于map
-    
+## CDF File Format
+可以使用json文件 原来的体数据分块压缩格式因为还要存储数据 所以必须要用二进制格式
+[x,y,z,average,chebyshev_dist]
+每一个lod下的每一块都有一个数组 数组的第i项代表flat index为i的分块的切比雪夫距离
+块长可以设为32 总大小在200MB左右
+```json
+{
+  "cdf_block_length": 32,
+  "volume_block_length": 512,
+  "lod0": {
+  "0_0_0": [1,1,0,1],
+  "1_0_0": [0,0,1,1]
+  },
+  "lod1": {
+  
+  },
+  "lod2": {
+
+  }  
+}
+```
    
- 
+## Plugin
+加载一个插件 然后创建一个插件对象
+加载需要: 插件的名称 raw_volume_reader.dll
+创建需要: 插件对象的类型 IVolumeReader
+具体类继承自某一特定接口类 需要申明和定义一个c风格的创建函数
+
+```c++
+
+// ivolumereaderplugininterface.hpp
+class IVolumeReader{
     
+};
+// iplugin.hpp
+class IPluginFactory{
     
+};
+//plugin_loader.hpp
+class PluginLoader{
+public:
+    static void LoadPlugins(const std::string& directory);    
+};
+
+// rawvolumereader.hpp
+class RawVolumeReader:public IVolumeReader{
     
+};
+class RawVolumeReaderPluginFactory:public IPluginFactory{
+    
+};
+
+DLL_EXPORT IVolumeReader* get_raw_volume_reader(){
+    return reinterpret_cast<IVolumeReader*>(new RawVolumeReader());
+}
+extern "C"
+DLL_EXPORT IPluginFactory* GetPluginFactoryInstance(){
+    
+}
+
+//library_reposity.hpp
+
+//library.hpp
+
+```
+插件类尽量都是默认构造函数
+为了抽象化 返回该类的工厂类基类 这样子可以与倾入式指针配合 
+同时使用工厂类基类代替 某一借口的基类 可以更加抽象化
+
+插件的名称应该事先规定好 虽然使用和生成是两个不同的阶段 一个是程序运行时 一个是程序build时即cmake
+这可以通过在cmake中添加宏定义使得两者相同 但是这样子新加一种插件又要重新build 不太好
+
+指定一个目录 每次都去该目录下遍历所有的dll 找到需要的函数 这样子耗时耗资源 
+不过可以专门创建一个用于数据加载的插件文件夹 只放这些 与程序启动需要的dll分开放
+
+另一种思路可以是 指定生成的插件命名规则 比如对于 `.raw` 的数据加载插件 必须命名为 `plugin_dataloader_raw.dll`
+第一种的好处是 一个dll可以有多个功能 不仅是数据加载 那么不会受到命名的限制
+第二种虽然寻找插件简单 但是就会限制一个插件只能对应一个功能
+`**所以第一种的资源消耗会有多大? 因为要预先加载一个目录下的所有dll信息**`
+PluginLoader::LoadPlugins 加载一个目录下的所有插件
+
+当需要加载一个 `.raw` 的数据文件时
+1. 知道这个需要去寻找 `IVolumeReader` 的插件 但不需要知道它具体叫什么类 比如 `RawVolumeReader`
+2. 需要在一个存放插件的目录下去遍历每一个插件 对每一个插件查询关键词 `.raw` 是否匹配
+    
+一个release的exe去加载debug的dll时程序会很慢?
     
     
     

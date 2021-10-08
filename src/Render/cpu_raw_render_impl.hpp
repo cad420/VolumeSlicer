@@ -9,6 +9,7 @@
 #include "Texture/texture.hpp"
 #include <VolumeSlicer/color.hpp>
 #include <VolumeSlicer/render.hpp>
+#include <Utils/linear_array.hpp>
 VS_START
 
 class CPURawVolumeRendererImpl : public CPURawVolumeRenderer
@@ -43,6 +44,10 @@ class CPURawVolumeRendererImpl : public CPURawVolumeRenderer
     Texture1D<Color4f> tf_1d;
     Texture2D<Color4f> tf_2d;
     Texture3D<uint8_t> volume_data;
+    Linear3DArray<uint8_t> volume_data_array;
+    std::vector<uint32_t> cdf_map;
+    static constexpr int cdf_block_length=4;
+    int cdf_dim_x,cdf_dim_y,cdf_dim_z;
     double volume_board_x,volume_board_y,volume_board_z;
     double space_x,space_y,space_z;
     int volume_dim_x,volume_dim_y,volume_dim_z;

@@ -6,7 +6,10 @@
 #include "transfer_function_impl.hpp"
 #include <VolumeSlicer/vec.hpp>
 #include <Utils/logger.hpp>
+#include <VolumeSlicer/cdf.hpp>
 #include <omp.h>
+#include <Utils/timer.hpp>
+#include <Utils/box.hpp>
 VS_START
 CPURawVolumeRendererImpl::CPURawVolumeRendererImpl(int w, int h)
 :window_w(w),window_h(h)
@@ -15,6 +18,23 @@ CPURawVolumeRendererImpl::CPURawVolumeRendererImpl(int w, int h)
 }
 void CPURawVolumeRendererImpl::SetVolume(std::shared_ptr<RawVolume> raw_volume)
 {
+    this->volume_data_array=Linear3DArray<uint8_t>(raw_volume->GetVolumeDimX(),
+                                                     raw_volume->GetVolumeDimY(),
+                                                     raw_volume->GetVolumeDimZ(),
+                                                     raw_volume->GetData());
+
+    {
+        CDFGenerator cdf_gen;
+        cdf_gen.SetVolumeData(volume_data_array,cdf_block_length);
+        {
+            AutoTimer timer;
+            cdf_gen.GenerateCDF();
+        }
+        this->cdf_map=std::move(cdf_gen.GetCDFArray());
+//        for(auto x:cdf_map){
+//            std::cout<<"block "<<x<<std::endl;
+//        }
+    }
     this->volume_data=TextureFile::LoadTexture3DFromMemory(raw_volume->GetData(),
                                                              raw_volume->GetVolumeDimX(),
                                                              raw_volume->GetVolumeDimY(),
@@ -28,6 +48,10 @@ void CPURawVolumeRendererImpl::SetVolume(std::shared_ptr<RawVolume> raw_volume)
     volume_board_x=volume_dim_x*space_x;
     volume_board_y=volume_dim_y*space_y;
     volume_board_z=volume_dim_z*space_z;
+
+    cdf_dim_x = volume_dim_x / cdf_block_length;
+    cdf_dim_y = volume_dim_y / cdf_block_length;
+    cdf_dim_z = volume_dim_z / cdf_block_length;
 }
 void CPURawVolumeRendererImpl::SetCamera(Camera camera)
 {
@@ -63,6 +87,25 @@ void CPURawVolumeRendererImpl::render()
     double kd  = 0.7;
     double shininess = 100.0;
 
+    //sample_dir should normalized
+    auto GetEmptySkipPos=[this](Vec3d const& sample_pos,const Vec3d& sample_dir){
+        Vec3i cdf_block_idx=sample_pos / cdf_block_length;
+        if(cdf_block_idx.x <0 || cdf_block_idx.x >= cdf_dim_x
+            || cdf_block_idx.y<0 || cdf_block_idx.y >= cdf_dim_y
+            || cdf_block_idx.z<0 || cdf_block_idx.z >= cdf_dim_z){
+            return sample_pos;
+        }
+        int flat_cdf_block_idx = cdf_block_idx.z * cdf_dim_x * cdf_dim_y +
+                                 cdf_block_idx.y * cdf_dim_x +
+                                 cdf_block_idx.x;
+        int cdf = cdf_map[flat_cdf_block_idx];
+        if(cdf == 0) return sample_pos;
+        auto box = ExpandBox(cdf-1,cdf_block_idx*cdf_block_length,(cdf_block_idx+1)*cdf_block_length);
+        auto t   = IntersectWithAABB(box,SimpleRay(sample_pos,sample_dir));
+        assert(t.x <= 0.0);
+        return sample_pos + t.y * sample_dir;
+    };
+
     auto PhongShaing=[voxel,ka,ks,kd,shininess,this](Vec3d sample_pos,Vec3d diffuse_color,Vec3d view_direction)->Vec3d{
         Vec3d N;
         double x1,x2;
@@ -92,6 +135,7 @@ void CPURawVolumeRendererImpl::render()
 #pragma omp parallel for
     for(int row=0;row<window_h;row++){
         LOG_INFO("start row {0}",row);
+        AutoTimer timer;
         for(int col=0;col<window_w;col++){
             double x = (2*(col+0.5)/window_w-1.0)*scale*ratio;
             double y = (1.0-2*(row+0.5)/window_h)*scale;
@@ -103,6 +147,11 @@ void CPURawVolumeRendererImpl::render()
 
             for (int i = 0; i < 9000; i++){
                 Vec3d sample_pos = ray_pos / volume_space; // space -> voxel
+                if(sample_pos.x<0.0 || sample_pos.y<0.0 || sample_pos.z<0.0) break;
+                //empty skip, update sample_pos in nearest non-empty block for the view_direction
+                sample_pos = GetEmptySkipPos(sample_pos,Normalize(view_direction/volume_space));
+                ray_pos = sample_pos *volume_space;
+
                 sample_pos /= volume_dim;
                 double sample_scalar = LinearSampler::Sample3D(volume_data, sample_pos.x, sample_pos.y, sample_pos.z);
                 if (sample_scalar > 0.0){

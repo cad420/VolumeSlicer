@@ -13,6 +13,8 @@
 #include <Utils/hash.hpp>
 #include <Utils/logger.hpp>
 #include <Utils/linear_array.hpp>
+#include <json.hpp>
+#include <fstream>
 VS_START
 FORWARD_IMPL_DECLARATION(CDFGenerator);
 
@@ -43,7 +45,7 @@ class CDF{
         }
         return res;
     }
-
+    void SetCDFEmptyFunc(std::function<bool(CDFItem const&)>&& f);
     bool IsCDFItemEmpty(CDFItem const& it) const{
         if(it.average<0.5)
             return true;
@@ -55,7 +57,7 @@ class CDF{
     }
     void GenerateCDF(){
         std::cout<<"start gen"<<std::endl;
-        //map is quick than unordered_map
+        //map is quick than unordered_map if unordered_map's hash function is bad
         //unordered_map is slow because hash function is bad
         std::unordered_map<std::array<int,3>,int> m;
         m.reserve(cdf.size());
@@ -135,10 +137,15 @@ class CDFGenerator{
   public:
     CDFGenerator()=default;
     ~CDFGenerator(){}
+
     void SetVolumeData(int len_x,int len_y,int len_z,int block_length,uint8_t* data);
+
     void SetVolumeData(const Linear3DArray<uint8_t>& data,int block_length);
-    void SetVolumeBlockNLog9Data();
-    void SetVolumeBlockNLog8Data();
+
+    using VolumeBlock = typename CompVolume::VolumeBlock;
+    //notice VolumeBlock's data is cuda ptr
+    void SetVolumeBlockData(VolumeBlock block,int volume_block_length,int cdf_block_length);
+
     void GenerateCDF(){
         cdf->GenerateCDF();
     }
@@ -179,5 +186,102 @@ inline void CDFGenerator::SetVolumeData(const Linear3DArray<uint8_t> &data, int 
         }
     }
 }
+inline void CDFGenerator::SetVolumeBlockData(CDFGenerator::VolumeBlock block, int volume_block_length,int cdf_block_length)
+{
+
+    Linear3DArray<uint8_t> array (volume_block_length,volume_block_length,volume_block_length);
+    CUDA_RUNTIME_API_CALL(cudaMemcpy(array.RawData(),block.block_data->GetDataPtr(),block.block_data->GetSize(),cudaMemcpyDeviceToHost));
+    SetVolumeData(array,cdf_block_length);
+}
+
+//class for volume block manage
+class CDFManager{
+  public:
+    CDFManager();
+    explicit CDFManager(const char* cdf_config_file);
+    CDFManager(CDFManager const&)=delete;
+    CDFManager& operator=(CDFManager const&)=delete;
+
+    //return false if open cdf_config_file successfully and read from file
+    //or true that volume_block_length and cdf_block_length are same in file
+    //or return true create with default construct function
+    bool SetBlockLength(int volume_block_length,int cdf_block_length);
+
+    // generate the cdf map for the VolumeBlock but not store the it
+    using VolumeBlock = typename CompVolume::VolumeBlock;
+    void AddVolumeBlock(VolumeBlock block);
+
+    void AddVolumeBlock(const Linear3DArray<uint8_t>& block,const std::array<uint32_t,4>& index);
+
+    //dim-xyz should all are same for VolumeBlock
+    auto GetBlockCDFDim() const -> std::array<uint32_t,3>;
+
+    //return false if not find the cdf map of block
+    bool GetVolumeBlockCDF(const std::array<uint32_t,4>&,std::vector<uint32_t>& v);
+
+    bool GetVolumeBlockCDF(const std::array<uint32_t,4>&,uint32_t* data,size_t length);
+
+    bool GetVolumeBlockCDF(int lod,int x,int y,int z,std::vector<uint32_t>& v);
+
+    bool GetVolumeBlockCDF(int lod,int x,int y,int z,uint32_t* data,size_t length);
+
+  private:
+    int volume_block_length,cdf_block_length;
+    std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> cdf_map;
+
+};
+inline CDFManager::CDFManager()
+:volume_block_length(0),cdf_block_length(0)
+{
+
+}
+inline CDFManager::CDFManager(const char *cdf_config_file)
+:volume_block_length(0),cdf_block_length(0)
+{
+    std::ifstream in(cdf_config_file);
+    if(!in.is_open()){
+        LOG_ERROR("CDFManager: cdf_config_file open failed");
+        return;
+    }
+    nlohmann::json j;
+    in>>j;
+    in.close();
+
+
+}
+inline bool CDFManager::SetBlockLength(int volume_block_length, int cdf_block_length)
+{
+
+    return false;
+}
+inline void CDFManager::AddVolumeBlock(CDFManager::VolumeBlock block)
+{
+
+}
+inline void CDFManager::AddVolumeBlock(const Linear3DArray<uint8_t> &block, const std::array<uint32_t, 4> &index)
+{
+
+}
+inline auto CDFManager::GetBlockCDFDim() const -> std::array<uint32_t, 3>
+{
+    return std::array<uint32_t, 3>();
+}
+inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &, std::vector<uint32_t> &v)
+{
+    return false;
+}
+inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &, uint32_t *data, size_t length)
+{
+    return false;
+}
+inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, std::vector<uint32_t> &v)
+{
+    return false;
+}
+inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, uint32_t *data, size_t length)
+{
+    return false;
+}
+
 
 VS_END
