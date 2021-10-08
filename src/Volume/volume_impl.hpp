@@ -9,7 +9,7 @@
 
 #include<VolumeSlicer/volume_sampler.hpp>
 #include<VolumeSlicer/utils.hpp>
-
+#include <Ext/iblock_volume_plugin_interface.hpp>
 
 VS_START
 
@@ -93,7 +93,7 @@ private:
     bool stop;
     std::atomic<bool> paused;
 
-    std::unique_ptr<BlockLoader> block_loader;
+    std::unique_ptr<IBlockVolumeProviderPluginInterface> block_loader;
 
     std::thread task;
 

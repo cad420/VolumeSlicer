@@ -2,12 +2,14 @@
 // Created by wyz on 2021/6/7.
 //
 #include<fstream>
-#include<spdlog/spdlog.h>
-#include <VolumeSlicer/volume.hpp>
 
+#include <VolumeSlicer/volume.hpp>
+#include <Utils/logger.hpp>
 #include"Volume/volume_impl.hpp"
 #include"Volume/block_loader.hpp"
-
+#include <Ext/iraw_volume_plugin_interface.hpp>
+#include <Utils/plugin_loader.hpp>
+#include <Ext/iblock_volume_plugin_interface.hpp>
 VS_START
 
 /**************************************************************************************************
@@ -42,19 +44,47 @@ void LoadRawVolumeData(const char* file_name,std::vector<uint8_t>& volume_data){
 }
 
 std::unique_ptr<RawVolume> Volume<VolumeType::Raw>::Load(const char *file_name,VoxelType type,const std::array<uint32_t,3>& dim,
-                                                       const std::array<float,3>& space) {
+
+                                                 const std::array<float,3>& space)
+{
+    try
+    {
+        auto f = std::unique_ptr<IRawVolumeReaderPluginInterface>(
+            PluginLoader::CreatePlugin<IRawVolumeReaderPluginInterface>(".raw"));
+        if(!f){
+            throw std::runtime_error("Plugin create failed.");
+        }
+        f->Open(file_name, type, dim);
+        std::vector<uint8_t> volume_data;
+        f->GetData(volume_data);
+
+        std::unique_ptr<RawVolume> volume(new RawVolumeImpl(std::move(volume_data)));
+        volume->SetDimX(dim[0]);
+        volume->SetDimY(dim[1]);
+        volume->SetDimZ(dim[2]);
+        volume->SetSpaceX(space[0]);
+        volume->SetSpaceY(space[1]);
+        volume->SetSpaceZ(space[2]);
+        return volume;
+    }
+    catch (const std::exception &err)
+    {
+        LOG_INFO("Plugin for raw volume read not found");
+    }
+    LOG_INFO("Using default method");
     try{
         std::vector<uint8_t> volume_data;
-        switch (type) {
-            case VoxelType::UInt8:
-                LoadRawVolumeData<uint8_t>(file_name, volume_data);
-                break;
-            case VoxelType::UInt16:
-                LoadRawVolumeData<uint16_t>(file_name, volume_data);
-                break;
-            case VoxelType::UInt32:
-                LoadRawVolumeData<uint32_t>(file_name, volume_data);
-                break;
+        switch (type)
+        {
+        case VoxelType::UInt8:
+            LoadRawVolumeData<uint8_t>(file_name, volume_data);
+            break;
+        case VoxelType::UInt16:
+            LoadRawVolumeData<uint16_t>(file_name, volume_data);
+            break;
+        case VoxelType::UInt32:
+            LoadRawVolumeData<uint32_t>(file_name, volume_data);
+            break;
         }
         std::unique_ptr<RawVolume> volume(new RawVolumeImpl(std::move(volume_data)));
         volume->SetDimX(dim[0]);
@@ -82,8 +112,24 @@ std::unique_ptr<CompVolume> Volume<VolumeType::Comp>::Load(const char *file_name
 CompVolumeImpl::VolumeImpl(const char *file_name)
 :pause(false),stop(false)
 {
+    try{
+        this->block_loader = std::unique_ptr<IBlockVolumeProviderPluginInterface>(
+            PluginLoader::CreatePlugin<IBlockVolumeProviderPluginInterface>("VolumeBlock"));
+        if(!block_loader){
+            throw std::runtime_error("Plugin create failed.");
+        }
+        block_loader->Open(file_name);
+        LOG_INFO("Create comp-volume loader plugin");
+    }
+    catch (const std::exception& err)
+    {
+        LOG_ERROR("{0}",err.what());
+        LOG_INFO("Use default loader for comp-volume");
+        this->block_loader = std::make_unique<BlockLoader>();
+        this->block_loader->Open(file_name);
+    }
+
     this->block_queue.setSize(16);
-    this->block_loader=std::make_unique<BlockLoader>(file_name);
     this->Loading();
     auto dim=block_loader->GetBlockDim(0);
     auto block_length=block_loader->GetBlockLength();

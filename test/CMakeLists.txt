@@ -42,3 +42,15 @@ target_link_libraries(test_comp_cuda_volume_render
 target_include_directories(test_comp_cuda_volume_render
         PRIVATE
         ${PROJECT_SOURCE_DIR}/src)
+
+add_executable(test_raw_plugin_load test_raw_plugin_load.cpp)
+target_link_libraries(
+        test_raw_plugin_load
+        PRIVATE
+        VS_CORE
+)
+target_include_directories(
+        test_raw_plugin_load
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
+)
