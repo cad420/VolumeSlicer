@@ -4,6 +4,7 @@
 
 #pragma once
 #include <array>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 namespace std{
     template <size_t len>
