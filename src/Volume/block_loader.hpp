@@ -5,35 +5,36 @@
 #ifndef VOLUMESLICER_BLOCK_LOADER_HPP
 #define VOLUMESLICER_BLOCK_LOADER_HPP
 
-#include<VolumeSlicer/export.hpp>
-#include<VolumeSlicer/define.hpp>
-#include<VolumeSlicer/reader.hpp>
-#include<Common/cuda_mem_pool.hpp>
-#include"Volume/volume_impl.hpp"
-#include<vector>
+#include "Volume/volume_impl.hpp"
+#include <VolumeSlicer/cuda_mem_pool.hpp>
+#include <VolumeSlicer/define.hpp>
+#include <VolumeSlicer/export.hpp>
+#include <VolumeSlicer/reader.hpp>
+#include <vector>
 VS_START
 
 using VolumeBlock=typename VolumeImpl<VolumeType::Comp>::VolumeBlock;
 class Worker;
 
-class BlockLoader{
+class BlockLoader: public IBlockVolumeProviderPluginInterface{
 public:
-    explicit BlockLoader(const char* file_path);
-    ~BlockLoader();
+    explicit BlockLoader();
+    ~BlockLoader() override;
+    void Open(std::string const& filename) override;
     //num of not busy decode worker
-    size_t GetAvailableNum();
+    size_t GetAvailableNum() override;
     //will check first in function, and only add valid block
-    void AddTask(const std::array<uint32_t,4>& );
+    bool AddTask(const std::array<uint32_t,4>& ) override;
     //if there have decoded block data
-    bool IsEmpty();
+    bool IsEmpty() override;
 
-    auto GetBlock()->CompVolume::VolumeBlock;
+    auto GetBlock()->CompVolume::VolumeBlock override;
 
-    bool IsAllAvailable();
+    bool IsAllAvailable() override;
 public:
-    auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> ;
+    auto GetBlockDim(int lod) const ->std::array<uint32_t ,3> override ;
 
-    auto GetBlockLength() const ->std::array<uint32_t,4> ;
+    auto GetBlockLength() const ->std::array<uint32_t,4> override ;
 private:
     size_t block_size_bytes;
 

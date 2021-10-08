@@ -25,10 +25,14 @@ private:
     atomic_wrapper<bool> status;
 };
 
-BlockLoader::BlockLoader(const char *file_path)
+BlockLoader::BlockLoader()
 :block_size_bytes(0),cu_mem_num(16),worker_num(2)
 {
-    this->packet_reader=Reader::CreateReader(file_path);
+
+}
+void BlockLoader::Open(const std::string& filename)
+{
+    this->packet_reader=Reader::CreateReader(filename.c_str());
     //!only after create reader then can know block's information
     this->block_size_bytes=packet_reader->GetBlockSizeByte();
     spdlog::info("block_size_bytes is: {0}.",block_size_bytes);
@@ -59,14 +63,14 @@ size_t BlockLoader::GetAvailableNum() {
     return num;
 }
 
-void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
+bool BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
     //check if idx is valid
     if(idx[0]==INVALID || idx[1]==INVALID || idx[2]==INVALID || idx[3]==INVALID){
-        return;
+        return false;
     }
 
     if(GetAvailableNum()==0){
-        return ;
+        return false;
     }
     else{
         for(size_t i=0;i<workers.size();i++){
@@ -98,6 +102,7 @@ void BlockLoader::AddTask(const std::array<uint32_t, 4> &idx) {
                 break;
             }
         }
+        return true;
     }
 }
 
@@ -140,7 +145,6 @@ auto BlockLoader::GetBlockLength() const -> std::array<uint32_t, 4> {
 bool BlockLoader::IsAllAvailable() {
     return GetAvailableNum()==worker_num;
 }
-
 
 VS_END
 
