@@ -15,6 +15,8 @@
 #include <Utils/linear_array.hpp>
 #include <json.hpp>
 #include <fstream>
+#include <iostream>
+#include <VolumeSlicer/volume.hpp>
 VS_START
 FORWARD_IMPL_DECLARATION(CDFGenerator);
 
@@ -34,6 +36,17 @@ class CDF{
     auto GetCDFItems()->const std::vector<CDFItem>&{
         return this->cdf;
     }
+    auto GetCDFValArray()->std::vector<uint32_t>{
+        std::sort(cdf.begin(),cdf.end(),[this](CDFItem const& c1,CDFItem const& c2){
+          return GetFlatID(c1)<GetFlatID(c2);
+        });
+        std::vector<uint32_t> res;
+        res.reserve(cdf.size());
+        for(const auto& it:cdf){
+            res.emplace_back(it.average*255);
+        }
+        return res;
+    }
     auto GetCDFArray()->std::vector<uint32_t> {
         std::sort(cdf.begin(),cdf.end(),[this](CDFItem const& c1,CDFItem const& c2){
             return GetFlatID(c1)<GetFlatID(c2);
@@ -45,8 +58,13 @@ class CDF{
         }
         return res;
     }
-    void SetCDFEmptyFunc(std::function<bool(CDFItem const&)>&& f);
+    void SetCDFEmptyFunc(std::function<bool(CDFItem const&)>&& f){
+        this->empty_func = f;
+    }
     bool IsCDFItemEmpty(CDFItem const& it) const{
+        if(empty_func){
+            return empty_func(it);
+        }
         if(it.average<0.5)
             return true;
         else
@@ -61,13 +79,22 @@ class CDF{
         //unordered_map is slow because hash function is bad
         std::unordered_map<std::array<int,3>,int> m;
         m.reserve(cdf.size());
-        std::cout<<"start map"<<std::endl;
+//        std::cout<<"start map"<<std::endl;
+        bool all_empty=true;
         for(auto& it:cdf){
             if(IsCDFItemEmpty(it)){
                 m[{it.x,it.y,it.z}] = std::numeric_limits<int>::max()>>1;
             }
             else{
                 m[{it.x,it.y,it.z}] = 0;
+                all_empty = false;
+            }
+        }
+        if(all_empty){
+            for(auto&it :cdf){
+                m[{it.x,it.y,it.z}] = (std::min)({(std::min)(it.x,dim_x-1-it.x),
+                                                        (std::min)(it.y,dim_y-1-it.y),
+                                                        (std::min)(it.z,dim_z-1-it.z)});
             }
         }
         bool update;
@@ -96,7 +123,7 @@ class CDF{
                 }//end of i
             }//end of a turn
             std::cout<<"turn "<<turn++<<std::endl;
-        }while(update);
+        }while(update && !all_empty);
         for(auto& it:cdf){
             it.chebyshev_dist = m[{it.x,it.y,it.z}];
         }
@@ -127,6 +154,7 @@ class CDF{
     int GetDimY() const{return dim_y;}
     int GetDimZ() const{return dim_z;}
   private:
+    std::function<bool(CDFItem const&)> empty_func;
     SizeType id;
     int block_length;
     int dim_x,dim_y,dim_z;//number of block for each dim
@@ -154,6 +182,9 @@ class CDFGenerator{
     }
     auto GetCDFArray(){
         return cdf->GetCDFArray();
+    }
+    auto GetCDFValArray(){
+        return cdf->GetCDFValArray();
     }
   private:
     std::unique_ptr<CDF> cdf;
@@ -194,26 +225,34 @@ inline void CDFGenerator::SetVolumeBlockData(CDFGenerator::VolumeBlock block, in
     SetVolumeData(array,cdf_block_length);
 }
 
-//class for volume block manage
+//class for volume block manage in runtime
+//it can open the pre-computed chebyshev_dist map or pre-computed average_dist map file
+//if the pre-computed average_dist map file is loaded, it can using user specified empty strategy to compute
+//the chebyshev_dist map when the GetVolumeBlockCDF call
+//using AddVolumeBlock to compute chebyshev_dist map which are not loaded
 class CDFManager{
   public:
-    CDFManager();
-    explicit CDFManager(const char* cdf_config_file);
     CDFManager(CDFManager const&)=delete;
     CDFManager& operator=(CDFManager const&)=delete;
-
+  public:
+    explicit CDFManager(const std::string& cdf_config_file);
+  public:
+    void OpenValueFile(const std::string& value_file);
+    bool SetComputeOnCall(bool compute);
+  public:
+    CDFManager();
     //return false if open cdf_config_file successfully and read from file
     //or true that volume_block_length and cdf_block_length are same in file
     //or return true create with default construct function
     bool SetBlockLength(int volume_block_length,int cdf_block_length);
 
-    // generate the cdf map for the VolumeBlock but not store the it
+    //generate the cdf map when the function call for the VolumeBlock but not store the it
     using VolumeBlock = typename CompVolume::VolumeBlock;
     void AddVolumeBlock(VolumeBlock block);
 
     void AddVolumeBlock(const Linear3DArray<uint8_t>& block,const std::array<uint32_t,4>& index);
-
-    //dim-xyz should all are same for VolumeBlock
+  public:
+    //dim-xyz should all the same for VolumeBlock
     auto GetBlockCDFDim() const -> std::array<uint32_t,3>;
 
     //return false if not find the cdf map of block
@@ -228,14 +267,14 @@ class CDFManager{
   private:
     int volume_block_length,cdf_block_length;
     std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> cdf_map;
-
+    std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> value_map;
 };
 inline CDFManager::CDFManager()
 :volume_block_length(0),cdf_block_length(0)
 {
 
 }
-inline CDFManager::CDFManager(const char *cdf_config_file)
+inline CDFManager::CDFManager(const std::string& cdf_config_file)
 :volume_block_length(0),cdf_block_length(0)
 {
     std::ifstream in(cdf_config_file);
@@ -251,8 +290,15 @@ inline CDFManager::CDFManager(const char *cdf_config_file)
 }
 inline bool CDFManager::SetBlockLength(int volume_block_length, int cdf_block_length)
 {
-
-    return false;
+    if(this->volume_block_length || this->cdf_block_length){
+        LOG_INFO("volume_block_length or cdf_block_length is already set.");
+        return false;
+    }
+    else{
+        this->volume_block_length = volume_block_length;
+        this->cdf_block_length    = cdf_block_length;
+        return true;
+    }
 }
 inline void CDFManager::AddVolumeBlock(CDFManager::VolumeBlock block)
 {
@@ -264,7 +310,8 @@ inline void CDFManager::AddVolumeBlock(const Linear3DArray<uint8_t> &block, cons
 }
 inline auto CDFManager::GetBlockCDFDim() const -> std::array<uint32_t, 3>
 {
-    return std::array<uint32_t, 3>();
+    uint32_t d = volume_block_length / cdf_block_length;
+    return {d,d,d};
 }
 inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &, std::vector<uint32_t> &v)
 {
