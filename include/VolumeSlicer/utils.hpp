@@ -170,6 +170,9 @@ public:
         }
         return T();
     }
+    auto maxsize(){
+        return maxSize;
+    }
 private:
     bool full() {
         if (m_List.size() == maxSize)

@@ -142,6 +142,9 @@ public:
     //return block num in queue which can get
     virtual int GetBlockQueueSize() =0;
 
+    //return max block num in result queue
+    virtual int GetBlockQueueMaxSize() = 0;
+
     //set maximum number of blocks which have uncompressed in the block queue
     virtual void SetBlockQueueSize(size_t) =0;
 

@@ -32,7 +32,7 @@ private:
 using RawVolumeImpl=VolumeImpl<VolumeType::Raw>;
 
 template<>
-class VolumeImpl<VolumeType::Comp>: public Volume<VolumeType::Comp>{
+class VolumeImpl<VolumeType::Comp>: public CompVolume{
 public:
     explicit VolumeImpl(const char* file_name);
 
@@ -54,6 +54,8 @@ public:
     void ClearAllBlockInQueue() noexcept override;
 
     int GetBlockQueueSize() override;
+
+    int GetBlockQueueMaxSize() override;
 
     void SetBlockQueueSize(size_t size) override;
 

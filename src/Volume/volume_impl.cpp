@@ -374,8 +374,11 @@ VolumeImpl<VolumeType::Comp>::~VolumeImpl() {
         }
         return block_dim;
     }
+    int VolumeImpl<VolumeType::Comp>::GetBlockQueueMaxSize()
+    {
+        return block_queue.maxsize();
+    }
 
-
-VS_END
+    VS_END
 
 
