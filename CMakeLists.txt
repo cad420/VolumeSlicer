@@ -16,3 +16,5 @@ add_subdirectory(test)
 add_subdirectory(apps)
 
 add_subdirectory(plugin)
+
+add_subdirectory(tools)

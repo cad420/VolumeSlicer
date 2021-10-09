@@ -1,4 +1,4 @@
-# VolumeSlicer
+VolumeSlicer
 
 ```
 class Slicer{
