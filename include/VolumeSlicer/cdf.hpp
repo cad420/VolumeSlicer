@@ -238,7 +238,7 @@ class CDFManager{
     explicit CDFManager(const std::string& cdf_config_file);
   public:
     void OpenValueFile(const std::string& value_file);
-    bool SetComputeOnCall(bool compute);
+    bool SetComputeOnCall(bool compute, std::function<bool(CDF::CDFItem const&)>&& f = nullptr);
   public:
     CDFManager();
     //return false if open cdf_config_file successfully and read from file
@@ -263,19 +263,24 @@ class CDFManager{
     bool GetVolumeBlockCDF(int lod,int x,int y,int z,std::vector<uint32_t>& v);
 
     bool GetVolumeBlockCDF(int lod,int x,int y,int z,uint32_t* data,size_t length);
-
+  public:
+    //same format with open, see tools/H264VolumeCDFGenerator.cpp
+    bool SaveCurrentCDFMapToFile(const std::string& filename) const;
+    bool SaveCurrentValueMapToFile(const std::string& filename) const;
   private:
+    bool compute;
+    std::function<bool(CDF::CDFItem const&)> empty_fn;
     int volume_block_length,cdf_block_length;
     std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> cdf_map;
     std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> value_map;
 };
 inline CDFManager::CDFManager()
-:volume_block_length(0),cdf_block_length(0)
+:volume_block_length(0),cdf_block_length(0),compute(false)
 {
 
 }
 inline CDFManager::CDFManager(const std::string& cdf_config_file)
-:volume_block_length(0),cdf_block_length(0)
+:volume_block_length(0),cdf_block_length(0),compute(false)
 {
     std::ifstream in(cdf_config_file);
     if(!in.is_open()){
@@ -329,6 +334,28 @@ inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, uint32_t
 {
     return false;
 }
+void CDFManager::OpenValueFile(const std::string &value_file)
+{
 
+}
+bool CDFManager::SetComputeOnCall(bool compute, std::function<bool(const CDF::CDFItem &)>&& f)
+{
+    if(this->value_map.empty()){
+        LOG_INFO("Pre-computed average value map is not load, so set compute(true) will not be successful");
+        return false;
+    }
+    this->compute = compute;
+    if(compute)
+        this->empty_fn = f;
+    return true;
+}
+bool CDFManager::SaveCurrentCDFMapToFile(const std::string &filename) const
+{
+    return false;
+}
+bool CDFManager::SaveCurrentValueMapToFile(const std::string &filename) const
+{
+    return false;
+}
 
 VS_END
