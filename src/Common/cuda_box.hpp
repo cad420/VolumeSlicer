@@ -15,8 +15,24 @@ class CUDABox{
           <<"max p: ("<<box.max_p.x<<" "<<box.max_p.y<<" "<<box.max_p.z<<")"<<std::endl;
         return os;
     }
+    __device__ __host__ CUDABox Expand(int r) const{
+        if(r<=0) return *this;
+        auto d = (max_p - min_p) * (r*1.0);
+        auto n_min_p = min_p - d;
+        auto n_max_p = max_p + d;
+        return CUDABox(n_min_p,n_max_p);
+    }
     float3 min_p,max_p;
 };
+__device__ __host__
+inline CUDABox ExpandCUDABox(int r,const float3& min_p,const float3& max_p){
+    if(r <= 0) return CUDABox(min_p,max_p);
+    auto d = (max_p - min_p) * (r*1.f);
+    auto n_min_p = min_p - d;
+    auto n_max_p = max_p + d;
+    return CUDABox(n_min_p,n_max_p);
+}
+
 __device__ __host__
 inline float2 IntersectWithAABB(const CUDABox& box,const CUDASimpleRay& ray){
     float t_min_x=(box.min_p.x-ray.origin.x)/ray.direction.x;

@@ -133,6 +133,17 @@ class CDF{
     void AddCDFItem(CDFItem const& item){
         cdf.push_back(item);
     }
+    void AddCDFItems(const std::vector<uint32_t>& val_array){
+        assert(val_array.size()==dim_x*dim_y*dim_z);
+        for(int idx = 0;idx<val_array.size();idx++){
+            int z = idx/(dim_x*dim_y);
+            int y = idx%(dim_x*dim_y)/dim_x;
+            int x = idx%(dim_x*dim_y)%dim_x;
+            CDFItem item(x,y,z);
+            item.average = val_array[idx]/255.0;
+            AddCDFItem(item);
+        }
+    }
     bool IsValidBlockIndex(int x,int y,int z) const{
         return x>=0 && x<dim_x && y>=0 && y<dim_y && z>=0 && z<dim_z;
     }
@@ -166,9 +177,9 @@ class CDFGenerator{
     CDFGenerator()=default;
     ~CDFGenerator(){}
 
-    void SetVolumeData(int len_x,int len_y,int len_z,int block_length,uint8_t* data);
+    void SetVolumeData(int len_x,int len_y,int len_z,int cdf_block_length,uint8_t* data);
 
-    void SetVolumeData(const Linear3DArray<uint8_t>& data,int block_length);
+    void SetVolumeData(const Linear3DArray<uint8_t>& data,int cdf_block_length);
 
     using VolumeBlock = typename CompVolume::VolumeBlock;
     //notice VolumeBlock's data is cuda ptr
@@ -189,23 +200,24 @@ class CDFGenerator{
   private:
     std::unique_ptr<CDF> cdf;
 };
-inline void CDFGenerator::SetVolumeData(int len_x, int len_y, int len_z, int block_length, uint8_t *data)
+inline void CDFGenerator::SetVolumeData(int len_x, int len_y, int len_z, int cdf_block_length, uint8_t *data)
 {
     Linear3DArray<uint8_t> array(len_x,len_y,len_z,data);
-    SetVolumeData(array,block_length);
+    SetVolumeData(array, cdf_block_length);
 }
-inline void CDFGenerator::SetVolumeData(const Linear3DArray<uint8_t> &data, int block_length)
+inline void CDFGenerator::SetVolumeData(const Linear3DArray<uint8_t> &data, int cdfblock_length)
 {
-    if(!block_length || (block_length&(block_length-1))){
-        throw std::runtime_error("block_length is not pow of 2");
+    if(!cdfblock_length || (cdfblock_length &(cdfblock_length -1))){
+        throw std::runtime_error("cdf_block_length is not pow of 2");
     }
-    int block_size_bytes=block_length*block_length*block_length;//block is small
+    int block_size_bytes= cdfblock_length * cdfblock_length * cdfblock_length;//block is small
     std::vector<uint8_t> block_data(block_size_bytes);
-    cdf=std::make_unique<CDF>(block_length,data.GetWidth(),data.GetHeight(),data.GetDepth());
+    cdf=std::make_unique<CDF>(cdfblock_length,data.GetWidth(),data.GetHeight(),data.GetDepth());
     for(int z=0;z<cdf->GetDimZ();z++){
         for(int y=0;y<cdf->GetDimY();y++){
             for(int x=0;x<cdf->GetDimX();x++){
-                data.ReadRegion(x*block_length,y*block_length,z*block_length,block_length,block_length,block_length,block_data.data());
+                data.ReadRegion(x* cdfblock_length,y* cdfblock_length,z* cdfblock_length, cdfblock_length,
+                                cdfblock_length, cdfblock_length,block_data.data());
                 CDF::CDFItem cdf_item(x,y,z);
                 size_t sum=0;
                 for(auto it:block_data){
@@ -247,6 +259,7 @@ class CDFManager{
     bool SetBlockLength(int volume_block_length,int cdf_block_length);
 
     //generate the cdf map when the function call for the VolumeBlock but not store the it
+    //it will replace the data in the cdf_map
     using VolumeBlock = typename CompVolume::VolumeBlock;
     void AddVolumeBlock(VolumeBlock block);
 
@@ -263,10 +276,21 @@ class CDFManager{
     bool GetVolumeBlockCDF(int lod,int x,int y,int z,std::vector<uint32_t>& v);
 
     bool GetVolumeBlockCDF(int lod,int x,int y,int z,uint32_t* data,size_t length);
+
+    auto GetVolumeBlockCDF(const std::array<uint32_t,4>&)-> std::vector<uint32_t> const&;
+
   public:
     //same format with open, see tools/H264VolumeCDFGenerator.cpp
     bool SaveCurrentCDFMapToFile(const std::string& filename) const;
     bool SaveCurrentValueMapToFile(const std::string& filename) const;
+  public:
+    void clear(){
+        compute = false;
+        empty_fn = nullptr;
+        volume_block_length = cdf_block_length = 0;
+        cdf_map.clear();
+        value_map.clear();
+    }
   private:
     bool compute;
     std::function<bool(CDF::CDFItem const&)> empty_fn;
@@ -291,6 +315,51 @@ inline CDFManager::CDFManager(const std::string& cdf_config_file)
     in>>j;
     in.close();
 
+    auto get_index = [](const std::string& lod, const std::string& idx){
+        uint32_t ld = std::stoul(lod.substr(3));
+        auto p1 = idx.find_first_of('_');
+        auto p2 = idx.find_last_of('_');
+        auto x_str = idx.substr(0,p1+1);
+        auto y_str = idx.substr(p1+1,p2-p1-1);
+        auto z_str = idx.substr(p2+1);
+        uint32_t x = std::stoul(x_str);
+        uint32_t y = std::stoul(y_str);
+        uint32_t z = std::stoul(z_str);
+        return std::array<uint32_t,4>{x,y,z,ld};
+    };
+    try{
+        this->volume_block_length = j["volume_block_length"];
+        this->cdf_block_length    = j["cdf_block_length"];
+        int min_lod=-1,max_lod;
+        for(max_lod = 0; ; max_lod++){
+            if(j.find("lod"+std::to_string(max_lod)) != j.end()){
+                if(min_lod == -1) min_lod = max_lod;
+            }
+            else break;
+        }
+        LOG_INFO("CDF map file min_lod({0}), max_lod({1}).",min_lod,max_lod);
+        for(int lod=min_lod;lod<=max_lod;lod++){
+            auto lod_str = "lod"+std::to_string(lod);
+            auto lod_map = j.at(lod_str);
+            for(auto it=lod_map.begin();it!=lod_map.end();it++){
+                std::string idx_str=it.key();
+                std::vector<uint32_t> array = it.value();
+                this->cdf_map[get_index(lod_str,idx_str)] = std::move(array);
+            }
+        }
+    }
+    catch (std::exception const& err)
+    {
+        LOG_ERROR("Load cdf map cause error: {0}.",err.what());
+        this->volume_block_length = this->cdf_block_length = 0;
+        this->cdf_map.clear();
+    }
+    catch (...)
+    {
+        LOG_ERROR("Load cdf map failed.");
+        this->volume_block_length = this->cdf_block_length = 0;
+        this->cdf_map.clear();
+    }
 
 }
 inline bool CDFManager::SetBlockLength(int volume_block_length, int cdf_block_length)
@@ -305,38 +374,64 @@ inline bool CDFManager::SetBlockLength(int volume_block_length, int cdf_block_le
         return true;
     }
 }
-inline void CDFManager::AddVolumeBlock(CDFManager::VolumeBlock block)
-{
-
-}
-inline void CDFManager::AddVolumeBlock(const Linear3DArray<uint8_t> &block, const std::array<uint32_t, 4> &index)
-{
-
-}
-inline auto CDFManager::GetBlockCDFDim() const -> std::array<uint32_t, 3>
-{
-    uint32_t d = volume_block_length / cdf_block_length;
-    return {d,d,d};
-}
-inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &, std::vector<uint32_t> &v)
-{
-    return false;
-}
-inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &, uint32_t *data, size_t length)
-{
-    return false;
-}
-inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, std::vector<uint32_t> &v)
-{
-    return false;
-}
-inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, uint32_t *data, size_t length)
-{
-    return false;
-}
 void CDFManager::OpenValueFile(const std::string &value_file)
 {
+    std::ifstream in(value_file);
+    if(!in.is_open()){
+        LOG_ERROR("Open value file failed.");
+        return;
+    }
+    nlohmann::json j;
+    in>>j;
+    in.close();
 
+    auto get_index = [](const std::string& lod, const std::string& idx){
+      uint32_t ld = std::stoul(lod.substr(3));
+      auto p1 = idx.find_first_of('_');
+      auto p2 = idx.find_last_of('_');
+      auto x_str = idx.substr(0,p1+1);
+      auto y_str = idx.substr(p1+1,p2-p1-1);
+      auto z_str = idx.substr(p2+1);
+      uint32_t x = std::stoul(x_str);
+      uint32_t y = std::stoul(y_str);
+      uint32_t z = std::stoul(z_str);
+      return std::array<uint32_t,4>{x,y,z,ld};
+    };
+    try{
+        auto volume_block_length_ = j["volume_block_length"];
+        auto cdf_block_length_    = j["cdf_block_length"];
+        if(volume_block_length_!=this->volume_block_length || cdf_block_length_!=this->cdf_block_length){
+            throw std::logic_error("Value file's volume_block_length or cdf_block_length not the same with cdf map's.");
+        }
+
+        int min_lod=-1,max_lod;
+        for(max_lod = 0; ; max_lod++){
+            if(j.find("lod"+std::to_string(max_lod)) != j.end()){
+                if(min_lod == -1) min_lod = max_lod;
+            }
+            else break;
+        }
+        LOG_INFO("Value map file min_lod({0}), max_lod({1}).",min_lod,max_lod);
+        for(int lod=min_lod;lod<=max_lod;lod++){
+            auto lod_str = "lod"+std::to_string(lod);
+            auto lod_map = j.at(lod_str);
+            for(auto it=lod_map.begin();it!=lod_map.end();it++){
+                std::string idx_str=it.key();
+                std::vector<uint32_t> array = it.value();
+                this->value_map[get_index(lod_str,idx_str)] = std::move(array);
+            }
+        }
+    }
+    catch (std::exception const& err)
+    {
+        LOG_ERROR("Load value map cause error: {0}.",err.what());
+        this->value_map.clear();
+    }
+    catch (...)
+    {
+        LOG_ERROR("Load value map failed.");
+        this->value_map.clear();
+    }
 }
 bool CDFManager::SetComputeOnCall(bool compute, std::function<bool(const CDF::CDFItem &)>&& f)
 {
@@ -349,6 +444,74 @@ bool CDFManager::SetComputeOnCall(bool compute, std::function<bool(const CDF::CD
         this->empty_fn = f;
     return true;
 }
+inline void CDFManager::AddVolumeBlock(CDFManager::VolumeBlock block)
+{
+    CDFGenerator cdf_gen;
+    cdf_gen.SetVolumeBlockData(block,volume_block_length,cdf_block_length);
+    cdf_gen.GenerateCDF();
+    this->cdf_map[block.index] = cdf_gen.GetCDFArray();
+    this->value_map[block.index] = cdf_gen.GetCDFValArray();
+}
+inline void CDFManager::AddVolumeBlock(const Linear3DArray<uint8_t> &block, const std::array<uint32_t, 4> &index)
+{
+    CDFGenerator cdf_gen;
+    cdf_gen.SetVolumeData(block,cdf_block_length);
+    cdf_gen.GenerateCDF();
+    this->cdf_map[index] = cdf_gen.GetCDFArray();
+    this->value_map[index] = cdf_gen.GetCDFValArray();
+}
+inline auto CDFManager::GetBlockCDFDim() const -> std::array<uint32_t, 3>
+{
+    uint32_t d = volume_block_length / cdf_block_length;
+    return {d,d,d};
+}
+auto CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &index) -> std::vector<uint32_t> const &
+{
+    if(compute){
+        if(!empty_fn){
+            LOG_ERROR("Require compute cdf but empty function is nullptr.");
+        }
+        else{
+            CDF cdf(cdf_block_length,volume_block_length,volume_block_length,volume_block_length);
+            if(value_map.find(index)!=value_map.end()){
+                cdf.AddCDFItems(value_map[index]);
+                cdf.GenerateCDF();
+                cdf_map[index] = cdf.GetCDFArray();
+            }
+            else{
+                LOG_INFO("Not find value array in value_map, compute failed.");
+            }
+        }
+    }
+    if(cdf_map.find(index)!=cdf_map.end())
+        return this->cdf_map[index];
+    return {};
+}
+inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &index, std::vector<uint32_t> &v)
+{
+    if(cdf_map.find(index)!=cdf_map.end()){
+        v = cdf_map[index];
+        return true;
+    }
+    return false;
+}
+inline bool CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &index, uint32_t *data, size_t length)
+{
+    if(cdf_map.find(index)!=cdf_map.end()){
+        ::memcpy(data,cdf_map[index].data(),length*sizeof(uint32_t));
+        return true;
+    }
+    return false;
+}
+inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, std::vector<uint32_t> &v)
+{
+    return GetVolumeBlockCDF({(uint32_t)x,(uint32_t)y,(uint32_t)z,(uint32_t)lod},v);
+}
+inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, uint32_t *data, size_t length)
+{
+    return GetVolumeBlockCDF({(uint32_t)x,(uint32_t)y,(uint32_t)z,(uint32_t)lod},data,length);
+}
+
 bool CDFManager::SaveCurrentCDFMapToFile(const std::string &filename) const
 {
     return false;
@@ -357,5 +520,6 @@ bool CDFManager::SaveCurrentValueMapToFile(const std::string &filename) const
 {
     return false;
 }
+
 
 VS_END

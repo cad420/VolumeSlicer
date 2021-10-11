@@ -17,7 +17,7 @@ int main(){
             {1.0,0.0,0.0}
         };
     }
-    std::ofstream out("camera_sequence_config1.json");
+    std::ofstream out("camera_sequence_config2.json");
     out << j <<std::endl;
     out.close();
 }

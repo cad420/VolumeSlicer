@@ -8,14 +8,14 @@ using namespace vs;
 int main(){
 
     SetCUDACtx(0);
-    auto renderer=CUDAOffScreenCompVolumeRenderer::Create(300,300);
+    auto renderer=CUDAOffScreenCompVolumeRenderer::Create(1600,1600);
     Camera camera;
     //22.5 -> 450
     // 5    -> 50
     //turn 18
-    camera.zoom=8;
-    camera.pos={4.5f,7.5f,6.f};
-    camera.look_at={4.5f,7.5f,0.0};
+    camera.zoom=16;
+    camera.pos={5.5f,6.5f,6.5f};
+    camera.look_at={5.5f,6.5f,0.0};
     camera.up={0.0,1.0,0.0};
     camera.right={1.0,0.0,0.0};
     renderer->SetCamera(camera);
@@ -32,6 +32,17 @@ int main(){
     tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.5,0.9});
     tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,0.8,1.0});
     renderer->SetTransferFunc(std::move(tf));
+
+    CompRenderPolicy policy;
+    policy.lod_dist[0]=0.3;
+    policy.lod_dist[1]=0.5;
+    policy.lod_dist[2]=1.2;
+    policy.lod_dist[3]=1.6;
+    policy.lod_dist[4]=3.2;
+    policy.lod_dist[5]=6.4;
+    policy.lod_dist[6]=std::numeric_limits<double>::max();
+    renderer->SetRenderPolicy(policy);
+
     AutoTimer timer;
     renderer->render();
 
