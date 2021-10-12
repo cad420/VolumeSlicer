@@ -43,7 +43,7 @@ class CDF{
         std::vector<uint32_t> res;
         res.reserve(cdf.size());
         for(const auto& it:cdf){
-            res.emplace_back(it.average*255);
+            res.emplace_back(static_cast<uint32_t>(it.average));
         }
         return res;
     }
@@ -92,9 +92,26 @@ class CDF{
         }
         if(all_empty){
             for(auto&it :cdf){
-                m[{it.x,it.y,it.z}] = (std::min)({(std::min)(it.x,dim_x-1-it.x),
-                                                        (std::min)(it.y,dim_y-1-it.y),
-                                                        (std::min)(it.z,dim_z-1-it.z)});
+                m[{it.x,it.y,it.z}] = (std::min)({(std::min)(it.x+1,dim_x-it.x),
+                                                        (std::min)(it.y+1,dim_y-it.y),
+                                                        (std::min)(it.z+1,dim_z-it.z)});
+            }
+        }
+        //fill board block with dist 1 if it is empty
+        if(!all_empty){
+            auto IsBoard = [this](const std::array<int,3>& idx){
+                if(idx[0] == 0 || idx[1] == 0 || idx[2] == 0 ||
+                    idx[0] == dim_x-1 || idx[1] == dim_y-1 || idx[2] == dim_z-1){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            };
+            for(auto& it:m){
+                if(IsBoard(it.first) && it.second){
+                    it.second = 1;
+                }
             }
         }
         bool update;
@@ -185,6 +202,10 @@ class CDFGenerator{
     //notice VolumeBlock's data is cuda ptr
     void SetVolumeBlockData(VolumeBlock block,int volume_block_length,int cdf_block_length);
 
+    int GetVolumeAvgValue() const{
+        return this->volume_average;
+    }
+
     void GenerateCDF(){
         cdf->GenerateCDF();
     }
@@ -199,6 +220,7 @@ class CDFGenerator{
     }
   private:
     std::unique_ptr<CDF> cdf;
+    int volume_average = 0;
 };
 inline void CDFGenerator::SetVolumeData(int len_x, int len_y, int len_z, int cdf_block_length, uint8_t *data)
 {
@@ -213,6 +235,7 @@ inline void CDFGenerator::SetVolumeData(const Linear3DArray<uint8_t> &data, int 
     int block_size_bytes= cdfblock_length * cdfblock_length * cdfblock_length;//block is small
     std::vector<uint8_t> block_data(block_size_bytes);
     cdf=std::make_unique<CDF>(cdfblock_length,data.GetWidth(),data.GetHeight(),data.GetDepth());
+    double volume_average = 0.0;
     for(int z=0;z<cdf->GetDimZ();z++){
         for(int y=0;y<cdf->GetDimY();y++){
             for(int x=0;x<cdf->GetDimX();x++){
@@ -225,9 +248,11 @@ inline void CDFGenerator::SetVolumeData(const Linear3DArray<uint8_t> &data, int 
                 }
                 cdf_item.average = static_cast<double>(sum) / static_cast<double>(block_size_bytes);
                 cdf->AddCDFItem(cdf_item);
+                volume_average += cdf_item.average;
             }
         }
     }
+    this->volume_average = static_cast<int>(volume_average / (cdf->GetDimX()*cdf->GetDimY()*cdf->GetDimZ()));
 }
 inline void CDFGenerator::SetVolumeBlockData(CDFGenerator::VolumeBlock block, int volume_block_length,int cdf_block_length)
 {
@@ -237,6 +262,7 @@ inline void CDFGenerator::SetVolumeBlockData(CDFGenerator::VolumeBlock block, in
     SetVolumeData(array,cdf_block_length);
 }
 
+//***************************************************************************************
 //class for volume block manage in runtime
 //it can open the pre-computed chebyshev_dist map or pre-computed average_dist map file
 //if the pre-computed average_dist map file is loaded, it can using user specified empty strategy to compute
@@ -257,6 +283,10 @@ class CDFManager{
     //or true that volume_block_length and cdf_block_length are same in file
     //or return true create with default construct function
     bool SetBlockLength(int volume_block_length,int cdf_block_length);
+
+    int GetCDFBlockLength() const{return cdf_block_length;}
+
+    int GetVolumeBlockLength() const{return volume_block_length;}
 
     //generate the cdf map when the function call for the VolumeBlock but not store the it
     //it will replace the data in the cdf_map
@@ -279,6 +309,9 @@ class CDFManager{
 
     auto GetVolumeBlockCDF(const std::array<uint32_t,4>&)-> std::vector<uint32_t> const&;
 
+    auto GetCDFMap() const ->  std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> const& {
+        return value_map;
+    }
   public:
     //same format with open, see tools/H264VolumeCDFGenerator.cpp
     bool SaveCurrentCDFMapToFile(const std::string& filename) const;
@@ -374,7 +407,7 @@ inline bool CDFManager::SetBlockLength(int volume_block_length, int cdf_block_le
         return true;
     }
 }
-void CDFManager::OpenValueFile(const std::string &value_file)
+inline void CDFManager::OpenValueFile(const std::string &value_file)
 {
     std::ifstream in(value_file);
     if(!in.is_open()){
@@ -433,7 +466,7 @@ void CDFManager::OpenValueFile(const std::string &value_file)
         this->value_map.clear();
     }
 }
-bool CDFManager::SetComputeOnCall(bool compute, std::function<bool(const CDF::CDFItem &)>&& f)
+inline bool CDFManager::SetComputeOnCall(bool compute, std::function<bool(const CDF::CDFItem &)>&& f)
 {
     if(this->value_map.empty()){
         LOG_INFO("Pre-computed average value map is not load, so set compute(true) will not be successful");
@@ -465,7 +498,7 @@ inline auto CDFManager::GetBlockCDFDim() const -> std::array<uint32_t, 3>
     uint32_t d = volume_block_length / cdf_block_length;
     return {d,d,d};
 }
-auto CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &index) -> std::vector<uint32_t> const &
+inline auto CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &index) -> std::vector<uint32_t> const &
 {
     if(compute){
         if(!empty_fn){
@@ -512,11 +545,11 @@ inline bool CDFManager::GetVolumeBlockCDF(int lod, int x, int y, int z, uint32_t
     return GetVolumeBlockCDF({(uint32_t)x,(uint32_t)y,(uint32_t)z,(uint32_t)lod},data,length);
 }
 
-bool CDFManager::SaveCurrentCDFMapToFile(const std::string &filename) const
+inline bool CDFManager::SaveCurrentCDFMapToFile(const std::string &filename) const
 {
     return false;
 }
-bool CDFManager::SaveCurrentValueMapToFile(const std::string &filename) const
+inline bool CDFManager::SaveCurrentValueMapToFile(const std::string &filename) const
 {
     return false;
 }
