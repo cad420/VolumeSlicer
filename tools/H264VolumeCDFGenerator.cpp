@@ -77,11 +77,21 @@ int main(int argc,char** argv){
         }
         else return idx1[3]<idx2[3];
     };
-    std::map<std::array<uint32_t,4>,int,decltype(order)> volume_value(order);
-    auto cdf_gen = [block_length,cdf_block_length,&volume_value](VolumeBlock volume_block)->CDFRetType {
+
+    std::vector<std::map<std::array<uint32_t,4>,int,decltype(order)>> volume_value_array;
+    volume_value_array.emplace_back(order);
+    auto AddToVolumeValue = [&volume_value_array,&order](const std::array<uint32_t,4>& index,int val){
+        static std::mutex mtx;
+        std::lock_guard<std::mutex> lk(mtx);
+        if(volume_value_array.back().size()>volume_value_array.max_size()-10){
+            volume_value_array.emplace_back(order);
+        }
+        volume_value_array.back()[index] = val;
+    };
+    auto cdf_gen = [block_length,cdf_block_length,&AddToVolumeValue](VolumeBlock volume_block)->CDFRetType {
       CDFGenerator cdf_generator;
       cdf_generator.SetVolumeBlockData(volume_block,block_length,cdf_block_length);
-      volume_value[volume_block.index] = cdf_generator.GetVolumeAvgValue();
+      AddToVolumeValue(volume_block.index,cdf_generator.GetVolumeAvgValue());
       //in future should release VolumeBlock after copy not until finish generating cdf
       //notice Release is not auto call in destruct function
       volume_block.Release();
@@ -159,10 +169,12 @@ int main(int argc,char** argv){
     try{
         std::unordered_map<uint32_t,std::vector<uint32_t>> value_array;
         //volume value is sorted in the order same with flag virtual block index
-        for(auto& it:volume_value){
-            auto lod = it.first[3];
-            auto value = it.second;
-            value_array[lod].push_back(value);
+        for(auto& volume_value:volume_value_array){
+            for(auto& it:volume_value){
+                auto lod = it.first[3];
+                auto value = it.second;
+                value_array[lod].push_back(value);
+            }
         }
         std::ofstream out("volume_value_"+output_filename);
         if(!out.is_open()){
