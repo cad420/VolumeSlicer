@@ -65,13 +65,13 @@ bool SlicerImpl::IsValidSlice(const Slice &slice) const {
 }
 
 void SlicerImpl::MoveByNormal(float dist) {
-    spdlog::info("slice ratio {0} {1} {2}.",ratio.x,ratio.y,ratio.z);
+//    spdlog::info("slice ratio {0} {1} {2}.",ratio.x,ratio.y,ratio.z);
     this->origin+=(dist*this->normal)/ratio;
     SetStatus(true);
 }
 
 void SlicerImpl::MoveInPlane(float offsetX, float offsetY) {
-    spdlog::info("slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
+//    spdlog::info("slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
     this->origin+=(offsetX*this->right+offsetY*this->up)/this->ratio;
     SetStatus(true);
 }
@@ -312,7 +312,7 @@ void SlicerImpl::SetStatus(bool modified) {
 
 void SlicerImpl::SetSliceSpaceRatio(const std::array<float, 3> &ratio) {
     this->ratio={ratio[0],ratio[1],ratio[2]};
-    spdlog::info("set slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
+//    spdlog::info("set slice ratio {0} {1} {2}.",this->ratio.x,this->ratio.y,this->ratio.z);
 }
 
 void SlicerImpl::resize(int w,int h) {

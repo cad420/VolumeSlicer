@@ -11,6 +11,7 @@
 #include <VolumeSlicer/volume_sampler.hpp>
 #include <VolumeSlicer/frame.hpp>
 #include <VolumeSlicer/transfer_function.hpp>
+#include <VolumeSlicer/render.hpp>
 using namespace vs;
 
 struct SDL_Window;
@@ -44,6 +45,8 @@ private:
 
     void render_root_frame();
     void render_node_frame();
+    void render_zoom_slice();
+    void render_volume_slice();
 private:
     SDL_Window* sdl_window;
     SDL_GLContext gl_context;
@@ -62,6 +65,13 @@ private:
     Slice world_slice;
     Slice node_slice;
 
+    int raw_lod;
+    int raw_dim_x,raw_dim_y,raw_dim_z;
+    std::shared_ptr<Slicer> zoom_slicer;
+    int raw_mode = 0;//0 for default, 1 for zoom slice, 2 for volume slice
+
+    bool show_imgui = true;
+
     uint32_t screen_quad_vao,screen_quad_vbo;
 
     uint32_t comp_sample_tex;
@@ -72,6 +82,9 @@ private:
     Frame raw_sample_frame;
 
     std::unique_ptr<Shader> comp_render_shader;
+    std::unique_ptr<Shader> zoom_slice_render_shader;
+
+    std::unique_ptr<RawVolumeRenderer> volume_slice_renderer;
 };
 
 

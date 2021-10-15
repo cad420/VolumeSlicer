@@ -64,7 +64,7 @@ void CUDARawVolumeSampler::Sample(uint8_t *data, Slice slice,float space_x,float
 
     CUDA_RUNTIME_API_CALL(cudaMemcpy(data,cu_sample_result,(size_t)w*h,cudaMemcpyDefault));
 
-    spdlog::info("Finish CUDA raw volume sample.");
+//    spdlog::info("Finish CUDA raw volume sample.");
 }
 
 CUDARawVolumeSampler::~CUDARawVolumeSampler() {
