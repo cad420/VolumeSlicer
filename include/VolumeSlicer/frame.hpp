@@ -184,6 +184,12 @@ class Image<Vec<T,len>>{
         }
         width=height=num=0;
     }
+    auto Width() const{
+        return width;
+    }
+    auto Height() const{
+        return height;
+    }
   private:
     uint32_t num;
     uint32_t width,height;
@@ -299,6 +305,12 @@ class Image<Color4b>{
             }
         }
         return image;
+    }
+    auto Width() const{
+        return width;
+    }
+    auto Height() const{
+        return height;
     }
   private:
     uint32_t num;
