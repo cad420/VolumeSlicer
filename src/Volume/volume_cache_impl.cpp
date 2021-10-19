@@ -3,6 +3,7 @@
 //
 #include "volume_cache_impl.hpp"
 #include "Common/cuda_utils.hpp"
+#include <iostream>
 VS_START
 
 std::unique_ptr<CUDAVolumeBlockCache> CUDAVolumeBlockCache::Create(CUcontext ctx) {
@@ -189,10 +190,13 @@ void CUDAVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4> 
             mapping_table.at(flat_idx+3)&=0x0000ffff;
     }
     catch (const std::exception& err) {
+        std::cout<<index[0]<<" "<<index[1]<<" "<<index[2]<<" "<<index[3]<<"\n"
+            <<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" "<<pos[3]<<" "<<flat_idx<<std::endl;
         spdlog::error("{0}:{1}",__FUNCTION__ ,err.what());
         spdlog::error("index {0} {1} {2} {3}, pos {4} {5} {6} {7}, flag_idx {8}",
                       index[0],index[1],index[2],index[3],
-                      pos[0],pos[1],pos[2],pos[3]);
+                      pos[0],pos[1],pos[2],pos[3],flat_idx);
+        exit(-1);
     }
 }
 
