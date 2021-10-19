@@ -9,7 +9,7 @@
 #include "Algorithm/helper_math.h"
 #include "Common/cuda_utils.hpp"
 #include <iostream>
-
+#include "Common/cuda_box.hpp"
 using namespace CUDARenderer;
 
 namespace {
@@ -24,6 +24,7 @@ namespace {
     __constant__ cudaTextureObject_t preIntTransferFunc;
     __constant__ uint* image;
     __constant__ uint* missedBlocks;
+    __constant__ uint* cdfMap[10];
     uint *d_image = nullptr;
     int image_w = 0, image_h = 0;
     uint4 *d_mappingTable = nullptr;
@@ -31,6 +32,7 @@ namespace {
     cudaArray* tf=nullptr;
     cudaArray* preInt_tf=nullptr;
     uint* d_missedBlocks=nullptr;
+    uint* d_cdfMap[10]={nullptr};
 
     __device__ uint rgbaFloatToUInt(float4 rgba)
     {
@@ -132,6 +134,28 @@ namespace {
 
     }
 
+    __device__ float3 GetCDFEmptySkipPos(int lod,int lod_t,const float3& sample_pos,const float3& sample_dir)
+    {
+        int lod_no_padding_block_length=compVolumeParameter.no_padding_block_length*lod_t;
+        int3 lod_block_dim=(compVolumeParameter.block_dim+lod_t-1)/lod_t;
+        int3 virtual_block_idx=make_int3(sample_pos/lod_no_padding_block_length);
+        int flat_block_idx= virtual_block_idx.z * lod_block_dim.x * lod_block_dim.y
+                               + virtual_block_idx.y * lod_block_dim.x
+                               + virtual_block_idx.x;
+        float3 offset_in_no_padding_block=(sample_pos-make_float3(virtual_block_idx*lod_no_padding_block_length))/lod_t;
+        int3 cdf_block_idx = make_int3(offset_in_no_padding_block / compVolumeParameter.cdf_block_length);
+        int flat_cdf_block_idx = (cdf_block_idx.z*compVolumeParameter.cdf_dim_len+cdf_block_idx.y)*compVolumeParameter.cdf_dim_len+cdf_block_idx.x;
+        uint32_t cdf = cdfMap[lod][flat_block_idx*compVolumeParameter.cdf_block_num+flat_cdf_block_idx];
+        if(!cdf)
+        {
+            return sample_pos;
+        }
+        float3 box_min_p = make_float3(virtual_block_idx*lod_no_padding_block_length + cdf_block_idx*compVolumeParameter.cdf_block_length*lod_t);
+        auto box = CUDABox(box_min_p,box_min_p+compVolumeParameter.cdf_block_length*lod_t);
+        auto t =IntersectWithAABB(box,CUDASimpleRay(sample_pos,sample_dir));
+        return sample_pos+t.y*sample_dir;
+    }
+
     /*
      * samplePos is measured in voxel
      */
@@ -159,6 +183,13 @@ namespace {
                             physical_sample_pos.y,physical_sample_pos.z);
 
         return 1;
+    }
+
+    __device__ int IntPow(int x,int y){
+        int ans=1;
+        for(int i=0;i<y;i++)
+            ans *= x;
+        return ans;
     }
     /*
      * samplePos is measured in voxel
@@ -283,9 +314,7 @@ namespace {
                 color={0.f,0.f,0.f,1.f};
                 break;
             }
-
             cur_lod=evaluateLod(length(ray_pos-start_pos));
-
             if(cur_lod>last_lod){
                 cur_step*=2;
                 lod_t*=2;
@@ -295,6 +324,31 @@ namespace {
             }
             if(cur_lod>6)
                 break;
+
+
+
+            float3 n_ray_pos = cudaCompRenderParameter.space *
+                               GetCDFEmptySkipPos(cur_lod, lod_t, ray_pos / cudaCompRenderParameter.space,
+                                                  ray_direction);
+
+            cur_lod = evaluateLod(length(n_ray_pos - start_pos));
+
+            if (cur_lod > last_lod)
+            {
+//                last_lod=cur_lod;
+//                lod_t=IntPow(2,last_lod);
+//                steps += length(n_ray_pos-ray_pos)/cur_step;
+//                cur_step =cudaCompRenderParameter.step*lod_t;
+//                lod_sample_pos = n_ray_pos;
+//                lod_steps = steps;
+            }
+            else{
+                steps += length(n_ray_pos-ray_pos)/cur_step;
+            }
+            if (cur_lod > 6)
+                break;
+
+
             float sample_scalar=0.f;
 
             int flag=VirtualSample(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,sample_scalar);
@@ -302,7 +356,7 @@ namespace {
             if (flag > 0)
             {
 
-                if (sample_scalar > 0.0f) {
+                if (sample_scalar > 0.30f) {
 
 //                    sample_color = tex1D<float4>(transferFunc, sample_scalar);
                     sample_color=tex2D<float4>(preIntTransferFunc,last_scalar,sample_scalar);
@@ -360,7 +414,19 @@ static void CreateDeviceMissedBlocks(size_t size){
     CUDA_RUNTIME_API_CALL(cudaMemset(d_missedBlocks,0,size*sizeof(uint32_t)));
     CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(missedBlocks,&d_missedBlocks,sizeof(uint*)));
 }
-
+static void CreateDeviceCDFMap(const uint32_t** data,int n,size_t* size){
+    assert(n<=10);
+    for(int i=0;i<10;i++){
+        if(d_cdfMap[i]){
+            CUDA_RUNTIME_API_CALL(cudaFree(d_cdfMap[i]));
+        }
+    }
+    for(int i=0;i<n;i++){
+        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_cdfMap[i],size[i]*sizeof(uint)));
+        std::cout<<d_cdfMap[i]<<std::endl;
+    }
+    CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cdfMap,&d_cdfMap,sizeof(uint*)*10));
+}
 namespace CUDARenderer{
 
     void UploadTransferFunc(float *data, size_t size) {
@@ -449,6 +515,20 @@ namespace CUDARenderer{
         CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(lodMappingTableOffset,data,size*sizeof(uint32_t)));
     }
 
+
+    void UploadCDFMap(const uint32_t** data,int n,size_t* size){
+        if(!d_cdfMap[0]){
+            CreateDeviceCDFMap(data,n,size);
+        }
+        for(int i =0;i<n;i++){
+            CUDA_RUNTIME_API_CALL(cudaMemcpy(d_cdfMap[i],data[i],size[i]*sizeof(uint32_t),cudaMemcpyHostToDevice));
+            int cnt = 0;
+            for(int j=0;j<size[i];j++){
+                if(!data[i][j]) cnt++;
+            }
+            std::cout<<"Lod "<<i<<"Upload data size: "<<size[i]<<" no empty cnt: "<<cnt<<std::endl;
+        }
+    }
 }
 
 #endif //VOLUMESLICER_CUDA_COMP_RENDER_IMPL_HPP

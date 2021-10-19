@@ -65,7 +65,7 @@ CUDACompVolumeRendererImpl::CUDACompVolumeRendererImpl(int w, int h, CUcontext c
     }
     CUDACompVolumeRendererImpl::resize(w,h);
 }
-
+CUDARenderer::CompVolumeParameter g_compVolumeParameter;
 void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volume) {
     this->comp_volume=comp_volume;
 
@@ -112,13 +112,75 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
                                                comp_volume->GetVolumeDimZ()*comp_volume->GetVolumeSpaceZ()
                                                );
     CUDARenderer::UploadCompVolumeParameter(compVolumeParameter);
+    g_compVolumeParameter=compVolumeParameter;
 
     auto texes=this->cuda_volume_block_cache->GetCUDATextureObjects();
     CUDARenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
-void CUDACompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy)
+void CUDACompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 {
+    if(!policy.cdf_value_file.empty()){
+        try{
+            cdf_manager=std::make_unique<CDFManager>(policy.cdf_value_file.c_str());
+        }
+        catch (std::exception const& err)
+        {
+            LOG_ERROR(err.what());
+            return ;
+        }
+        cdf_block_length=cdf_manager->GetCDFBlockLength();
+        cdf_dim_x = cdf_manager->GetBlockCDFDim()[0];
+        cdf_dim_y = cdf_manager->GetBlockCDFDim()[1];
+        cdf_dim_z = cdf_manager->GetBlockCDFDim()[2];
+        auto& cdf_map = cdf_manager->GetCDFMap();
+//        for(auto& it:cdf_map){
+//            this->cdf_map[Vec4i(it.first[0],it.first[1],it.first[2],it.first[3])] = it.second;
+//        }
 
+        LOG_INFO("cdf_block_length: {0}, cdf_dim: {1} {2} {3}",cdf_block_length,cdf_dim_x,cdf_dim_y,cdf_dim_z);
+        g_compVolumeParameter.cdf_block_length=cdf_block_length;
+        assert(cdf_dim_x==cdf_dim_y && cdf_dim_y==cdf_dim_z);
+        g_compVolumeParameter.cdf_dim_len=cdf_dim_x;
+        g_compVolumeParameter.cdf_block_num=cdf_dim_x*cdf_dim_y*cdf_dim_z;
+        CUDARenderer::UploadCompVolumeParameter(g_compVolumeParameter);
+        std::cout<<"111"<<std::endl;
+        std::vector<std::pair<std::array<uint32_t,4>,std::vector<uint32_t>>> array;
+        array.reserve(cdf_map.size());
+        for(auto& it:cdf_map){
+            array.push_back(it);
+        }
+        cdf_manager.reset();
+        std::cout<<"222"<<std::endl;
+        std::sort(array.begin(),array.end(),[](const auto& idx1,const auto& idx2){
+          if(idx1.first[3]==idx2.first[3]){
+              if(idx1.first[2]==idx2.first[2]){
+                  if(idx1.first[1]==idx2.first[1]){
+                      return idx1.first[0]<idx2.first[0];
+                  }
+                  else return idx1.first[1]<idx2.first[1];
+              }
+              else return idx1.first[2]<idx2.first[2];
+          }
+          else return idx1.first[3]<idx2.first[3];
+        });
+        std::cout<<"333"<<std::endl;
+        std::unordered_map<uint32_t,std::vector<uint32_t>> tmp;
+
+        for(auto& it:array){
+            auto& v=tmp[it.first[3]];
+            v.insert(v.end(),it.second.begin(),it.second.end());
+        }
+        std::cout<<"444"<<std::endl;
+        std::vector<const uint32_t*> data(tmp.size());
+        std::vector<size_t> size(tmp.size());
+        for(int i=0;i<data.size();i++){
+            data[i] = tmp[i].data();
+            size[i] = tmp[i].size();
+            LOG_INFO("lod {0} has cdf size: {1}",i,size[i]);
+        }
+
+        CUDARenderer::UploadCDFMap(data.data(),data.size(),size.data());
+    }
 }
 void CUDACompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpiRenderParameter)
 {
@@ -144,10 +206,10 @@ void CUDACompVolumeRendererImpl::SetTransferFunc(TransferFunc tf) {
     //todo move to another place
     CUDARenderer::LightParameter lightParameter;
     lightParameter.bg_color=make_float4(0.f,0.f,0.f,0.f);
-    lightParameter.ka=0.5f;
-    lightParameter.kd=0.8f;
-    lightParameter.ks=0.5f;
-    lightParameter.shininess=64.f;
+    lightParameter.ka=0.35f;
+    lightParameter.kd=0.75f;
+    lightParameter.ks=0.3f;
+    lightParameter.shininess=36.f;
     CUDARenderer::UploadLightParameter(lightParameter);
 }
 

@@ -134,9 +134,11 @@ void CPURawVolumeRendererImpl::render()
     };
 #pragma omp parallel for
     for(int row=0;row<window_h;row++){
-        LOG_INFO("start row {0}",row);
-        AutoTimer timer;
+//        LOG_INFO("start row {0}",row);
+//        AutoTimer timer;
         for(int col=0;col<window_w;col++){
+
+
             double x = (2*(col+0.5)/window_w-1.0)*scale*ratio;
             double y = (1.0-2*(row+0.5)/window_h)*scale;
 

@@ -36,6 +36,10 @@ void CPUOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> c
     this->volume_space_z = comp_volume->GetVolumeSpaceZ();
     this->base_space     = (std::min)({volume_space_x,volume_space_y,volume_space_z});
     auto block_len_info  = comp_volume->GetBlockLength();
+    auto dim=comp_volume->GetBlockDim(0);
+    this->volume_block_dim_x=dim[0];
+    this->volume_block_dim_y=dim[1];
+    this->volume_block_dim_z=dim[2];
     this->block_length   = block_len_info[0];
     this->padding        = block_len_info[1];
     this->min_lod        = block_len_info[2];
@@ -65,17 +69,101 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
       std::lock_guard<std::mutex> lk(mtx);
         missed_blocks.insert(idx);
     };
+
+    auto GetVolumeBlockEmptySkipPos = [this](int lod,int lod_t,const Vec3d& sample_pos,const Vec3d& sample_dir){
+      if(sample_pos.x<0 || sample_pos.y<0 || sample_pos.z<0
+         || sample_pos.x > volume_dim_x || sample_pos.y > volume_dim_y || sample_pos.z > volume_dim_z){
+          return sample_pos;
+      }
+      Vec4i virtual_block_idx;
+      virtual_block_idx.x = sample_pos.x / no_padding_block_length;
+      virtual_block_idx.y = sample_pos.y / no_padding_block_length;
+      virtual_block_idx.z = sample_pos.z / no_padding_block_length;
+
+      virtual_block_idx /= lod_t;
+      virtual_block_idx.w=lod;
+
+      auto lod_volume_block_dim_x = (this->volume_block_dim_x + lod_t - 1) / lod_t;
+      auto lod_volume_block_dim_y = (this->volume_block_dim_y + lod_t - 1) / lod_t;
+//      auto lod_volume_dim_z = (this->volume_dim_z + lod_t - 1) / lod_t;
+      auto flat_virtual_block_idx = virtual_block_idx.z * lod_volume_block_dim_x * lod_volume_block_dim_y + virtual_block_idx.y * lod_volume_block_dim_x + virtual_block_idx.x;
+//      if(flat_virtual_block_idx>this->volume_value_map[virtual_block_idx.w].size()){
+//          LOG_ERROR("flat_virtual_block_idx overflow");
+//          LOG_ERROR("flat_virtual_block_idx: {0}.",flat_virtual_block_idx);
+//          LOG_ERROR("volume_value_map[lod] size: {0}.",volume_value_map[virtual_block_idx.w].size());
+//          LOG_ERROR("virtual_block_idx: {0} {1} {2} {3}.",virtual_block_idx.x,virtual_block_idx.y,virtual_block_idx.z,virtual_block_idx.w);
+//      }
+      auto volume_value = this->volume_value_map[virtual_block_idx.w][flat_virtual_block_idx];
+      if(volume_value > 0) return sample_pos;
+      auto box_min_p = Vec3d(virtual_block_idx)*no_padding_block_length*lod_t;
+      auto box = ExpandBox(0,
+                           box_min_p,
+                           box_min_p + Vec3d(no_padding_block_length*lod_t));
+      auto t = IntersectWithAABB(box,SimpleRay(sample_pos,sample_dir));
+
+      return sample_pos + t.y * sample_dir;
+    };
+
+    auto GetCDFEmptySkipPos =[this](int lod,int lod_t,const Vec3d& sample_pos,const Vec3d& sample_dir){
+      if(sample_pos.x<0 || sample_pos.y<0 || sample_pos.z<0
+         || sample_pos.x > volume_dim_x || sample_pos.y > volume_dim_y || sample_pos.z > volume_dim_z){
+          return sample_pos;
+      }
+        Vec4i virtual_block_idx;
+        virtual_block_idx.x = sample_pos.x / no_padding_block_length;
+        virtual_block_idx.y = sample_pos.y / no_padding_block_length;
+        virtual_block_idx.z = sample_pos.z / no_padding_block_length;
+
+        virtual_block_idx /= lod_t;
+        virtual_block_idx.w=lod;
+
+        Vec3d offset_in_block = sample_pos / lod_t - Vec3d(virtual_block_idx)*no_padding_block_length;
+        Vec3i cdf_block_idx = offset_in_block / cdf_block_length;
+        assert(cdf_block_idx.x>=0 && cdf_block_idx.x<cdf_dim_x
+             && cdf_block_idx.y>=0 && cdf_block_idx.y<cdf_dim_y
+             && cdf_block_idx.z>=0 && cdf_block_idx.z<cdf_dim_z);
+        int flat_cdf_block_idx = cdf_block_idx.z * cdf_dim_x * cdf_dim_y +
+                               cdf_block_idx.y * cdf_dim_x +
+                               cdf_block_idx.x;
+        assert(cdf_map[virtual_block_idx].size());
+
+//        std::cout<<virtual_block_idx.x<<" "<<virtual_block_idx.y<<" "<<virtual_block_idx.z<<" "<<virtual_block_idx.w<<std::endl;
+//        std::cout<<flat_cdf_block_idx<<std::endl;
+//        if(flat_cdf_block_idx>cdf_map[virtual_block_idx].size()){
+//            LOG_ERROR("flat_cdf_block_idx overflow");
+//            LOG_ERROR("cdf_block_idx: {0} {1} {2}",cdf_block_idx.x,cdf_block_idx.y,cdf_block_idx.z);
+//            LOG_ERROR("virtual_block_idx: {0} {1} {2} {3}",virtual_block_idx.x,virtual_block_idx.y,virtual_block_idx.z,virtual_block_idx.w);
+//            LOG_ERROR("sample_pos: {0} {1} {2}",sample_pos.x,sample_pos.y,sample_pos.z);
+//            LOG_ERROR("offset_in_block: {0} {1} {2}",offset_in_block.x,offset_in_block.y,offset_in_block.z);
+//            exit(-1);
+//        }
+        int cdf = cdf_map[virtual_block_idx][flat_cdf_block_idx];
+
+        if(cdf == 0) return sample_pos;
+        auto box_min_p = Vec3d(cdf_block_idx)*cdf_block_length*lod_t + Vec3d(virtual_block_idx)*(int)no_padding_block_length*lod_t;
+        auto box = ExpandBox(cdf-1,
+                           box_min_p,
+                           box_min_p + Vec3d(cdf_block_length*lod_t));
+        auto t = IntersectWithAABB(box,SimpleRay(sample_pos,sample_dir));
+        assert(t.x<=0.0);
+//        if(t.y<=0.0){
+//            LOG_ERROR("t.y({0}) < 0.0",t.y);
+//            exit(-1);
+//        }
+        return sample_pos + t.y * sample_dir;
+    };
     auto VirtualSample=[&AddMissedBlock,this](int lod,int lod_t,const Vec3d& sample_pos,double& scalar)->int{
+      if(sample_pos.x<0 || sample_pos.y<0 || sample_pos.z<0
+         || sample_pos.x > volume_dim_x || sample_pos.y > volume_dim_y || sample_pos.z > volume_dim_z){
+          scalar = 0.0;
+          return -1;
+      }
         Vec4i virtual_block_idx;
         virtual_block_idx.x = sample_pos.x / no_padding_block_length;
         virtual_block_idx.y = sample_pos.y / no_padding_block_length;
         virtual_block_idx.z = sample_pos.z / no_padding_block_length;
 //        virtual_block_idx.w = 0;
-        if(virtual_block_idx.x<0 || virtual_block_idx.y<0 || virtual_block_idx.z<0
-            || virtual_block_idx.x >= volume_dim_x || virtual_block_idx.y >= volume_dim_y || virtual_block_idx.z >= volume_dim_z){
-            scalar = 0.0;
-            return 1;
-        }
+
         virtual_block_idx /= lod_t;
         virtual_block_idx.w=lod;
         bool cached=block_cache_manager->IsBlockDataCached(virtual_block_idx);
@@ -226,7 +314,7 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
         for(int row=0;row < window_h;row++){
             if(row%(window_h/10)==0)
                 LOG_INFO("turn {0} finish {1}",turn,row*1.0/window_h);
-//#pragma omp parallel for
+#pragma omp parallel for
             for(int col=0;col < window_w;col++){
 //                if(col!=70 || row!=0) continue;
 //                if(row%(window_h/10)==0 && col%(window_w/10)==0)
@@ -254,6 +342,16 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
                     //3.break
                     int cur_lod=EvaluateLod(Length(ray_pos-view_pos));
                     int lod_t=IntPow(2,cur_lod);
+                    //todo re-generate volume-value-json
+                    //VolumeBlock accelerate
+//                    ray_pos = GetVolumeBlockEmptySkipPos(cur_lod,lod_t,ray_pos/volume_space,ray_direction) * volume_space;
+//                    cur_lod = EvaluateLod(Length(ray_pos-view_pos));
+//                    lod_t   = IntPow(2,cur_lod);
+
+                    //cdf accelerate
+                    ray_pos = GetCDFEmptySkipPos(cur_lod,lod_t,ray_pos/volume_space,ray_direction) * volume_space;
+                    cur_lod=EvaluateLod(Length(ray_pos-view_pos));
+                    lod_t=IntPow(2,cur_lod);
 
                     int flag=VirtualSample(cur_lod,lod_t,ray_pos / volume_space,sample_scalar);//record missed blocks in the function
                     if(flag == 0){
@@ -261,6 +359,10 @@ void CPUOffScreenCompVolumeRendererImpl::render() {
                         ray_start_pos.At(col,row) = ray_pos;
                         intermediate_result.At(col,row) = color;
                         render_finish = false;
+                        break;
+                    }
+                    else if(flag == -1){
+                        i=steps;
                         break;
                     }
                     if(sample_scalar>0.0){
@@ -376,6 +478,29 @@ void CPUOffScreenCompVolumeRendererImpl::clear() {
 void CPUOffScreenCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 {
     std::copy(policy.lod_dist,policy.lod_dist+10,this->lod_dist);
+    if(!policy.cdf_value_file.empty()){
+        try{
+            cdf_manager=std::make_unique<CDFManager>(policy.cdf_value_file.c_str());
+        }
+        catch (std::exception const& err)
+        {
+            LOG_ERROR(err.what());
+            return ;
+        }
+        cdf_block_length=cdf_manager->GetCDFBlockLength();
+        cdf_dim_x = cdf_manager->GetBlockCDFDim()[0];
+        cdf_dim_y = cdf_manager->GetBlockCDFDim()[1];
+        cdf_dim_z = cdf_manager->GetBlockCDFDim()[2];
+        auto& cdf_map = cdf_manager->GetCDFMap();
+        for(auto& it:cdf_map){
+            this->cdf_map[Vec4i(it.first[0],it.first[1],it.first[2],it.first[3])] = it.second;
+        }
+        cdf_manager.reset();
+        LOG_INFO("cdf_block_length: {0}, cdf_dim: {1} {2} {3}",cdf_block_length,cdf_dim_x,cdf_dim_y,cdf_dim_z);
+    }
+    if(!policy.volume_value_file.empty()){
+        this->volume_value_map = ReadVolumeValueFile(policy.volume_value_file);
+    }
 }
 void CPUOffScreenCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 {

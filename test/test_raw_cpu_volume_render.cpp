@@ -14,8 +14,8 @@ int main(){
     camera.up={0.0,1.0,0.0};
     camera.right={1.0,0.0,0.0};
     renderer->SetCamera(camera);
-    PluginLoader::LoadPlugins("./plugins");
-    auto volume=RawVolume ::Load("../test_data/foot_256_256_256_uint8.raw",VoxelType::UInt8,
+//    PluginLoader::LoadPlugins("./plugins");
+    auto volume=RawVolume ::Load("../test_data/aneurism_256_256_256_uint8.raw",VoxelType::UInt8,
                                    {256,256,256},
                                    {0.01,0.01,0.01});
     renderer->SetVolume(std::move(volume));

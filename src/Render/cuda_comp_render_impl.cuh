@@ -23,6 +23,9 @@ namespace CUDARenderer{
 
 //not changed while start rendering
     struct CompVolumeParameter{
+        int cdf_block_num;
+        int cdf_dim_len;//xyz is all the same
+        int cdf_block_length;
         int min_lod,max_lod;
         int block_length;
         int padding;
@@ -61,6 +64,8 @@ namespace CUDARenderer{
     void CUDACalcBlock(uint32_t* missed_blocks,size_t size,uint32_t w,uint32_t h);
 
     void CUDARender(uint32_t w,uint32_t h,uint32_t* image);
+
+    void UploadCDFMap(const uint32_t** data,int n,size_t* size);
 }
 
 

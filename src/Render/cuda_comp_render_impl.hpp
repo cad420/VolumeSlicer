@@ -8,6 +8,7 @@
 #include <VolumeSlicer/volume_cache.hpp>
 #include <unordered_set>
 #include "Common/hash_function.hpp"
+#include <VolumeSlicer/cdf.hpp>
 VS_START
 class CUDACompVolumeRendererImpl: public CUDACompVolumeRenderer{
 public:
@@ -57,6 +58,13 @@ private:
     std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> missed_blocks;
     std::unordered_set<std::array<uint32_t,4>,Hash_UInt32Array4> new_missed_blocks,no_missed_blocks;
     std::vector<uint32_t> block_offset;
+
+
+    std::unique_ptr<CDFManager> cdf_manager;
+    int cdf_block_length;
+//    std::unordered_map<Vec4i,std::vector<uint32_t>> cdf_map;
+    int cdf_dim_x,cdf_dim_y,cdf_dim_z;
+    std::unordered_map<int,std::vector<uint32_t>> volume_value_map;
 };
 
 

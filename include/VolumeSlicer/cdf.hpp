@@ -43,7 +43,7 @@ class CDF{
         std::vector<uint32_t> res;
         res.reserve(cdf.size());
         for(const auto& it:cdf){
-            res.emplace_back(static_cast<uint32_t>(it.average));
+            res.emplace_back(static_cast<uint32_t>(it.average==0.0?0:it.average+1));
         }
         return res;
     }
@@ -310,7 +310,7 @@ class CDFManager{
     auto GetVolumeBlockCDF(const std::array<uint32_t,4>&)-> std::vector<uint32_t> const&;
 
     auto GetCDFMap() const ->  std::unordered_map<std::array<uint32_t,4>,std::vector<uint32_t>> const& {
-        return value_map;
+        return cdf_map;
     }
   public:
     //same format with open, see tools/H264VolumeCDFGenerator.cpp
@@ -342,6 +342,7 @@ inline CDFManager::CDFManager(const std::string& cdf_config_file)
     std::ifstream in(cdf_config_file);
     if(!in.is_open()){
         LOG_ERROR("CDFManager: cdf_config_file open failed");
+        throw std::runtime_error("CDFManager create failed.");
         return;
     }
     nlohmann::json j;
@@ -370,7 +371,7 @@ inline CDFManager::CDFManager(const std::string& cdf_config_file)
             }
             else break;
         }
-        LOG_INFO("CDF map file min_lod({0}), max_lod({1}).",min_lod,max_lod);
+        LOG_INFO("CDF map file min_lod({0}), max_lod({1}).",min_lod,--max_lod);
         for(int lod=min_lod;lod<=max_lod;lod++){
             auto lod_str = "lod"+std::to_string(lod);
             auto lod_map = j.at(lod_str);
@@ -444,6 +445,7 @@ inline void CDFManager::OpenValueFile(const std::string &value_file)
             }
             else break;
         }
+        max_lod--;
         LOG_INFO("Value map file min_lod({0}), max_lod({1}).",min_lod,max_lod);
         for(int lod=min_lod;lod<=max_lod;lod++){
             auto lod_str = "lod"+std::to_string(lod);
@@ -554,5 +556,66 @@ inline bool CDFManager::SaveCurrentValueMapToFile(const std::string &filename) c
     return false;
 }
 
+inline auto ReadVolumeValueFile(std::string const& filename){
+    std::unordered_map<int,std::vector<uint32_t>> volume_value_map;
+    std::ifstream in(filename);
+    if(!in.is_open()){
+        throw std::runtime_error("Volume value file open failed.");
+    }
+    nlohmann::json j;
+    in >> j;
+    in.close();
+    try{
+        int volume_block_length = j["volume_block_length"];
+        LOG_INFO("Read volume value file's volume_block_length is: {0}",volume_block_length);
+        int min_lod=-1,max_lod;
+        for(max_lod = 0; ; max_lod++){
+            if(j.find("lod"+std::to_string(max_lod)) != j.end()){
+                if(min_lod == -1) min_lod = max_lod;
+            }
+            else break;
+        }
+        max_lod--;
+        for(int lod=min_lod;lod<=max_lod;lod++){
+            std::vector<uint32_t> array = j.at("lod"+std::to_string(lod));
+            volume_value_map[lod] = std::move(array);
+        }
+        LOG_INFO("Successfully read volume value data from json.");
+        return volume_value_map;
+    }
+    catch (std::exception const& err)
+    {
+        LOG_ERROR("Read volume value data from json cause error:{0}.",err.what());
+    }
+    catch (...)
+    {
+        LOG_ERROR("Read volume value data from json failed.");
+    }
+}
+
+class CDFFile{
+  public:
+    struct Header{
+        int min_lod;
+        int max_lod;
+        //lod number of element(uint32_t)
+        std::vector<std::pair<int,int>> items;//items.size() == max_lod-min_lod+1
+    };
+    CDFFile()=default;
+    void Open(std::string const& filename){
+
+    }
+    void Write(int lod,std::vector<uint32_t> cdf){
+
+    }
+    void Read(int lod,std::vector<uint32_t>& cdf){
+
+    }
+    void Close(){
+
+    }
+  private:
+    Header header;
+};
 
 VS_END

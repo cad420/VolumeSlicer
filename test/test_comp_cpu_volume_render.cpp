@@ -15,7 +15,7 @@ int main(){
     // 5    -> 50
     //turn 18
     camera.zoom=16;
-    camera.pos={5.5f,6.5f,6.5f};
+    camera.pos={5.5f,6.5f,9.5f};
     camera.look_at={5.5f,6.5f,0.0};
     camera.up={0.0,1.0,0.0};
     camera.right={1.0,0.0,0.0};
@@ -46,10 +46,11 @@ int main(){
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
     tf.points.emplace_back(25,std::array<double,4>{0.1,0.0,0.0,0.0});
-    tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.9});
-    tf.points.emplace_back(64,std::array<double,4>{1.0,0.75,0.7,0.9});
-    tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.5,0.9});
-    tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,0.8,1.0});
+    tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.0});
+    tf.points.emplace_back(60,std::array<double,4>{1.0,0.75,0.7,0.0});
+    tf.points.emplace_back(64,std::array<double,4>{1.0,0.85,0.75,0.6});
+    tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.85,0.9});
+    tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,0.9,1.0});
     renderer->SetTransferFunc(std::move(tf));
 
     CompRenderPolicy policy;
@@ -60,6 +61,8 @@ int main(){
     policy.lod_dist[4]=3.2;
     policy.lod_dist[5]=6.4;
     policy.lod_dist[6]=std::numeric_limits<double>::max();
+    policy.cdf_value_file="chebyshev_dist_mouse_cdf_config.json";
+//    policy.volume_value_file="volume_value_mouse_cdf_config.json";
     renderer->SetRenderPolicy(policy);
 
     AutoTimer timer;
