@@ -100,15 +100,15 @@ __global__ void CUDAGenRays(){
 
 __device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& scalar,
                              stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks){
-
-    int3 virtual_block_idx=make_int3(sample_pos / compVolumeParameter.no_padding_block_length);
-    if(virtual_block_idx.x < 0 || virtual_block_idx.y < 0 || virtual_block_idx.z < 0 ||
-       virtual_block_idx.x >= compVolumeParameter.volume_dim.x ||
-       virtual_block_idx.y >= compVolumeParameter.volume_dim.y ||
-       virtual_block_idx.z >= compVolumeParameter.volume_dim.z ){
-        scalar = 0.f;
-        return 1;
+    if(sample_pos.x < 0 || sample_pos.y < 0 || sample_pos.z < 0 ||
+        sample_pos.x > compVolumeParameter.volume_dim.x ||
+        sample_pos.y > compVolumeParameter.volume_dim.y ||
+        sample_pos.z > compVolumeParameter.volume_dim.z ){
+//        scalar = 0.f;
+        return -1;
     }
+    int3 virtual_block_idx=make_int3(sample_pos / compVolumeParameter.no_padding_block_length);
+
     virtual_block_idx = virtual_block_idx / lod_t;
     int3 block_dim=(compVolumeParameter.block_dim+lod_t-1)/lod_t;
     size_t flat_virtual_block_idx = virtual_block_idx.z * block_dim.x * block_dim.y
@@ -172,7 +172,7 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
     float sample_scalar         = 0.f;
     float3 lod_sample_start_pos = last_ray_start_pos;
     ray_direction               = normalize(ray_direction);
-
+    float last_scalar           = sample_scalar;
     for(;i<steps;i++){
         int cur_lod=EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
         int lod_t = IntPow(2,cur_lod);
@@ -188,10 +188,16 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
             intermediate_result[image_idx] = color;
             return;
         }
+        else if(flag == -1){
+            break;
+        }
 
         if(sample_scalar > 0.f){
-            float4 sample_color = tex1D<float4>(transfer_func,sample_scalar);
+            float4 sample_color = tex2D<float4>(preInt_transfer_func,last_scalar,sample_scalar);
+
             if(sample_color.w > 0.f){
+                sample_color.w *= 0.5f + 1.f/(cur_lod+2.f);
+                last_scalar=sample_scalar;
                 auto shading_color = make_float4(PhongShading(cur_lod,lod_t,missed_blocks,
                                                   ray_sample_pos / compVolumeParameter.volume_space,
                                                   make_float3(sample_color),
@@ -205,12 +211,12 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
 
         ray_sample_pos = lod_sample_start_pos+ (i+1-lod_steps)*ray_direction * cudaOffCompRenderParameter.step * lod_t;
     }
-    if(i >= steps || color.w > 0.99f){
+//    if(i >= steps || color.w > 0.99f){
         color.w=1.f;
         intermediate_result[image_idx] = color;
         color_image[image_idx]         = RGBAFloatToUInt(color);
 //        color_image[image_idx]         = RGBAFloatToUInt(make_float4(ray_sample_pos/compVolumeParameter.volume_board,1.f));
-    }
+//    }
 }
 
 __device__ float3 PhongShading(int lod,int lod_t,stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,
@@ -414,6 +420,7 @@ namespace CUDAOffRenderer{
         for(auto& block:v){
             h_missed_blocks.insert(block);
         }
+        stdgpu::unordered_set<int4,Hash_Int4>::destroyDeviceObject(d_missed_blocks);
     }
     void GetRenderImage(uint8_t *data)
     {
