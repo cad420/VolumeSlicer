@@ -22,7 +22,7 @@ VideoCaptureImpl::VideoCaptureImpl(const char *filename, int width, int height, 
 }
 void VideoCaptureImpl::AddFrame(const uint8_t *pixels)
 {
-    cv::Mat image(width,height,CV_8UC3,const_cast<uint8_t*>(pixels));
+    cv::Mat image(height,width,CV_8UC3,const_cast<uint8_t*>(pixels));
     output_video.write(image);
 }
 VideoCaptureImpl::~VideoCaptureImpl()
