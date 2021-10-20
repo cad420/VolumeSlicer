@@ -6,7 +6,9 @@
 #define VOLUMESLICER_OPENGL_COMP_RENDER_IMPL_HPP
 
 #include <VolumeSlicer/render.hpp>
-#include "Render/wgl_wrap.hpp"
+//#include "Render/wgl_wrap.hpp"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 VS_START
 
 
@@ -44,11 +46,12 @@ private:
     void fetchBlocks();
 
 private:
-    void setCurrentCtx(){wglMakeCurrent(window_handle,gl_context);}
+    void setCurrentCtx(){glfwMakeContextCurrent(window);}
 private:
     Image<uint32_t> image;
-    HDC window_handle;
-    HGLRC gl_context;
+//    HDC window_handle;
+//    HGLRC gl_context;
+    GLFWwindow* window;
     int window_w,window_h;
 
 };

@@ -2,6 +2,7 @@ include(${PROJECT_SOURCE_DIR}/third_party/spdlog.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/glm.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/VolumeCompression.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/stdgpu.cmake)
+include(${PROJECT_SOURCE_DIR}/third_party/glfw.cmake)
 find_package(CUDA REQUIRED)
 #find_package(CUDAToolkit REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -34,11 +35,12 @@ list(
         Common/library.cpp
         Common/library_reposity.cpp
         Common/plugin_loader.cpp
-        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
-        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
+#        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
+#        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
+        ${PROJECT_SOURCE_DIR}/third_party/glad/src/glad.c
 )
 add_library(VS_CORE
-#        SHARED
+        SHARED
         ${VS_SRCS})
 
 
@@ -53,8 +55,8 @@ target_include_directories(VS_CORE
         ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
-#        ${PROJECT_SOURCE_DIR}/third_party/glad/include
+#        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
+        ${PROJECT_SOURCE_DIR}/third_party/glad/include
         )
 
 target_link_libraries(VS_CORE
@@ -70,6 +72,7 @@ target_link_libraries(VS_CORE
         OpenMP::OpenMP_CXX
 #        CUDA::nvrtc
         stdgpu::stdgpu
+        glfw
         )
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)

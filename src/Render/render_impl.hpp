@@ -10,8 +10,7 @@
 #include<VolumeSlicer/frame.hpp>
 
 #include"Render/shader_program.hpp"
-
-#include<Windows.h>
+#include <GLFW/glfw3.h>
 VS_START
 
 
@@ -66,10 +65,12 @@ private:
     void bindShaderUniform();
     void bindTextureUnit();
     void setSlice();
+    void setCurrentCtx(){
+        glfwMakeContextCurrent(window);
+    }
 private:
     //wgl window
-    HDC window_handle;
-    HGLRC gl_context;
+    GLFWwindow * window;
     uint32_t window_width,window_height;
 
     //volume

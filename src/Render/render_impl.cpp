@@ -10,8 +10,6 @@
 #include "Common/gl_helper.hpp"
 #include "Render/render_impl.hpp"
 #include "Render/transfer_function_impl.hpp"
-#include "Render/wgl_wrap.hpp"
-#define WGL_NV_gpu_affinity
 
 
 VS_START
@@ -116,7 +114,7 @@ void MultiVolumeRender::SetVisibleZ(float z0, float z1) noexcept {
 }
 
 void MultiVolumeRender::SetSlicer(std::shared_ptr<Slicer> slicer) noexcept {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     this->slicer=slicer;
 //    this->slice_visible=true;
     setSlice();
@@ -124,8 +122,8 @@ void MultiVolumeRender::SetSlicer(std::shared_ptr<Slicer> slicer) noexcept {
 
 void MultiVolumeRender::resize(int w, int h) noexcept{
     if(w>0 && h>0 && w<MAX_SLICE_W && h<MAX_SLICE_H){
-        HWND window=WindowFromDC(this->window_handle);
-        MoveWindow(window,0,0,w,h,false);
+//        HWND window=WindowFromDC(this->window_handle);
+//        MoveWindow(window,0,0,w,h,false);
         this->window_width=w;
         this->window_height=h;
         glViewport(0,0,w,h);
@@ -134,14 +132,25 @@ void MultiVolumeRender::resize(int w, int h) noexcept{
 }
 
 void MultiVolumeRender::initGL() {
-    auto ins=GetModuleHandle(NULL);
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_real_distribution<float> dist(0.f, 1.f);
-    std::string idx=std::to_string(dist(rng));
-    HWND window=create_window(ins,("wgl_invisable"+idx).c_str(),window_width,window_height);
-    this->window_handle=GetDC(window);
-    this->gl_context=create_opengl_context(this->window_handle);
+    if (glfwInit() == GLFW_FALSE)
+    {
+        std::cout << "Failed to init GLFW" << std::endl;
+        return;
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, true);
+    window=glfwCreateWindow(window_width,window_height,"HideWindow",nullptr, nullptr);
+    if(window==nullptr){
+        throw std::runtime_error("Create GLFW window failed.");
+    }
+    setCurrentCtx();
+    glfwHideWindow(window);
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
+        throw std::runtime_error("GLAD failed to load opengl api");
+    }
+
     glEnable(GL_DEPTH_TEST);
     spdlog::info("successfully init OpenGL context.");
 }
@@ -191,7 +200,7 @@ void MultiVolumeRender::bindTextureUnit() {
 }
 
 void MultiVolumeRender::render() noexcept {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
 //    spdlog::info("{0}",__FUNCTION__ );
     setSlice();
     bindTextureUnit();
@@ -301,7 +310,7 @@ void MultiVolumeRender::RenderSlice() noexcept {
 }
 
 void MultiVolumeRender::setVolumeBoard() {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     float volume_origin_x=0.f-0.5f;
     float volume_origin_y=0.f-0.5f;
     float volume_origin_z=0.f-0.5f;
@@ -380,7 +389,7 @@ void MultiVolumeRender::setVolumeBoard() {
 }
 
 void MultiVolumeRender::setVisibleBoard() {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     float v_x0=x0*volume_board_x;
     float v_x1=x1*volume_board_x;
     float v_y0=y0*volume_board_y;
@@ -432,7 +441,7 @@ void MultiVolumeRender::setVisibleBoard() {
 }
 
 void MultiVolumeRender::setPosFrameBuffer() {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
 
     glDeleteFramebuffers(1,&raycast_pos_fbo);
     glDeleteRenderbuffers(1,&raycast_pos_rbo);
@@ -488,7 +497,7 @@ void MultiVolumeRender::setPosFrameBuffer() {
 }
 
 void MultiVolumeRender::setScreenQuad() {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     screen_quad_vertices={
             -1.0f,  1.0f,  0.0f, 1.0f,
             -1.0f, -1.0f,  0.0f, 0.0f,
@@ -514,7 +523,7 @@ void MultiVolumeRender::setScreenQuad() {
 }
 
 void MultiVolumeRender::setShader() {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     this->slice_render_shader=std::make_unique<Shader>(
             "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\slice_render_v.glsl",
             "C:\\Users\\wyz\\projects\\VolumeSlicer\\src\\Render\\shader\\slice_render_f.glsl"
@@ -535,7 +544,7 @@ void MultiVolumeRender::setShader() {
 }
 
 void MultiVolumeRender::SetTransferFunction(TransferFunc &&tf) noexcept {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     TransferFuncImpl tf_impl(tf);
 
     glGenTextures(1,&transfer_func_tex);
@@ -560,7 +569,7 @@ void MultiVolumeRender::SetTransferFunction(TransferFunc &&tf) noexcept {
     GL_CHECK
 }
 void MultiVolumeRender::SetTransferFunc1D(float *tf,int dim) noexcept{
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     if(!transfer_func_tex){
         glGenTextures(1,&transfer_func_tex);
         glBindTexture(GL_TEXTURE_1D,transfer_func_tex);
@@ -574,7 +583,7 @@ void MultiVolumeRender::SetTransferFunc1D(float *tf,int dim) noexcept{
 
 }
 auto MultiVolumeRender::GetFrame() noexcept -> Frame {
-    wglMakeCurrent(window_handle,gl_context);
+    setCurrentCtx();
     Frame frame;
     frame.width=window_width;
     frame.height=window_height;
@@ -691,9 +700,10 @@ void MultiVolumeRender::setSlice() {
         glDeleteTextures(1,&slice_color_tex);
         glDeleteTextures(1,&slice_pos_tex);
 
-        wglDeleteContext(gl_context);
-        auto window=WindowFromDC(window_handle);
-        ReleaseDC(window,window_handle);
+        glfwDestroyWindow(window);
+//        wglDeleteContext(gl_context);
+//        auto window=WindowFromDC(window_handle);
+//        ReleaseDC(window,window_handle);
 //        DestroyWindow(window);
 
     }
