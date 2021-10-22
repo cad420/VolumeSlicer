@@ -73,7 +73,7 @@ void LargeVolumeVisGUI::init(const char * config_file) {
     //todo replace 0 with iGPU
     SetCUDACtx(0);
 
-    PluginLoader::LoadPlugins("./plugins");
+//    PluginLoader::LoadPlugins("./plugins");
 
     initSDL();
 
@@ -88,12 +88,14 @@ void LargeVolumeVisGUI::show() {
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
         //camera pos according to volume dim count in voxel
-        static control::FPSCamera fpsCamera({4.5f,7.5f,10.f});
+        static control::FPSCamera fpsCamera({4.9f,5.85f,5.93f});
         static bool right_mouse_press;
         while(SDL_PollEvent(&event)){
             switch(event.type){
                 case SDL_QUIT:{
                     exit=true;
+                    auto pos=fpsCamera.getCameraPos();
+                    LOG_ERROR("camera pos {0} {1} {2}",pos.x,pos.y,pos.z);
                     break;
                 }
                 case SDL_WINDOWEVENT:{
@@ -105,8 +107,13 @@ void LargeVolumeVisGUI::show() {
                 }
                 case SDL_KEYDOWN:{
                     switch (event.key.keysym.sym) {
-                        case SDLK_ESCAPE:{exit=true;break;}
-                        case SDLK_LCTRL:{;break;}
+                        case SDLK_ESCAPE:{exit=true;
+                            auto pos=fpsCamera.getCameraPos();
+                            LOG_ERROR("camera pos {0} {1} {2}",pos.x,pos.y,pos.z);
+                            break;}
+                        case SDLK_LCTRL:{
+//                            motion=true;
+                            break;}
                         case SDLK_a:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Left,0.0001);motion=true;break;}
                         case SDLK_d:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Right,0.0001);motion=true;break;}
                         case SDLK_w:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Forward,0.0001);motion=true;break;}
@@ -115,7 +122,6 @@ void LargeVolumeVisGUI::show() {
                         case SDLK_e:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Bottom,0.0001);motion=true;break;}
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
-
 
                             break;
                         }
@@ -130,7 +136,7 @@ void LargeVolumeVisGUI::show() {
                 case SDL_KEYUP:{
                     switch (event.key.keysym.sym) {
                         case SDLK_LCTRL:{
-
+//                            motion=false;
                             break;
                         }
                     }
@@ -201,7 +207,7 @@ void LargeVolumeVisGUI::show() {
     };
     SDL_EXPR(sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED));
     SDL_Rect rect{0,0,(int)window_w,(int)window_h};
-    SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
+    SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_ABGR8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
     SDL_Texture* low_texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w/2,window_h/2);
     SDL_CHECK
     decltype(SDL_GetTicks()) cur_frame_t;
@@ -213,37 +219,38 @@ void LargeVolumeVisGUI::show() {
         process_event();
 
 
-        if(motion || motioned){
-            if(motion)
-                motioned=true;
-            else
-                motioned=false;
-            interval=66;
-            comp_volume_renderer->resize(window_w/2,window_h/2);
-            comp_volume_renderer->SetStep(base_space*0.5,4000);
-            comp_volume_renderer->render();
-            SDL_UpdateTexture(low_texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w *2);
-            SDL_RenderClear(sdl_renderer);
-            SDL_RenderCopy(sdl_renderer, low_texture, nullptr, &rect);
-            SDL_RenderPresent(sdl_renderer);
-
-        }
-        else{
+//        if(motion || motioned){
+//            if(motion)
+//                motioned=true;
+//            else
+//                motioned=false;
+//            interval=66;
+//            comp_volume_renderer->resize(window_w/2,window_h/2);
+//            comp_volume_renderer->SetStep(base_space*0.5,4000);
+//            comp_volume_renderer->render();
+//            SDL_UpdateTexture(low_texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w *2);
+//            SDL_RenderClear(sdl_renderer);
+//            SDL_RenderCopy(sdl_renderer, low_texture, nullptr, &rect);
+//            SDL_RenderPresent(sdl_renderer);
+//
+//        }
+//        else{
             motioned=false;
-            interval=750;
+            interval=100;
             comp_volume_renderer->resize(window_w,window_h);
-            comp_volume_renderer->SetStep(base_space*0.3,10000);
+            comp_volume_renderer->SetStep(base_space*0.3,8000);
             comp_volume_renderer->render();
             SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w * 4);
             SDL_RenderClear(sdl_renderer);
             SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
             SDL_RenderPresent(sdl_renderer);
-        }
+//        }
 //        render_imgui();
         SDL_CHECK
         while(SDL_GetTicks()<cur_frame_t+interval){
         }
     }
+
 }
 void LargeVolumeVisGUI::render_imgui() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -320,18 +327,32 @@ void LargeVolumeVisGUI::initRendererResource() {
     this->comp_volume->SetSpaceY(volume_space_y);
     this->comp_volume->SetSpaceZ(volume_space_z);
 
-    this->comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w, window_h);
+//    this->comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w, window_h);
+    this->comp_volume_renderer=OpenGLCompVolumeRenderer::Create(window_w,window_h);
     this->comp_volume_renderer->SetVolume(comp_volume);
 
 
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
-    tf.points.emplace_back(25,std::array<double,4>{0.1,0.0,0.0,0.0});
-    tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.9});
-    tf.points.emplace_back(64,std::array<double,4>{1.0,0.75,0.7,0.9});
-    tf.points.emplace_back(224,std::array<double,4>{1.0,0.85,0.5,0.9});
-    tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,0.8,1.0});
+//    tf.points.emplace_back(25,std::array<double,4>{0.1,0.0,0.0,0.0});
+//    tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.0});
+    tf.points.emplace_back(74,std::array<double,4>{0.0,0.0,0.0,0.0});
+    tf.points.emplace_back(127,std::array<double,4>{0.75,0.75,0.75,0.6});
+    tf.points.emplace_back(128,std::array<double,4>{1.0,1.0,0.0,1.0});
+    tf.points.emplace_back(255,std::array<double,4>{1.0,0.0,0.0,1.0});
     this->comp_volume_renderer->SetTransferFunc(std::move(tf));
+
+    CompRenderPolicy policy;
+    policy.lod_dist[0]=0.6;
+    policy.lod_dist[1]=1.2;
+    policy.lod_dist[2]=2.4;
+    policy.lod_dist[3]=4.8;
+    policy.lod_dist[4]=9.6;
+    policy.lod_dist[5]=19.2;
+    policy.lod_dist[6]=std::numeric_limits<double>::max();
+    policy.cdf_value_file="chebyshev_dist_mouse_cdf_config.json";
+//    policy.volume_value_file="volume_value_mouse_cdf_config.json";
+    this->comp_volume_renderer->SetRenderPolicy(policy);
 }
 
 

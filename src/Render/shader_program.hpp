@@ -14,7 +14,7 @@
 #include<glm/glm.hpp>
 
 #ifdef _WINDOWS
-#include<glad/wgl.h>
+#include<glad/glad.h>
 #else
 #include<glad/glad.h>
 #endif
@@ -44,6 +44,9 @@ VS_START
         void setMat2(const std::string& name,const glm::mat2& mat) const;
         void setMat3(const std::string& name,const glm::mat3& mat) const;
         void setMat4(const std::string& name,const glm::mat4& mat) const;
+        void setUIArray(const std::string& name,uint32_t* data,int count);
+        void setFloatArray(const std::string& name,float* data,int count);
+        void setIntArray(const std::string& name,int* data,int count);
         void checkCompileErrors(GLuint id,std::string type);
     };
 
@@ -267,9 +270,20 @@ VS_START
         if (geometryShader != nullptr)
             glDeleteShader(gShader);
     }
+    inline void Shader::setUIArray(const std::string &name, uint32_t *data, int count)
+    {
+        glUniform1uiv(glGetUniformLocation(ID,name.c_str()),count,data);
+    }
+    inline void Shader::setFloatArray(const std::string &name, float *data, int count)
+    {
+        glUniform1fv(glGetUniformLocation(ID,name.c_str()),count,data);
+    }
+    inline void Shader::setIntArray(const std::string &name, int *data, int count)
+    {
+        glUniform1iv(glGetUniformLocation(ID,name.c_str()),count,data);
+    }
 
-
-VS_END
+    VS_END
 
 
 #endif //NEURONVISUALIZATIONGL_SHADER_PROGRAM_H

@@ -1,9 +1,11 @@
 //
 // Created by wyz on 2021/7/21.
 //
-#include "volume_cache_impl.hpp"
+#include "cuda_volume_cache_impl.hpp"
 #include "Common/cuda_utils.hpp"
 #include <iostream>
+#include <VolumeSlicer/volume_cache.hpp>
+
 VS_START
 
 std::unique_ptr<CUDAVolumeBlockCache> CUDAVolumeBlockCache::Create(CUcontext ctx) {
@@ -241,5 +243,4 @@ CUDAVolumeBlockCacheImpl::~CUDAVolumeBlockCacheImpl() {
 
 
 VS_END
-
 

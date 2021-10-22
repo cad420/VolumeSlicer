@@ -197,7 +197,7 @@ class Image<Vec<T,len>>{
 };
 
 template<>
-class Image<Color4b>{
+class VS_EXPORT Image<Color4b>{
     struct UnInit{
 
     };

@@ -13,7 +13,8 @@ list(
         Slice/slice_impl.cpp
         Volume/volume_impl.cpp
         Volume/block_loader.cpp
-        Volume/volume_cache_impl.cpp
+        Volume/cuda_volume_cache_impl.cpp
+        Volume/opengl_volume_cache_impl.cpp
         Volume/cpu_volume_cache_impl.cpp
         Slice/volume_sampler_impl.cpp
         Slice/raw_volume_sample.cu

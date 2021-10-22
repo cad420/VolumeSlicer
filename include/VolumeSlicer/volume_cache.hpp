@@ -71,7 +71,11 @@ public:
 
 class VS_EXPORT OpenGLVolumeBlockCache: public VolumeBlockCache{
 public:
+    OpenGLVolumeBlockCache() =default;
 
+    static std::unique_ptr<OpenGLVolumeBlockCache> Create();
+
+    virtual auto GetOpenGLTextureHandles() -> std::vector<uint32_t> = 0;
 };
 
 template <typename Block3DArray>

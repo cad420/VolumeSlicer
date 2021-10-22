@@ -101,6 +101,9 @@ public:
 
     virtual void clear() = 0;
 };
+struct RawRenderPolicy{
+
+};
 class VS_EXPORT IRawVolumeRenderer: public IVolumeRenderer{
 public:
     virtual void SetVolume(std::shared_ptr<RawVolume> raw_volume) = 0;

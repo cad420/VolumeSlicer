@@ -1468,4 +1468,7 @@ struct Hash_Int4{
 inline __device__ __host__ bool operator==(int4 const& v1,int4 const& v2){
     return v1.x==v2.x && v1.y==v2.y && v1.z==v2.z && v1.w==v2.w;
 }
+inline __device__ __host__ bool operator!=(int3 const& v1,int3 const& v2){
+    return v1.x!=v2.x || v1.y!=v2.y || v1.z!=v2.z;
+}
 #endif
