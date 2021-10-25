@@ -69,7 +69,7 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     compVolumeParameter.block_length            = block_length[0];
     compVolumeParameter.padding                 = block_length[1];
     compVolumeParameter.no_padding_block_length = block_length[0]-2*block_length[1];
-    compVolumeParameter.voxel                   = 1.f;
+    compVolumeParameter.voxel                   = 0.2f;
     compVolumeParameter.block_dim               = make_int3(block_dim[0],block_dim[1],block_dim[2]);
     compVolumeParameter.volume_texture_shape    = make_int4(1024,1024,1024,12);
     compVolumeParameter.volume_dim              = make_int3(comp_volume->GetVolumeDimX(),
@@ -85,7 +85,7 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     this->step                                  = (std::min)({comp_volume->GetVolumeSpaceX(),
                                                                     comp_volume->GetVolumeSpaceY(),
                                                                     comp_volume->GetVolumeSpaceZ()})
-                                                  * 0.3f;
+                                                  * 0.2f;
     auto texes = this->volume_block_cache->GetCUDATextureObjects();
     CUDAOffRenderer::SetCUDATextureObject(texes.data(),texes.size());
 }
@@ -115,10 +115,10 @@ void CUDAOffScreenCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
     CUDAOffRenderer::UploadPreIntTransferFunc(tf_impl.getPreIntTransferFunc().data());
 
     CUDAOffRenderer::ShadingParameter shadingParameter;
-    shadingParameter.ka        = 0.25f;
-    shadingParameter.kd        = 0.5f;
-    shadingParameter.ks        = 0.36f;
-    shadingParameter.shininess = 100.f;
+    shadingParameter.ka        = 0.35f;
+    shadingParameter.kd        = 0.55f;
+    shadingParameter.ks        = 0.2f;
+    shadingParameter.shininess = 48.f;
     CUDAOffRenderer::UploadShadingParameter(shadingParameter);
 }
 void CUDAOffScreenCompVolumeRendererImpl::render()
@@ -173,7 +173,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
                 if(volume_block.valid){
                     volume_block_cache->UploadVolumeBlock(volume_block.index,
                                                           volume_block.block_data->GetDataPtr(),
-                                                          volume_block.block_data->GetSize());
+                                                          volume_block.block_data->GetSize(),true);
                     m[volume_block.index] += 1;
                     volume_block.Release();
                     missed_blocks.erase(block);
@@ -222,6 +222,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render()
                  turn,dummy_missed_blocks.size(),missed_blocks.size(),dummy_missed_blocks.size()-missed_blocks.size());
     }
     CUDAOffRenderer::GetRenderImage(reinterpret_cast<uint8_t*>(image.GetData()));
+    spdlog::set_level(spdlog::level::info);
     LOG_INFO("CUDA comp-volume render finish.");
     LOG_INFO("Total upload block set's size is: {0}.",m.size());
     LOG_INFO("Print block upload info:");

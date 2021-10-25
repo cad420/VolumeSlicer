@@ -47,5 +47,9 @@ target_link_libraries(
         VS_CORE
         ${OpenCV_LIBS}
 )
-
+target_compile_features(
+        OffScreenVolumeRenderer
+        PRIVATE
+        cxx_std_17
+)
 add_subdirectory(test)

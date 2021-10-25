@@ -20,7 +20,7 @@ __constant__ CUDAOffCompRenderParameter cudaOffCompRenderParameter;
 __constant__ CompVolumeParameter        compVolumeParameter;
 __constant__ ShadingParameter           shadingParameter;
 __constant__ float3* ray_directions;//Image<Vec4> is not valid in cuda kernel
-__constant__ float3* ray_start_pos;
+__constant__ float4* ray_start_pos;
 __constant__ float3* ray_stop_pos;
 __constant__ float4* intermediate_result;
 __constant__ uint*   color_image;
@@ -30,7 +30,7 @@ __constant__ cudaTextureObject_t cache_volumes[20];
 __constant__ cudaTextureObject_t transfer_func;
 __constant__ cudaTextureObject_t preInt_transfer_func;
 float3* d_ray_directions      = nullptr;
-float3* d_ray_start_pos       = nullptr;
+float4* d_ray_start_pos       = nullptr;
 float3* d_ray_stop_pos        = nullptr;
 float4* d_intermediate_result = nullptr;
 uint*   d_color_image         = nullptr;
@@ -45,7 +45,7 @@ cudaArray* preInt_tf          = nullptr;
 
 
 __device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& scalar,
-                             stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks);
+                             stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,bool write = true);
 
 __device__ float3 PhongShading(int lod,int lod_t,stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,
                                float3 const& sample_pos,
@@ -84,22 +84,25 @@ __global__ void CUDAGenRays(){
 
     if(IsIntersected(intersect_t.x,intersect_t.y)){
         if(intersect_t.x>0.f){
-            ray_start_pos[image_idx]=cudaOffCompRenderParameter.camera_pos+intersect_t.x*pixel_view_direction;
+            ray_start_pos[image_idx]=make_float4(cudaOffCompRenderParameter.camera_pos+intersect_t.x*pixel_view_direction,0);
         }
         else{
-            ray_start_pos[image_idx]=cudaOffCompRenderParameter.camera_pos;
+            ray_start_pos[image_idx]=make_float4(cudaOffCompRenderParameter.camera_pos,0);
         }
         ray_stop_pos[image_idx]=cudaOffCompRenderParameter.camera_pos+intersect_t.y*pixel_view_direction;
     }
     else{
-        ray_stop_pos[image_idx]=ray_start_pos[image_idx]=make_float3(0.f);
+        ray_start_pos[image_idx]=make_float4(0.f);
+        ray_stop_pos[image_idx]=make_float3(0.f);
     }
 //    color_image[image_idx] = RGBAFloatToUInt(make_float4(ray_stop_pos[image_idx]/compVolumeParameter.volume_board,1.f));
 
 }
-
+__device__ int3 GetVirtualBlockIndex(const float3& sample_pos,int lod_t){
+    return make_int3(sample_pos / (compVolumeParameter.no_padding_block_length*lod_t));
+}
 __device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& scalar,
-                             stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks){
+                             stdgpu::unordered_set<int4,Hash_Int4>& missed_blocks,bool write){
     if(sample_pos.x < 0 || sample_pos.y < 0 || sample_pos.z < 0 ||
         sample_pos.x > compVolumeParameter.volume_dim.x ||
         sample_pos.y > compVolumeParameter.volume_dim.y ||
@@ -119,7 +122,12 @@ __device__ int VirtualSample(int lod,int lod_t,const float3& sample_pos,float& s
 
     uint  physical_block_flag = (physical_block_idx.w>>16)&(0x0000ffff);
     if(physical_block_flag==0){
-        missed_blocks.insert(make_int4(virtual_block_idx,lod));
+//        if(lod==6){
+//            printf("virtual block idx %d %d %d\n",virtual_block_idx.x,virtual_block_idx.y,virtual_block_idx.z);
+//            printf("sample_pos %.2f %.2f %.2f\n",sample_pos.x,sample_pos.y,sample_pos.z );
+//        }
+        if(write)
+            missed_blocks.insert(make_int4(virtual_block_idx,lod));
         scalar = 0.f;
         return 0;
     }
@@ -148,7 +156,11 @@ __device__ int IntPow(int x,int y){
         ans *= x;
     return ans;
 }
-
+__device__ float CalcDistanceFromCameraToBlockCenter(const float3& sample_pos,int lod_t){
+    int3 virtual_block_idx = make_int3(sample_pos/(compVolumeParameter.no_padding_block_length*lod_t));
+    float3 virtual_block_center = make_float3(virtual_block_idx+0.5) * lod_t*compVolumeParameter.no_padding_block_length;
+    return length(virtual_block_center*compVolumeParameter.volume_space-cudaOffCompRenderParameter.camera_pos);
+}
 __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_blocks){
     int image_x   = blockIdx.x*blockDim.x+threadIdx.x;
     int image_y   = blockIdx.y*blockDim.y+threadIdx.y;
@@ -159,46 +171,58 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
 //    return;
     float4 color = intermediate_result[image_idx];
     if(color.w > 0.99f) return;
-    float3 last_ray_start_pos = ray_start_pos[image_idx];
+    float4 last_ray_start_pos_ = ray_start_pos[image_idx];
+    float3 last_ray_start_pos = make_float3(last_ray_start_pos_);
     float3 last_ray_stop_pos  = ray_stop_pos[image_idx];
     float3 ray_direction      = last_ray_stop_pos - last_ray_start_pos;
     float3 ray_sample_pos     = last_ray_start_pos;
 
     int i                       = 0;
     int lod_steps               = 0;
-    int last_lod                = EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
+    int last_lod                = last_ray_start_pos_.w;
     int last_lod_t              = IntPow(2,last_lod);
     int steps                   = length(ray_direction)/cudaOffCompRenderParameter.step/last_lod_t;
     float sample_scalar         = 0.f;
     float3 lod_sample_start_pos = last_ray_start_pos;
     ray_direction               = normalize(ray_direction);
     float last_scalar           = sample_scalar;
+//    int3 last_virtual_block_idx = GetVirtualBlockIndex(last_ray_start_pos,last_lod_t);
+//    bool  record_lod_change     = false;
     for(;i<steps;i++){
-        int cur_lod=EvaluateLod(length(ray_sample_pos-cudaOffCompRenderParameter.camera_pos));
-        int lod_t = IntPow(2,cur_lod);
-        if(cur_lod > last_lod){
-            lod_sample_start_pos=ray_sample_pos;
-            last_lod = cur_lod;
-            lod_steps = i;
-        }
+        int cur_lod,cur_lod_t,flag;
 
-        int flag = VirtualSample(cur_lod,lod_t,ray_sample_pos/compVolumeParameter.volume_space,sample_scalar,missed_blocks);
-        if(flag == 0 ){
-            ray_start_pos[image_idx]       = ray_sample_pos;
-            intermediate_result[image_idx] = color;
-            return;
-        }
-        else if(flag == -1){
-            break;
-        }
+            cur_lod=EvaluateLod(CalcDistanceFromCameraToBlockCenter(ray_sample_pos/compVolumeParameter.volume_space,last_lod_t));
+            cur_lod_t = IntPow(2,cur_lod);
+            if(cur_lod>6) break;
+            if(cur_lod > last_lod){
+//                record_lod_change = true;
+                lod_sample_start_pos=ray_sample_pos;
+                last_lod = cur_lod;
+                last_lod_t = cur_lod_t;
+                lod_steps = i;
+
+            }
+
+            flag = VirtualSample(cur_lod,cur_lod_t,ray_sample_pos/compVolumeParameter.volume_space,sample_scalar,missed_blocks);
+            if(flag == 0 ){
+                ray_start_pos[image_idx]       = make_float4(ray_sample_pos,cur_lod);
+                intermediate_result[image_idx] = color;
+                return;
+            }
+            else if(flag == -1){
+                break;
+            }
+
+
+
 
         if(sample_scalar > 0.f){
             float4 sample_color = tex2D<float4>(preInt_transfer_func,last_scalar,sample_scalar);
 
             if(sample_color.w > 0.f){
-                sample_color.w *= 0.5f + 1.f/(cur_lod+2.f);
+                sample_color.w *= 0.5f + 1.f/(cur_lod*cur_lod+2.f);
                 last_scalar=sample_scalar;
-                auto shading_color = make_float4(PhongShading(cur_lod,lod_t,missed_blocks,
+                auto shading_color = make_float4(PhongShading(cur_lod,cur_lod_t,missed_blocks,
                                                   ray_sample_pos / compVolumeParameter.volume_space,
                                                   make_float3(sample_color),
                                                   ray_direction),sample_color.w);
@@ -209,11 +233,16 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4,Hash_Int4> missed_bloc
             }
         }
 
-        ray_sample_pos = lod_sample_start_pos+ (i+1-lod_steps)*ray_direction * cudaOffCompRenderParameter.step * lod_t;
+        ray_sample_pos = lod_sample_start_pos+ (i+1-lod_steps)*ray_direction * cudaOffCompRenderParameter.step * cur_lod_t;
     }
 //    if(i >= steps || color.w > 0.99f){
         color.w=1.f;
+        double gamma = 1.0/2.2;
+        color.x = powf(color.x,gamma);
+        color.y = powf(color.y,gamma);
+        color.z = powf(color.z,gamma);
         intermediate_result[image_idx] = color;
+
         color_image[image_idx]         = RGBAFloatToUInt(color);
 //        color_image[image_idx]         = RGBAFloatToUInt(make_float4(ray_sample_pos/compVolumeParameter.volume_board,1.f));
 //    }
@@ -259,8 +288,8 @@ void CreateDeviceRenderImages(int w,int h){
         if(d_ray_start_pos){
             CUDA_RUNTIME_API_CALL(cudaFree(d_ray_start_pos));
         }
-        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_ray_start_pos,sizeof(float3)*d_image_w*d_image_h));
-        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(ray_start_pos,&d_ray_start_pos,sizeof(float3*)));
+        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_ray_start_pos,sizeof(float4)*d_image_w*d_image_h));
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(ray_start_pos,&d_ray_start_pos,sizeof(float4*)));
     }
     {
         if(d_ray_stop_pos){
@@ -293,7 +322,7 @@ void InitDeviceRenderImages(){
     }
     {
         if(d_ray_start_pos){
-            CUDA_RUNTIME_API_CALL(cudaMemset(d_ray_start_pos,0,sizeof(float3)*d_image_w*d_image_h));
+            CUDA_RUNTIME_API_CALL(cudaMemset(d_ray_start_pos,0,sizeof(float4)*d_image_w*d_image_h));
         }
     }
     {

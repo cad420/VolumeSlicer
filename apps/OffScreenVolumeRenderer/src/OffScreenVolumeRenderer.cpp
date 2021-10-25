@@ -1,4 +1,4 @@
-//
+ //
 // Created by wyz on 2021/9/28.
 //
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -7,6 +7,7 @@
 #include "OffScreenVolumeRenderer.hpp"
 #include "json.hpp"
 #include <fstream>
+#include <filesystem>
 using namespace vs;
 using nlohmann::json;
 static std::shared_ptr<spdlog::logger> logger;
@@ -236,10 +237,17 @@ void OffScreenVolumeRenderer::RenderFrames(const char *config_file)
         renderer->render();
         auto image = renderer->GetImage();
         if(save_image){
-            image.SaveToFile((GetName(output_video_name)+"_frame_"+std::to_string(i)+".jpeg").c_str());
+            if(!std::filesystem::exists("images")){
+                std::filesystem::create_directory("images");
+            }
+            image.SaveToFile(("images/"+GetName(output_video_name)+"_frame_"+std::to_string(i)+".jpeg").c_str());
         }
-        video_capture.AddFrame(reinterpret_cast<uint8_t*>(image.ToImage3b().GetData()));
+        std::cout<<"before"<<" "<<i<<std::endl;
+        auto img = image.ToImage3b();
+        video_capture.AddFrame(reinterpret_cast<uint8_t*>(img.GetData()));
+        std::cout<<"after"<<std::endl;
         timer.stop();
+        spdlog::set_level(spdlog::level::info);
         LogInfo("render frame "+std::to_string(i)+" cost time "+timer.duration().s().fmt());
         //for gpu take a rest
         _sleep(2000);
