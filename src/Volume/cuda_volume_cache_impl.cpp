@@ -54,12 +54,15 @@ void CUDAVolumeBlockCacheImpl::CreateMappingTable(const std::map<uint32_t, std::
 
 }
 
-void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size) {
+void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size,bool device) {
     //upload data to texture
     std::array<uint32_t ,4> pos{INVALID,INVALID,INVALID,INVALID};
     bool cached=getCachedPos(index,pos);
     if(!cached){
-        UpdateCUDATexture3D(data,cu_arrays[pos[3]],block_length,block_length*pos[0],block_length*pos[1],block_length*pos[2]);
+        if(device)
+            UpdateCUDATexture3D(data,cu_arrays[pos[3]],block_length,block_length*pos[0],block_length*pos[1],block_length*pos[2]);
+        else
+            UpdateCUDATexture3D(data,cu_arrays[pos[3]],block_length,block_length,block_length,block_length*pos[0],block_length*pos[1],block_length*pos[2]);
         spdlog::info("Upload block({0},{1},{2},{3}) to CUDA Array({4},{5},{6},{7})",
                      index[0],index[1],index[2],index[3],
                      pos[0],pos[1],pos[2],pos[3]);

@@ -67,7 +67,7 @@ void OpenGLVolumeBlockCacheImpl::CreateMappingTable(const std::map<uint32_t, std
     mapping_table.assign(lod_mapping_table_offset.at(max_lod+1),0);
 
 }
-void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size)
+void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size,bool device)
 {
     //upload data to texture
     std::array<uint32_t ,4> pos{INVALID,INVALID,INVALID,INVALID};
@@ -78,8 +78,14 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
         CUarray cu_array;
         CUDA_DRIVER_API_CALL(cuGraphicsSubResourceGetMappedArray(&cu_array,cu_resources[pos[3]],0,0));
         CUDA_MEMCPY3D m = {0};
-        m.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-        m.srcDevice = (CUdeviceptr)data;
+        if(device){
+            m.srcMemoryType = CU_MEMORYTYPE_DEVICE;
+            m.srcDevice = (CUdeviceptr)data;
+        }
+        else{
+            m.srcMemoryType=CU_MEMORYTYPE_HOST;
+            m.srcHost=data;
+        }
 
         m.dstMemoryType=CU_MEMORYTYPE_ARRAY;
         m.dstArray = cu_array;

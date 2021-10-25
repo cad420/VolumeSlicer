@@ -235,7 +235,7 @@ void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
         if(block.valid){
             assert(block.block_data->GetDataPtr());
 //            cuda_comp_volume_sampler->UploadCUDATexture3D(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
-            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize(),true);
 //            spdlog::info("before release");
             block.Release();
 //            spdlog::info("after release");

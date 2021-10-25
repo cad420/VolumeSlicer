@@ -345,7 +345,7 @@ void CUDACompVolumeRendererImpl::fetchBlocks() {
         auto block=comp_volume->GetBlock(it);
         if(block.valid){
             assert(block.block_data->GetDataPtr());
-            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize(),true);
             block.Release();
         }
     }

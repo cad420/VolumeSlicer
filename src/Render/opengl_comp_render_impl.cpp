@@ -414,7 +414,7 @@ void OpenGLCompVolumeRendererImpl::fetchBlocks() {
         auto block=comp_volume->GetBlock(it);
         if(block.valid){
             assert(block.block_data->GetDataPtr());
-            this->opengl_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+            this->opengl_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize(),true);
             block.Release();
         }
     }

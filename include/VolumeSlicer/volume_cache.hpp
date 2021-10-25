@@ -31,7 +31,7 @@ public:
 
     virtual void CreateMappingTable(const std::map<uint32_t,std::array<uint32_t,3>>&) = 0;
 
-    virtual void UploadVolumeBlock(const std::array<uint32_t,4>&,uint8_t*,size_t) = 0;
+    virtual void UploadVolumeBlock(const std::array<uint32_t,4>&,uint8_t*,size_t,bool device) = 0;
 
     //query if the block is cached
     virtual bool IsCachedBlock(const std::array<uint32_t,4>&) = 0;

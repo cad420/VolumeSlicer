@@ -19,7 +19,7 @@ class OpenGLVolumeBlockCacheImpl: public OpenGLVolumeBlockCache{
 
     void CreateMappingTable(const std::map<uint32_t,std::array<uint32_t,3>>&) override;
 
-    void UploadVolumeBlock(const std::array<uint32_t,4>&,uint8_t*,size_t) override;
+    void UploadVolumeBlock(const std::array<uint32_t,4>&,uint8_t*,size_t,bool device) override;
 
     //query if the block is cached
     bool IsCachedBlock(const std::array<uint32_t,4>&) override;

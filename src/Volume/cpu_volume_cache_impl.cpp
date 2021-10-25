@@ -37,7 +37,7 @@ class CPUVolumeBlockCacheImpl: public CPUVolumeBlockCache<Block3DArray>{
 
     }
 
-    void UploadVolumeBlock(const std::array<uint32_t,4>&,uint8_t*,size_t) override{
+    void UploadVolumeBlock(const std::array<uint32_t,4>&,uint8_t*,size_t,bool device) override{
 
     }
 
