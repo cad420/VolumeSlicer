@@ -20,7 +20,7 @@ void SliceZoomWidget::paintEvent(QPaintEvent *event) {
     frame.height=max_zoom_slicer->GetImageH();
     frame.channels=1;
     frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
-    raw_volume_sampler->Sample(max_zoom_slicer->GetSlice(),frame.data.data());
+    raw_volume_sampler->Sample(max_zoom_slicer->GetSlice(),frame.data.data(),true);
 
     QImage image(frame.data.data(),frame.width,frame.height,QImage::Format::Format_Grayscale8,nullptr,nullptr);
     QImage color_img=image.convertToFormat(QImage::Format_RGBA8888);

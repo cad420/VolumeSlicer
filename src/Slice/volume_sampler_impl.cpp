@@ -10,7 +10,7 @@ VS_START
  * API for RawVolumeSamplerImpl
  */
 
-std::unique_ptr<VolumeSampler> VolumeSampler::CreateVolumeSampler(const std::shared_ptr<RawVolume> & volume) {
+std::unique_ptr <VolumeSampler> VolumeSampler::CreateVolumeSampler(const std::shared_ptr<RawVolume> & volume) {
     return std::make_unique<VolumeSamplerImpl<RawVolume>>(volume);
 }
 VolumeSamplerImpl<RawVolume>::VolumeSamplerImpl(const std::shared_ptr<RawVolume> &volume):raw_volume(volume){
@@ -22,7 +22,7 @@ VolumeSamplerImpl<RawVolume>::VolumeSamplerImpl(const std::shared_ptr<RawVolume>
     spdlog::info("Successfully create raw volume sampler.");
 }
 
-bool VolumeSamplerImpl<RawVolume>::Sample(const Slice &slice, uint8_t *data) {
+bool VolumeSamplerImpl<RawVolume>::Sample(const Slice &slice, uint8_t *data,bool) {
     cuda_raw_volume_sampler->Sample(data,slice,
                                     raw_volume->GetVolumeSpaceX(),
                                     raw_volume->GetVolumeSpaceY(),
@@ -81,7 +81,7 @@ VolumeSamplerImpl<CompVolume>::VolumeSamplerImpl(const std::shared_ptr<CompVolum
 /**
  * to dynamic change space in runtime, space should only get by GetVolumeSpace only in this Sample function.
  */
-bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
+bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data,bool async) {
 
     glm::vec3 origin={slice.origin[0],slice.origin[1],slice.origin[2]};
     glm::vec3 right={slice.right[0],slice.right[1],slice.right[2]};
@@ -125,7 +125,11 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data) {
 
     sendRequests();
 
-    fetchBlocks();
+    do{
+        fetchBlocks(async);
+    }while(!async && !isSampleComplete());
+
+    clearCurrentInfo();
 
     auto &mapping_table = this->cuda_volume_block_cache->GetMappingTable();
     this->cuda_comp_volume_sampler->UploadMappingTable(mapping_table.data(),mapping_table.size());
@@ -216,32 +220,53 @@ void VolumeSamplerImpl<CompVolume>::sendRequests() {
         spdlog::info("send {0} {1} {2} {3}.",it.index[0],it.index[1],it.index[2],it.index[3]);
         comp_volume->SetRequestBlock(it.index);
     }
-    new_need_blocks.clear();
+//    new_need_blocks.clear();
 //    spdlog::info("end of set request");
     for(auto& it:no_need_blocks){
         comp_volume->EraseBlockInRequest(it.index);
         spdlog::info("erase {0} {1} {2} {3}.",it.index[0],it.index[1],it.index[2],it.index[3]);
     }
-    no_need_blocks.clear();
+//    no_need_blocks.clear();
 //    spdlog::info("end of erase");
     comp_volume->StartLoadBlock();//not necessary
 //    spdlog::info("end of {0}",__FUNCTION__);
 }
-
-void VolumeSamplerImpl<CompVolume>::fetchBlocks() {
+void VolumeSamplerImpl<CompVolume>::clearCurrentInfo()
+{
+    new_need_blocks.clear();
+    no_need_blocks.clear();
+}
+void VolumeSamplerImpl<CompVolume>::fetchBlocks(bool async) {
     this->is_sample_complete=true;
-    for(auto& it:current_intersect_blocks){
-        auto block=comp_volume->GetBlock(it.index);
-        if(block.valid){
-            assert(block.block_data->GetDataPtr());
-//            cuda_comp_volume_sampler->UploadCUDATexture3D(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
-            this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize(),true);
-//            spdlog::info("before release");
-            block.Release();
-//            spdlog::info("after release");
+    if(!async){
+        auto tmp = new_need_blocks;
+        for(auto& it:tmp){
+            auto block = comp_volume->GetBlock(it.index);
+            if(block.valid){
+                assert(block.block_data->GetDataPtr());
+                this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize(),true);
+                block.Release();
+                new_need_blocks.erase(it);
+            }
+            else{
+                this->is_sample_complete = false;
+            }
         }
-        else{
-            this->is_sample_complete=false;
+    }
+    else{
+        for(auto& it:current_intersect_blocks){
+            auto block=comp_volume->GetBlock(it.index);
+            if(block.valid){
+                assert(block.block_data->GetDataPtr());
+//            cuda_comp_volume_sampler->UploadCUDATexture3D(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize());
+                this->cuda_volume_block_cache->UploadVolumeBlock(block.index,block.block_data->GetDataPtr(),block.block_data->GetSize(),true);
+//            spdlog::info("before release");
+                block.Release();
+//            spdlog::info("after release");
+            }
+            else{
+                this->is_sample_complete=false;
+            }
         }
     }
 }

@@ -490,7 +490,7 @@ void VolumeSliceGUI::render_zoom_slice()
 
     GL_CHECK
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-    raw_volume_sampler->Sample(slice,raw_sample_frame.data.data());
+    raw_volume_sampler->Sample(slice,raw_sample_frame.data.data(),true);
 
 
 
@@ -540,7 +540,7 @@ void VolumeSliceGUI::render_volume_slice()
 void VolumeSliceGUI::render_node_frame() {
     GL_CHECK
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-    comp_volume_sampler->Sample(node_slice,comp_sample_frame.data.data());
+    comp_volume_sampler->Sample(node_slice,comp_sample_frame.data.data(),false);
 
     glTextureSubImage2D(comp_sample_tex,0,0,0,window_w,window_h,GL_RED,GL_UNSIGNED_BYTE,comp_sample_frame.data.data());
     glBindTextureUnit(0,comp_sample_tex);

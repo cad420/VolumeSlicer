@@ -25,7 +25,7 @@ public:
 
     ~VolumeSamplerImpl() override;
 
-    bool Sample(const Slice& slice,uint8_t* data) override;
+    bool Sample(const Slice& slice,uint8_t* data,bool async) override;
 
 private:
 
@@ -56,7 +56,7 @@ public:
 
     ~VolumeSamplerImpl() override;
     //data is host ptr
-    bool Sample(const Slice& slice,uint8_t* data) override;
+    bool Sample(const Slice& slice,uint8_t* data,bool async) override;
 
 private:
     //set comp_volume's information for member data
@@ -76,7 +76,9 @@ private:
     void sendRequests();
 
     //get blocks from comp_volume which are current need
-    void fetchBlocks();
+    void fetchBlocks(bool async);
+
+    void clearCurrentInfo();
 private:
     void createVirtualBlocks();
     bool isSampleComplete() const;
