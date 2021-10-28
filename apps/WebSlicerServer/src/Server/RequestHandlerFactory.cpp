@@ -18,7 +18,7 @@ namespace remote
 {
 Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const Poco::Net::HTTPServerRequest &request)
 {
-    if (request.getURI() != "/rpc")
+    if (request.getURI().substr(0,4) != "/rpc")
     {
         return new DefaultRequestHandler();
     }

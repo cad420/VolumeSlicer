@@ -16,6 +16,8 @@ namespace remote
 {
 WebSocketRequestHandler::WebSocketRequestHandler()
 {
+    MessageQueue::set_queue_type("slice");
+    message_queue = &MessageQueue::get_instance();
 }
 
 void WebSocketRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request,
@@ -32,8 +34,13 @@ void WebSocketRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
         bool should_close;
 
         WebSocket ws(request, response);
+        std::cout<<"connect websocket uri: "<<request.getURI()<<std::endl;
         auto one_hour = Poco::Timespan(0, 1, 0, 0, 0);
         ws.setReceiveTimeout(one_hour);
+
+        auto handler =[&ws](const uint8_t* data,uint32_t size){
+            ws.sendFrame(data,size,WebSocket::FRAME_BINARY);
+        };
 
         rapidjson::Document doc;
         SetCUDACtx(0);
