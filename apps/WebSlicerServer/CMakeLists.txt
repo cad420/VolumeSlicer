@@ -7,6 +7,9 @@ list(
         src/SlicerServerApplication.cpp
         src/Server/RequestHandlerFactory.cpp
         src/Server/WebSocketRequestHandler.cpp
+        src/RPC/MessageQueue.cpp
+        src/RPC/RPCMethod.cpp
+        src/RPC/SliceService.cpp
 )
 
 add_executable(SlicerServer ${SRCS})
