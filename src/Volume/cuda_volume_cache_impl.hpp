@@ -58,7 +58,9 @@ private:
         std::array<uint32_t,4> pos_index;
         bool valid;
         bool cached;
+        size_t t;
     };
+
 private:
     void createBlockCacheTable();
     void updateMappingTable(const std::array<uint32_t,4>& index,const std::array<uint32_t,4>& pos,bool valid=true);

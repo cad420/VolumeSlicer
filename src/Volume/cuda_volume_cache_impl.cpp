@@ -53,8 +53,9 @@ void CUDAVolumeBlockCacheImpl::CreateMappingTable(const std::map<uint32_t, std::
     mapping_table.assign(lod_mapping_table_offset.at(max_lod+1),0);
 
 }
-
+static size_t count = 0;
 void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size,bool device) {
+
     //upload data to texture
     std::array<uint32_t ,4> pos{INVALID,INVALID,INVALID,INVALID};
     bool cached=getCachedPos(index,pos);
@@ -82,6 +83,7 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
             it.block_index=index;
             it.valid=true;
             it.cached=true;
+            it.t = ++count;
         }
     }
 
@@ -134,6 +136,7 @@ bool CUDAVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 4>
     for(auto& it:block_cache_table){
         if(it.block_index==target && it.cached){
             it.valid=true;
+            it.t = ++count;
             this->updateMappingTable(target,it.pos_index,true);
             return true;
         }
@@ -168,6 +171,7 @@ void CUDAVolumeBlockCacheImpl::createBlockCacheTable() {
                     item.block_index={INVALID,INVALID,INVALID,INVALID};
                     item.valid=false;
                     item.cached=false;
+                    item.t = 0;
                     block_cache_table.push_back(item);
                 }
             }
@@ -206,7 +210,10 @@ void CUDAVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4> 
 }
 
 bool CUDAVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &target, std::array<uint32_t, 4> &pos) {
-    for(const auto& it:block_cache_table){
+    block_cache_table.sort([](const BlockCacheItem& it1,const BlockCacheItem& it2){
+      return it1.t<it2.t;
+    });
+    for( auto& it:block_cache_table){
         if(it.block_index==target && it.cached){
 //            assert(!it.valid);
             spdlog::info("Copy CUDA device memory to CUDA Array which already stored.");

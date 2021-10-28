@@ -104,7 +104,7 @@ void main() {
 //    return;
     vec3 ray_sample_pos = ray_start_pos;
     vec3 lod_sample_start_pos = ray_start_pos;
-    int last_lod = EvaluateLod(length(ray_sample_pos-camera_pos));
+    int last_lod = 0;
     int last_lod_t = PowTwo(last_lod);
     int lod_steps = 0;
     int steps = int(dot(ray_direction,start2end) / step / last_lod_t);
