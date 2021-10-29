@@ -5,6 +5,7 @@
 #include "Server/RequestHandlerFactory.hpp"
 #include <Poco/Net/HTTPServer.h>
 #include <Utils/logger.hpp>
+#include "Manager/ManagerClient.hpp"
 VS_START
 namespace remote
 {
@@ -20,12 +21,18 @@ void SlicerServerApplication::hanldle_option(const std::string &name, const std:
 int SlicerServerApplication::main(const std::vector<std::string> &args)
 {
 
-    std::unique_ptr<Poco::Net::HTTPServer> server = nullptr;
-    Poco::Net::ServerSocket svs(16689);
-    server = std::make_unique<Poco::Net::HTTPServer>(Poco::makeShared<RequestHandlerFactory>(), svs,
-                                                     Poco::makeAuto<Poco::Net::HTTPServerParams>());
-    server->start();
-    LOG_INFO("SlicerServer start at port {0}", 16689);
+    std::unique_ptr<ManagerClient> manager = nullptr;
+    std::string address="127.0.0.1:9876";
+    manager = std::make_unique<ManagerClient>(address);
+
+//    std::unique_ptr<Poco::Net::HTTPServer> server = nullptr;
+//    Poco::Net::ServerSocket svs(16689);
+//    server = std::make_unique<Poco::Net::HTTPServer>(Poco::makeShared<RequestHandlerFactory>(), svs,
+//                                                     Poco::makeAuto<Poco::Net::HTTPServerParams>());
+//    server->start();
+//    LOG_INFO("SlicerServer start at port {0}", 16689);
+
+
     waitForTerminationRequest();
 
     return Application::EXIT_OK;

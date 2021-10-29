@@ -10,6 +10,7 @@ list(
         src/RPC/MessageQueue.cpp
         src/RPC/RPCMethod.cpp
         src/RPC/SliceService.cpp
+        src/Manager/ManagerClient.cpp
 )
 
 add_executable(SlicerServer ${SRCS})
