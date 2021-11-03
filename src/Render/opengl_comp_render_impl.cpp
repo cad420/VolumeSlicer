@@ -123,6 +123,7 @@ void OpenGLCompVolumeRendererImpl::SetCamera(Camera camera) {
 }
 
 void OpenGLCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf) {
+    setCurrentCtx();
     TransferFuncImpl tf_impl(tf);
     if(!transfer_func_tex){
         glGenTextures(1,&transfer_func_tex);
@@ -287,10 +288,11 @@ void OpenGLCompVolumeRendererImpl::resize(int w, int h) {
 }
 
 void OpenGLCompVolumeRendererImpl::clear() {
-
+    setCurrentCtx();
 }
 void OpenGLCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 {
+    setCurrentCtx();
     float lod_dist[10];
     for(int i =0 ;i < 10 ;i++)
         lod_dist[i]=policy.lod_dist[i];
@@ -299,6 +301,7 @@ void OpenGLCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 }
 void OpenGLCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
 {
+    setCurrentCtx();
 
 }
 void OpenGLCompVolumeRendererImpl::SetStep(double step, int steps)
