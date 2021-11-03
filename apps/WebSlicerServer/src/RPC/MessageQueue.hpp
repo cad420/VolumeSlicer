@@ -20,6 +20,7 @@ class MessageQueue{
         Callback callback;
     };
     static void set_queue_type(const std::string& name);
+    static auto get_queue_type()->std::string;
     static MessageQueue& get_instance();
 
     void add_message(const uint8_t* msg,uint32_t size,const Callback& callback);

@@ -7,6 +7,7 @@
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
 #include <Utils/logger.hpp>
+#include <iostream>
 VS_START
 namespace remote{
 
@@ -49,7 +50,7 @@ void ManagerClient::register_worker()
 
     try{
         auto buffer_size = 4 * 1024 * 1024;
-        std::unique_ptr<char[]> buffer(new char[buffer_size]);
+        std::unique_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
         uint32_t flags = 0;
         int received;
         bool should_close;
@@ -61,6 +62,10 @@ void ManagerClient::register_worker()
         std::cout<<"connect websocket uri: "<<request.getURI()<<std::endl;
         auto one_hour = Poco::Timespan(0, 1, 0, 0, 0);
         ws->setReceiveTimeout(one_hour);
+
+        auto handler = [ pws = ws.get()](const uint8_t* response,uint32_t total){
+            pws->sendFrame(response,total,WebSocket::FRAME_BINARY);
+        };
 
         do{
             received = ws->receiveFrame(buffer.get(), buffer_size, reinterpret_cast<int &>(flags));
@@ -78,12 +83,8 @@ void ManagerClient::register_worker()
                 break;
             }
 
-            for(int i=0;i<received;i++)
-                std::cout<<buffer[i];
-            std::cout<<std::endl;
-            const char* h="Hello, this is worker";
-            if(received>5)
-            ws->sendFrame(h,strlen(h),WebSocket::FRAME_TEXT);
+
+            message_queue->add_message(buffer.get(),received,handler);
 
         }while(true);
         LOG_INFO("ManagerClient connection closed");

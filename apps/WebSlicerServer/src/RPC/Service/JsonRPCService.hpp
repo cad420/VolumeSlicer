@@ -14,7 +14,7 @@ namespace remote{
  */
 class JsonRPCService{
   public:
-    using Callback = std::function<void(uint8_t*,uint32_t)>;
+    using Callback = std::function<void(const uint8_t*,uint32_t)>;
     virtual void process_message(const uint8_t*,uint32_t,const Callback&) = 0;
 
 };

@@ -11,6 +11,7 @@ list(
         src/RPC/RPCMethod.cpp
         src/RPC/SliceService.cpp
         src/Manager/ManagerClient.cpp
+        src/Dataset/CompVolume.cpp
 )
 
 add_executable(SlicerServer ${SRCS})
@@ -26,4 +27,6 @@ target_link_libraries(
         Poco::Util
         VS_CORE
         seria::seria
+        mpack
 )
+target_compile_features(SlicerServer PRIVATE cxx_std_17)

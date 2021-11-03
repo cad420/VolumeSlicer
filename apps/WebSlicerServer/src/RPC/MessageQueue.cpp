@@ -2,6 +2,7 @@
 // Created by wyz on 2021/10/28.
 //
 #include "MessageQueue.hpp"
+#include <Utils/logger.hpp>
 VS_START
 namespace remote
 {
@@ -57,6 +58,7 @@ void MessageQueue::process()
             lk.unlock();
             //todo lock for callback?
             service->process_message(task.message.data(),task.message.size(),task.callback);
+            LOG_INFO("finish");
         }
         else if(running){
             cv.wait(lk);
@@ -68,6 +70,10 @@ void MessageQueue::process()
 void MessageQueue::set_queue_type(const std::string &type_name)
 {
     name = type_name;
+}
+auto MessageQueue::get_queue_type()->std::string
+{
+    return name;
 }
 
 }

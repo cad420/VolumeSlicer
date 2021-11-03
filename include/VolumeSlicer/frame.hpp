@@ -15,6 +15,25 @@
 #include<stdexcept>
 
 VS_START
+class VS_EXPORT Img{
+  public:
+    enum class Format{
+        RAW,JPEG
+    };
+    enum class Quality{
+        HIGH=90,
+        MEDIUM=70,
+        LOW=50
+    };
+    Format format;
+    uint32_t width,height;
+    uint8_t channels;
+    std::vector<uint8_t> data;
+    static Img encode(const uint8_t* data,uint32_t width,uint32_t height,
+                      uint8_t channels,Img::Format format,
+                      Img::Quality quality = Img::Quality::MEDIUM,
+                      bool flip_vertically = false);
+};
 /**
  * just support uint8_t data, not provide encode
  */

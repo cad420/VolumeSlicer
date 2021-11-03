@@ -3,12 +3,13 @@
 //
 
 #pragma once
+#include <Poco/Util/ServerApplication.h>
 #include <VolumeSlicer/export.hpp>
 
 #include <Poco/Util/Option.h>
 #include <Poco/Util/OptionCallback.h>
 #include <Poco/Util/OptionSet.h>
-#include <Poco/Util/ServerApplication.h>
+
 VS_START
 namespace remote
 {
@@ -22,8 +23,12 @@ class SlicerServerApplication : public Poco::Util::ServerApplication
     void hanldle_option(const std::string &name, const std::string &value);
 
     int main(const std::vector<std::string> &args) override;
-
+  public:
+    static auto GetVolumePath(){
+        return volume_path;
+    }
   private:
+    inline static std::string volume_path;
 };
 }
 
