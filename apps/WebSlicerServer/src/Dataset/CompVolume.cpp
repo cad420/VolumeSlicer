@@ -9,6 +9,9 @@ std::shared_ptr<CompVolume> VolumeDataSet::comp_volume = nullptr;
 void VolumeDataSet::Load(const std::string &path)
 {
     comp_volume = CompVolume::Load(path.c_str());
+    comp_volume->SetSpaceX(0.00032f);
+    comp_volume->SetSpaceY(0.00032f);
+    comp_volume->SetSpaceZ(0.001f);
 }
 auto VolumeDataSet::GetVolume()->const std::shared_ptr<CompVolume>&
 {

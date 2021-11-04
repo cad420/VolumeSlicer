@@ -51,12 +51,12 @@ public:
     auto GetVolumeSpaceY() const -> float {return space_y;}
     auto GetVolumeSpaceZ() const -> float {return space_z;}
 protected:
-    uint32_t n_voxels_x;
-    uint32_t n_voxels_y;
-    uint32_t n_voxels_z;
-    float space_x;
-    float space_y;
-    float space_z;
+    uint32_t n_voxels_x = 0;
+    uint32_t n_voxels_y = 0;
+    uint32_t n_voxels_z = 0;
+    float space_x = 1.f;
+    float space_y = 1.f;
+    float space_z = 1.f;
 };
 
 template<typename T>
