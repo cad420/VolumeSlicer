@@ -41,7 +41,7 @@ list(
         ${PROJECT_SOURCE_DIR}/third_party/glad/src/glad.c
 )
 add_library(VS_CORE
-        SHARED
+#        SHARED
         ${VS_SRCS})
 
 

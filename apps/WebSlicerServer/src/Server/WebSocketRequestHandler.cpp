@@ -11,6 +11,8 @@
 #include <seria/deserialize/rapidjson.hpp>
 #include <iostream>
 #include <VolumeSlicer/volume_sampler.hpp>
+#include "SlicerServerApplication.hpp"
+#include <atomic>
 VS_START
 namespace remote
 {
@@ -24,7 +26,7 @@ void WebSocketRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
                                             Poco::Net::HTTPServerResponse &response)
 {
     using WebSocket = Poco::Net::WebSocket;
-
+    static std::atomic<int> server_count = 0;
     try
     {
         auto buffer_size = 4 * 1024 * 1024;
@@ -33,8 +35,13 @@ void WebSocketRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
         int received;
         bool should_close;
 
+        if(server_count>=SlicerServerApplication::GetServerCap()){
+            throw std::runtime_error("Current server num is reach to max server num");
+        }
+        server_count++;
         WebSocket ws(request, response);
         std::cout<<"connect websocket uri: "<<request.getURI()<<std::endl;
+        LOG_INFO("New ws and current serve num is: {0}",server_count);
         auto one_hour = Poco::Timespan(0, 1, 0, 0, 0);
         ws.setReceiveTimeout(one_hour);
 
@@ -76,6 +83,9 @@ void WebSocketRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
     {
         LOG_ERROR("WebSocket finished with unknown exception");
     }
+    LOG_INFO("WebSocket closed...");
+    LOG_INFO("Close ws and current serve num is: {0}",server_count-1);
+    server_count--;
 }
 }
 VS_END

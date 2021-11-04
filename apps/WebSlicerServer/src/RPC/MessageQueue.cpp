@@ -3,6 +3,7 @@
 //
 #include "MessageQueue.hpp"
 #include <Utils/logger.hpp>
+#include <iostream>
 VS_START
 namespace remote
 {
@@ -40,7 +41,7 @@ MessageQueue &MessageQueue::get_instance()
 
 void MessageQueue::add_message(const uint8_t *msg, uint32_t size,const Callback& callback)
 {
-    std::lock_guard<std::mutex> lk(mtx);
+    std::unique_lock<std::mutex> lk(mtx);
     MessageQueue::Task task{std::vector<uint8_t>(msg,msg+size),callback};
     tasks.emplace(std::move(task));
     cv.notify_one();
@@ -53,12 +54,12 @@ void MessageQueue::process()
     while(running){
         std::unique_lock<std::mutex> lk(mtx);
         if(!tasks.empty()){
+            std::cout<<"Message queue worker thread id: "<<std::this_thread::get_id()<<std::endl;
             auto task = std::move(tasks.front());
             tasks.pop();
             lk.unlock();
             //todo lock for callback?
             service->process_message(task.message.data(),task.message.size(),task.callback);
-            LOG_INFO("finish");
         }
         else if(running){
             cv.wait(lk);

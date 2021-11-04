@@ -9,6 +9,7 @@
 #include <functional>
 #include <mutex>
 #include <condition_variable>
+#include <VolumeSlicer/volume.hpp>
 VS_START
 namespace remote{
 class SliceRenderer{
@@ -32,7 +33,14 @@ class SliceService: public JsonRPCService{
 
   protected:
     //rpc method
-    Image render(Slice slice);
+    /**
+     * @brief
+     * @param slice
+     * @param d number of slice should be sampled except the central slice
+     * @param depth voxels between two slices
+     * @param direction 1 represent forward slice's normal, 2 represent backward slice's normal, 3 represent double direction
+     */
+    Image render(Slice slice,int d,float depth,int direction);
 
   private:
     std::unique_ptr<RPCMethod> methods;

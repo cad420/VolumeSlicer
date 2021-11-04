@@ -1,20 +1,22 @@
 //
 // Created by wyz on 2021/10/29.
 //
+#include "Common/utils.hpp"
 #include "ManagerClient.hpp"
+#include "SlicerServerApplication.hpp"
 #include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPMessage.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
 #include <Utils/logger.hpp>
 #include <iostream>
+
 VS_START
 namespace remote{
 
 ManagerClient::ManagerClient(std::string address)
 :address(std::move(address)),uri("http://"+this->address)
 {
-    MessageQueue::set_queue_type("slice");
     message_queue = &MessageQueue::get_instance();
     work = std::thread([this](){
         register_worker();
@@ -45,9 +47,12 @@ void ManagerClient::register_worker()
 {
     using namespace Poco::Net;
     HTTPClientSession session(uri.getHost(),uri.getPort());
-    HTTPRequest request(HTTPRequest::HTTP_GET,"/worker/slice/1",HTTPMessage::HTTP_1_1);
+    HTTPRequest request(HTTPRequest::HTTP_GET,
+                        URIJoin("/worker",MessageQueue::get_queue_type(),std::to_string(SlicerServerApplication::GetServerCap())),
+                        HTTPMessage::HTTP_1_1);
     HTTPResponse response;
 
+    LOG_INFO("register worker's request uri is: {0}",request.getURI());
     try{
         auto buffer_size = 4 * 1024 * 1024;
         std::unique_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
@@ -59,7 +64,7 @@ void ManagerClient::register_worker()
         if(!ws){
             throw std::runtime_error("create websocket failed");
         }
-        std::cout<<"connect websocket uri: "<<request.getURI()<<std::endl;
+
         auto one_hour = Poco::Timespan(0, 1, 0, 0, 0);
         ws->setReceiveTimeout(one_hour);
 
@@ -70,9 +75,9 @@ void ManagerClient::register_worker()
         do{
             received = ws->receiveFrame(buffer.get(), buffer_size, reinterpret_cast<int &>(flags));
 
-            auto is_ping = (flags & WebSocket::FRAME_OP_BITMASK) == WebSocket::FRAME_OP_PING;
+            bool is_ping = (flags & WebSocket::FRAME_OP_BITMASK) == WebSocket::FRAME_OP_PING;
             if (is_ping) {
-                LOG_INFO("received ping");
+                LOG_INFO("received a ping");
                 ws->sendFrame(buffer.get(), received,WebSocket::FRAME_FLAG_FIN | WebSocket::FRAME_OP_PONG);
                 continue;
             }
@@ -83,7 +88,6 @@ void ManagerClient::register_worker()
                 break;
             }
 
-
             message_queue->add_message(buffer.get(),received,handler);
 
         }while(true);
@@ -91,7 +95,7 @@ void ManagerClient::register_worker()
     }
     catch (const std::exception& err)
     {
-        LOG_ERROR("ManagerClient error: {0}",err.what());
+        LOG_ERROR("ManagerClient closed with error: {0}",err.what());
     }
     catch (...)
     {

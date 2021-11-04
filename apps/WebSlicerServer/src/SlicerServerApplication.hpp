@@ -24,11 +24,11 @@ class SlicerServerApplication : public Poco::Util::ServerApplication
 
     int main(const std::vector<std::string> &args) override;
   public:
-    static auto GetVolumePath(){
-        return volume_path;
+    static auto GetServerCap(){
+        return max_server_num;
     }
   private:
-    inline static std::string volume_path;
+    inline static int max_server_num;
 };
 }
 
