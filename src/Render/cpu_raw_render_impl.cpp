@@ -75,7 +75,7 @@ void CPURawVolumeRendererImpl::render()
 
     double scale = Radians(camera.zoom/2);
     double ratio = 1.0*window_w/window_h;
-    double step  = 0.001;
+    double step  = 0.003;
     double voxel = 0.01;
 
     Vec3d volume_space = {space_x,space_y,space_z};
@@ -118,6 +118,7 @@ void CPURawVolumeRendererImpl::render()
         x1=LinearSampler::Sample3D(volume_data,sample_pos.x,sample_pos.y,sample_pos.z+voxel);
         x2=LinearSampler::Sample3D(volume_data,sample_pos.x,sample_pos.y,sample_pos.z-voxel);
         N.z=x1-x2;
+        if(Length(N)<0.00001) return diffuse_color;
         N=-Normalize(N);
 
         Vec3d L = -view_direction;
@@ -138,7 +139,7 @@ void CPURawVolumeRendererImpl::render()
 //        AutoTimer timer;
         for(int col=0;col<window_w;col++){
 
-
+//            if(row!=335 || col!=472) continue;
             double x = (2*(col+0.5)/window_w-1.0)*scale*ratio;
             double y = (1.0-2*(row+0.5)/window_h)*scale;
 
@@ -151,17 +152,17 @@ void CPURawVolumeRendererImpl::render()
                 Vec3d sample_pos = ray_pos / volume_space; // space -> voxel
                 if(sample_pos.x<0.0 || sample_pos.y<0.0 || sample_pos.z<0.0) break;
                 //empty skip, update sample_pos in nearest non-empty block for the view_direction
-                sample_pos = GetEmptySkipPos(sample_pos,Normalize(view_direction/volume_space));
-                ray_pos = sample_pos *volume_space;
+//                sample_pos = GetEmptySkipPos(sample_pos,Normalize(view_direction/volume_space));
+//                ray_pos = sample_pos *volume_space;
 
                 sample_pos /= volume_dim;
                 double sample_scalar = LinearSampler::Sample3D(volume_data, sample_pos.x, sample_pos.y, sample_pos.z);
                 if (sample_scalar > 0.0){
                     Vec4d sample_color  = LinearSampler::Sample1D(tf_1d, sample_scalar / 255);
-                    Vec3d shading_color = PhongShaing(sample_pos,Vec3d(sample_color),view_direction);
-                    sample_color.x = shading_color.x;
-                    sample_color.y = shading_color.y;
-                    sample_color.z = shading_color.z;
+//                    Vec3d shading_color = PhongShaing(sample_pos,Vec3d(sample_color),view_direction);
+//                    sample_color.x = shading_color.x;
+//                    sample_color.y = shading_color.y;
+//                    sample_color.z = shading_color.z;
                     if (sample_color.a > 0.0){
                         color += sample_color * Vec4d(sample_color.a, sample_color.a, sample_color.a, 1.0) * (1.0 - color.a);
                     }
@@ -170,6 +171,8 @@ void CPURawVolumeRendererImpl::render()
                     break;
                 ray_pos += step * view_direction;
             }
+            //todo blend color with back-ground color
+            color = color*color.a + (1-color.a) * Vec4d(1.0,1.0,1.0,1.0);
             image.At(col,row)=Color4b{Clamp(color.r,0.0,1.0)*255,
                                          Clamp(color.g,0.0,1.0)*255,
                                          Clamp(color.b,0.0,1.0)*255,

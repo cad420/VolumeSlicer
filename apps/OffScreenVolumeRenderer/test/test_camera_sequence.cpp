@@ -10,14 +10,14 @@ int main(){
     for(int i=0;i<30*60;i++){
         std::string idx="frame_"+std::to_string(i+1);
         j[idx]={
-            30,
-            {5.5,5.5,11.0 - i * 0.0036},
-            {5.5,5.5,0.0},
+            12,
+            {2.5,6.5,8.0 - i * 0.0024},
+            {2.5,6.5,0.0},
             {0.0,1.0,0.0},
             {1.0,0.0,0.0}
         };
     }
-    std::ofstream out("camera_sequence_config2.json");
+    std::ofstream out("camera_sequence_config.json");
     out << j <<std::endl;
     out.close();
 }

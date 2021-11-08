@@ -9,7 +9,7 @@
 using namespace vs;
 int main(int argc,char** argv){
     SetCUDACtx(0);
-    auto renderer=CUDAOffScreenCompVolumeRenderer::Create(800,800);
+    auto renderer=CUDAOffScreenCompVolumeRenderer::Create(1200,1200);
     Camera camera;
     camera.zoom=16;
     camera.pos={5.5f,6.5f,6.5f};
@@ -42,7 +42,7 @@ int main(int argc,char** argv){
     renderer->SetRenderPolicy(policy);
 
     {
-        VideoCapture video_capture("test_cuda_comp_render_video.avi", 800, 800, 30);
+        VideoCapture video_capture("test_cuda_comp_render_video.avi", 1200, 1200, 30);
 
         for (int i = 0; i < 300; i++)
         {

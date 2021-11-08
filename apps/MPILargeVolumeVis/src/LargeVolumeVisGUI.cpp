@@ -120,6 +120,15 @@ void LargeVolumeVisGUI::show() {
                         case SDLK_s:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Backward,0.0001);motion=true;break;}
                         case SDLK_q:{ fpsCamera.processKeyEvent(control::CameraDefinedKey::Up,0.0001);motion=true;break;}
                         case SDLK_e:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Bottom,0.0001);motion=true;break;}
+                        case SDLK_f:{
+                            TransferFunc tf;
+                            tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
+                            tf.points.emplace_back(74,std::array<double,4>{0.0,0.0,0.0,0.0});
+                            tf.points.emplace_back(127,std::array<double,4>{0.75,0.75,0.75,0.6});
+                            tf.points.emplace_back(128,std::array<double,4>{1.0,0.3,1.0,1.0});
+                            tf.points.emplace_back(255,std::array<double,4>{1.0,0.0,0.0,1.0});
+                            this->comp_volume_renderer->SetTransferFunc(std::move(tf));
+                        }
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
 
@@ -279,7 +288,7 @@ void LargeVolumeVisGUI::initSDL() {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE,8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_EXPR(sdl_window = SDL_CreateWindow("VolumeSlicer", window_manager->GetNodeScreenOffsetX(),window_manager->GetNodeScreenOffsetY() ,
+    SDL_EXPR(sdl_window = SDL_CreateWindow("MPILargeVolumeVis", window_manager->GetNodeScreenOffsetX(),window_manager->GetNodeScreenOffsetY() ,
                                            window_manager->GetNodeWindowWidth(), window_manager->GetNodeWindowHeight(), SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI));
 
     gl_context=SDL_GL_CreateContext(sdl_window);
