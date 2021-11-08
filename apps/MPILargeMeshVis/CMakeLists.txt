@@ -1,0 +1,29 @@
+
+list(
+        APPEND
+        MPILargeMeshVis_SRCS
+        src/LargeMeshVisGUI.cpp
+        src/MPILargeMeshVisApplication.cpp
+        src/main.cpp
+)
+add_executable(
+        MPILargeMeshVis
+        ${MPILargeMeshVis_SRCS}
+)
+target_link_libraries(
+        MPILargeMeshVis
+        PRIVATE
+        VS_CORE
+        SDL2-static
+        imgui
+        ${MPI_LIBRARIES}
+        ${OPENGL_LIBRARIES}
+)
+target_include_directories(
+        MPILargeMeshVis
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/third_party
+        ${MPI_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/third_party/glad/include
+)
+target_compile_features(MPILargeMeshVis PRIVATE cxx_std_17)

@@ -14,3 +14,5 @@ add_subdirectory(MPILargeVolumeVis)
 add_subdirectory(OffScreenVolumeRenderer)
 
 add_subdirectory(WebSlicerServer)
+
+add_subdirectory(MPILargeMeshVis)

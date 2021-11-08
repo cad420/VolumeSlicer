@@ -30,12 +30,14 @@ list(
         Render/cpu_raw_render_impl.cpp
         Render/cuda_offscreen_comp_render_impl.cpp
         Render/cuda_offscreen_comp_render_impl.cu
+        Render/simple_mesh_render_impl.cpp
         IO/reader_impl.cpp
         Common/cuda_context.cpp
         Common/image.cpp
         Common/library.cpp
         Common/library_reposity.cpp
         Common/plugin_loader.cpp
+        Mesh/mesh_impl.cpp
 #        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
 #        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
         ${PROJECT_SOURCE_DIR}/third_party/glad/src/glad.c
