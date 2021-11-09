@@ -5,6 +5,8 @@ include(${PROJECT_SOURCE_DIR}/third_party/msmpi.cmake)
 
 find_package(OpenGL REQUIRED)
 
+add_subdirectory(QTOffScreenRenderEditor)
+
 add_subdirectory(QTVolumeSlicer)
 
 add_subdirectory(MPIVolumeSlicer)

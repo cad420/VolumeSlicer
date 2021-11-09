@@ -46,6 +46,8 @@ template<class T>
 class Image{
 public:
     Image()=default;
+    Image(const Image& image)=default;
+    Image& operator=(const Image&)=default;
     Image(Image&& image)noexcept{
         *this=std::move(image);
     }
@@ -58,6 +60,7 @@ public:
         image.channels=0;
         this->data=std::move(image.data);
         assert(image.data.size()==0);
+        return *this;
     }
 
 
