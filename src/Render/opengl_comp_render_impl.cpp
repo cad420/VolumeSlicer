@@ -123,6 +123,7 @@ void OpenGLCompVolumeRendererImpl::SetCamera(Camera camera) {
 }
 
 void OpenGLCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf) {
+    setCurrentCtx();
     TransferFuncImpl tf_impl(tf);
     if(!transfer_func_tex){
         glGenTextures(1,&transfer_func_tex);
