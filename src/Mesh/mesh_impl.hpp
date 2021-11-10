@@ -26,6 +26,7 @@ class MeshImpl: public Mesh{
 
     auto GetAllSurfaces() -> const std::vector<Surface>& override;
 
+    void SetSurfaceColorByName(const std::string&,const std::array<float,4>&) override;
   private:
     std::vector<Surface> surfaces;
     std::unique_ptr<IMeshLoaderPluginInterface> mesh_loader;

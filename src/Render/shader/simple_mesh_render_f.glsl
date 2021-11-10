@@ -4,10 +4,14 @@ in vec3 normal;
 out vec4 frag_color;
 uniform vec3 camera_pos;
 uniform vec3 light_pos;
+layout(std430,binding = 0) buffer ColorMap{
+    vec4 color[];
+}color_map;
+uniform int surface_idx;
 void main() {
 //    frag_color=vec4(1.f,0.f,0.f,1.f);return;
     vec3 n = normalize(normal);
-    vec3 color = vec3(0.7f,0.2f,0.1f);
+    vec3 color = vec3(color_map.color[surface_idx]);
     //ambient
     vec3 ambient = 0.05f * color;
     //diffuse

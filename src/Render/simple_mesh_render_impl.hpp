@@ -31,7 +31,7 @@ class SimpleMeshRendererImpl: public SimpleMeshRenderer{
         glfwMakeContextCurrent(window);
     }
     void initGL();
-
+    void setupMeshColorMap();
   private:
     Image<Color4b> image;
     GLFWwindow* window = nullptr;
@@ -39,11 +39,14 @@ class SimpleMeshRendererImpl: public SimpleMeshRenderer{
     Camera camera;
     std::shared_ptr<Mesh> mesh;
 
+    std::vector<std::array<float,4>> color_map;
+    uint32_t color_map_ssbo;
     std::vector<uint32_t> surfaces_vao,surfaces_vbo,surfaces_ebo;
     std::vector<size_t> surfaces_indices_num;
     std::unique_ptr<Shader> simple_mesh_render_shader;
 
     MPIRenderParameter mpi;
+
 
 };
 VS_END

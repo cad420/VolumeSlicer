@@ -29,6 +29,7 @@ MeshImpl::MeshImpl(std::string path)
         surface.has_normal=shape.has_normal;
         surface.name=shape.name;
         surface.vertices.reserve(shape.vertices.size());
+        surface.color = shape.color;
         for(auto& v:shape.vertices){
             surface.vertices.emplace_back(Vertex{
                 v.pos,
@@ -97,6 +98,16 @@ const MeshImpl::Surface &MeshImpl::GetSurfaceByName(std::string name)
 auto MeshImpl::GetAllSurfaces() -> const std::vector<Surface> &
 {
     return surfaces;
+}
+void MeshImpl::SetSurfaceColorByName(const std::string& name,const std::array<float,4>& color)
+{
+    for(auto& s:surfaces){
+        if(s.name==name){
+            s.color=color;
+            return;
+        }
+    }
+    LOG_ERROR("Not found surface with name {0}",name);
 }
 
 VS_END

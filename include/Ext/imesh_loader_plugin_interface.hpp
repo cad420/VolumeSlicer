@@ -21,6 +21,7 @@ class IMeshLoaderPluginInterface{
         bool has_texcoord;
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
+        std::array<float,4> color;
     };
     virtual void Open(std::string path) = 0;
 

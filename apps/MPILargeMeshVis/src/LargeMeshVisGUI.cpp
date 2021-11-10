@@ -66,7 +66,7 @@ void LargeMeshVisGUI::show()
     bool exit = false;
         auto process_event=[&exit,this](){
         static SDL_Event event;
-        static control::FPSCamera fpsCamera({1.12f,1.472f,4.0f});
+        static control::FPSCamera fpsCamera({1.12f,0.94f,4.0f});
         static bool right_mouse_press;
         while(SDL_PollEvent(&event)){
             switch (event.type)
@@ -214,7 +214,7 @@ void LargeMeshVisGUI::initSDL()
 void LargeMeshVisGUI::initResource()
 {
     this->mesh = Mesh::Load(window_manager->GetNodeResourcePath());
-    this->mesh->Transform(0.00032f,0.00032f,0.00032f);
+    this->mesh->Transform(space_x,space_y,space_z);
     this->mesh_renderer = SimpleMeshRenderer::Create(window_w,window_h);
     this->mesh_renderer->SetMesh(this->mesh);
 }

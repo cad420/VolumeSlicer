@@ -40,11 +40,13 @@ void SimpleMeshRendererImpl::SetMesh(std::shared_ptr<Mesh> mesh)
     this->surfaces_vbo.resize(surfaces.size());
     this->surfaces_ebo.resize(surfaces.size());
     this->surfaces_indices_num.resize(surfaces.size());
+    this->color_map.resize(surfaces.size());
     glGenVertexArrays(surfaces.size(),surfaces_vao.data());
     glGenBuffers(surfaces.size(),surfaces_vbo.data());
     glGenBuffers(surfaces.size(),surfaces_ebo.data());
     for(int i=0;i<surfaces.size();i++){
         assert(surfaces[i].has_normal);
+        color_map[i]=surfaces[i].color;
         surfaces_indices_num[i]=surfaces[i].indices.size();
         glBindVertexArray(surfaces_vao[i]);
         glBindBuffer(GL_ARRAY_BUFFER,surfaces_vbo[i]);
@@ -61,6 +63,7 @@ void SimpleMeshRendererImpl::SetMesh(std::shared_ptr<Mesh> mesh)
         GL_CHECK
     }
     GL_CHECK
+    setupMeshColorMap();
 }
 
 void SimpleMeshRendererImpl::SetCamera(Camera camera)
@@ -80,7 +83,8 @@ void SimpleMeshRendererImpl::render()
     glm::mat4 view=glm::lookAt(glm::vec3{camera.pos[0],camera.pos[1],camera.pos[2]},
                                glm::vec3{camera.look_at[0],camera.look_at[1],camera.look_at[2]},
                                glm::vec3{camera.up[0],camera.up[1],camera.up[2]});
-    glm::mat4 projection=glm::perspective(glm::radians(camera.zoom),(float)window_w/window_h,0.001f,20.f);
+    glm::mat4 projection=glm::perspective(glm::radians(camera.zoom),(float)window_w/window_h,0.001f,3.f);
+//    glm::mat4 projection = glm::ortho(-glm::radians(camera.zoom),glm::radians(camera.zoom),-glm::radians(camera.zoom),glm::radians(camera.zoom),0.001f,5.f);
     projection[0][0] *= mpi.mpi_world_col_num;
     projection[1][1] *= mpi.mpi_world_row_num;
     projection[2][0] = -mpi.mpi_world_col_num + 1 + 2* mpi.mpi_node_x_index;
@@ -97,6 +101,7 @@ void SimpleMeshRendererImpl::render()
     simple_mesh_render_shader->setVec3("camera_pos",camera.pos[0],camera.pos[1],camera.pos[2]);
     simple_mesh_render_shader->setVec3("light_pos",camera.pos[0],camera.pos[1],camera.pos[2]);
     for(int i=0;i<surfaces_vao.size();i++){
+        simple_mesh_render_shader->setInt("surface_idx",i);
         glBindVertexArray(surfaces_vao[i]);
         glDrawElements(GL_TRIANGLES,surfaces_indices_num[i],GL_UNSIGNED_INT,0);
         GL_CHECK
@@ -154,6 +159,14 @@ void SimpleMeshRendererImpl::initGL()
     }
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
+}
+void SimpleMeshRendererImpl::setupMeshColorMap()
+{
+    glGenBuffers(1,&color_map_ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER,color_map_ssbo);
+    glBufferData(GL_SHADER_STORAGE_BUFFER,color_map.size()*sizeof(color_map[0]),color_map.data(),GL_STATIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER,0,color_map_ssbo);
+    GL_CHECK
 }
 
 VS_END

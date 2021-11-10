@@ -20,6 +20,7 @@ public:
       std::vector<Vertex> vertices;
       bool has_normal;
       std::vector<uint32_t> indices;
+      std::array<float,4> color;
   };
 public:
     static std::unique_ptr<Mesh> Load(std::string path);
@@ -37,6 +38,7 @@ public:
 
     virtual auto GetAllSurfaces() -> const std::vector<Surface>& = 0;
 
+    virtual void SetSurfaceColorByName(const std::string&,const std::array<float,4>&) = 0;
 };
 
 

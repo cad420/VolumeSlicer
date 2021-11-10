@@ -20,7 +20,7 @@ class ObjMeshLoaderPlugin: public IMeshLoaderPluginInterface{
     void Close() override;
 
   private:
-    void ReadObj(const std::string&);
+    void ReadObj(const std::string& name,const std::string& path,const std::array<float,4>& color);
   private:
     std::vector<Surface> surfaces;
 };
