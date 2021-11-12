@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/18.
 //
 
-#ifndef VOLUMESLICER_VOLUME_SAMPLER_HPP
-#define VOLUMESLICER_VOLUME_SAMPLER_HPP
+#pragma once
 
 #include<VolumeSlicer/volume.hpp>
 
@@ -29,4 +28,4 @@ public:
 
 VS_END
 
-#endif //VOLUMESLICER_VOLUME_SAMPLER_HPP
+

@@ -1,9 +1,7 @@
 //
 // Created by wyz on 2021/5/29.
 //
-
-#ifndef MARCHINGCUBES_CAMERA_HPP
-#define MARCHINGCUBES_CAMERA_HPP
+#pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -356,4 +354,4 @@ namespace control{
 
     };
 }
-#endif //MARCHINGCUBES_CAMERA_HPP
+

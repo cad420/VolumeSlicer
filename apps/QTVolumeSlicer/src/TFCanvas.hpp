@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/7.
 //
 
-#ifndef VOLUMESLICER_TFCANVAS_HPP
-#define VOLUMESLICER_TFCANVAS_HPP
+#pragma once
 #include <QWidget>
 #include <VolumeSlicer/transfer_function.hpp>
 using namespace vs;
@@ -23,4 +22,4 @@ protected:
 private:
 
 };
-#endif //VOLUMESLICER_TFCANVAS_HPP
+

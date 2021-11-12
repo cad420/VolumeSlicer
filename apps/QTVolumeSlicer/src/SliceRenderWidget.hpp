@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/28.
 //
 
-#ifndef VOLUMESLICER_SLICERENDERWIDGET_HPP
-#define VOLUMESLICER_SLICERENDERWIDGET_HPP
+#pragma once
 
 #include <memory>
 
@@ -55,4 +54,4 @@ private:
 
 };
 
-#endif //VOLUMESLICER_SLICERENDERWIDGET_HPP
+

@@ -1,7 +1,7 @@
 //
 // Created by wyz on 2021/7/22.
 //
-#include <Utils/plugin_loader.hpp>
+#include <VolumeSlicer/Utils/plugin_loader.hpp>
 
 #include "LargeVolumeVisGUI.hpp"
 #include "camera.hpp"
@@ -216,8 +216,15 @@ void LargeVolumeVisGUI::show() {
     };
     SDL_EXPR(sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED));
     SDL_Rect rect{0,0,(int)window_w,(int)window_h};
-    SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_ABGR8888,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
-    SDL_Texture* low_texture=SDL_CreateTexture(sdl_renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,window_w/2,window_h/2);
+    SDL_PixelFormatEnum format=SDL_PIXELFORMAT_UNKNOWN;
+    if(this->comp_volume_renderer->GetBackendName()=="cuda"){
+        format = SDL_PIXELFORMAT_RGBA8888;
+    }
+    else if(this->comp_volume_renderer->GetBackendName()=="opengl"){
+        format = SDL_PIXELFORMAT_ABGR8888;
+    }
+    SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,format,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
+    SDL_Texture* low_texture=SDL_CreateTexture(sdl_renderer,format,SDL_TEXTUREACCESS_STREAMING,window_w/2,window_h/2);
     SDL_CHECK
     decltype(SDL_GetTicks()) cur_frame_t;
     uint32_t interval;
@@ -247,9 +254,9 @@ void LargeVolumeVisGUI::show() {
             motioned=false;
             interval=100;
             comp_volume_renderer->resize(window_w,window_h);
-            comp_volume_renderer->SetStep(base_space*0.3,8000);
-            comp_volume_renderer->render();
-            SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w * 4);
+            comp_volume_renderer->SetStep(base_space*0.3,6000);
+            comp_volume_renderer->render(true);
+            SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetImage().GetData(), window_w * 4);
             SDL_RenderClear(sdl_renderer);
             SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
             SDL_RenderPresent(sdl_renderer);

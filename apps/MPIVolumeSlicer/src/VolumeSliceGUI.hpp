@@ -2,9 +2,7 @@
 // Created by wyz on 2021/7/12.
 //
 
-#ifndef VOLUMESLICER_VOLUMESLICEGUI_HPP
-#define VOLUMESLICER_VOLUMESLICEGUI_HPP
-
+#pragma once
 
 #include <VolumeSlicer/slice.hpp>
 #include <VolumeSlicer/volume.hpp>
@@ -88,4 +86,3 @@ private:
 };
 
 
-#endif //VOLUMESLICER_VOLUMESLICEGUI_HPP

@@ -1,11 +1,11 @@
 //
 // Created by wyz on 2021/9/7.
 //
+#pragma once
 
-#ifndef VOLUMESLICER_RAY_HPP
-#define VOLUMESLICER_RAY_HPP
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/vec.hpp>
+
 VS_START
 
 class SimpleRay{
@@ -19,4 +19,4 @@ class SimpleRay{
 };
 
 VS_END
-#endif // VOLUMESLICER_RAY_HPP
+

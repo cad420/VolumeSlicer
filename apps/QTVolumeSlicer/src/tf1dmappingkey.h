@@ -1,5 +1,4 @@
-#ifndef TF1DMAPPINGKEY_H
-#define TF1DMAPPINGKEY_H
+#pragma once
 
 #include <QColor>
 
@@ -73,5 +72,3 @@ private:
     QColor colorR;		///< color of the right part of the key
     bool   split;       ///< is the key split?
 };
-
-#endif

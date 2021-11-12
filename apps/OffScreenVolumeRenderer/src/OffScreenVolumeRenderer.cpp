@@ -3,7 +3,7 @@
 //
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <VolumeSlicer/render.hpp>
-#include <Utils/timer.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 #include "OffScreenVolumeRenderer.hpp"
 #include "json.hpp"
 #include <fstream>

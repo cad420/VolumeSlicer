@@ -2,7 +2,7 @@
 // Created by wyz on 2021/9/7.
 //
 #include <VolumeSlicer/render.hpp>
-#include <Utils/timer.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 #include <iostream>
 #include <fstream>
 using namespace vs;

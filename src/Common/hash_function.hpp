@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/8.
 //
 
-#ifndef CGUTILS_HASH_FUNCTION_HPP
-#define CGUTILS_HASH_FUNCTION_HPP
+#pragma once
 
 #include <cstdint>
 #include <array>
@@ -18,12 +17,14 @@ struct Hash_UInt32Array2{
         return ((a[0]&mask)<<32)|((a[1]&mask));
     }
 };
+
 struct Hash_UInt32Array3{
     size_t operator()(const UInt32Array3& a) const {
         size_t mask=0xfffff;
         return ((a[0]&mask)<<40) | ((a[1]&mask)<<20) | (a[2]&mask);
     }
 };
+
 struct Hash_UInt32Array4{
     size_t operator()(const UInt32Array4& a) const {
         size_t mask=0xffff;
@@ -31,4 +32,4 @@ struct Hash_UInt32Array4{
     }
 };
 
-#endif //CGUTILS_HASH_FUNCTION_HPP
+

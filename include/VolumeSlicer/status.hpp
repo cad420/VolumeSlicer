@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/8.
 //
 
-#ifndef VOLUMESLICER_STATUS_HPP
-#define VOLUMESLICER_STATUS_HPP
+#pragma once
 
 #include<string>
 #include<VolumeSlicer/export.hpp>
@@ -21,4 +20,4 @@ public:
 
 VS_END
 
-#endif //VOLUMESLICER_STATUS_HPP
+

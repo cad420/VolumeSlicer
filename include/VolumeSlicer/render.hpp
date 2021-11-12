@@ -2,16 +2,15 @@
 // Created by wyz on 2021/6/8.
 //
 
-#ifndef VOLUMESLICER_RENDER_HPP
-#define VOLUMESLICER_RENDER_HPP
+#pragma once
 
 #include <VolumeSlicer/volume.hpp>
 #include <VolumeSlicer/mesh.hpp>
 #include <VolumeSlicer/camera.hpp>
 #include <VolumeSlicer/frame.hpp>
 #include <VolumeSlicer/transfer_function.hpp>
-VS_START
 
+VS_START
 
 template<class T,class enable= void>
 class Renderer;
@@ -77,7 +76,7 @@ VS_EXPORT std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
 
 //==============================================================================
 
-struct MPIRenderParameter{
+struct alignas(16) MPIRenderParameter{
     float mpi_node_x_offset;
     float mpi_node_y_offset;
     int mpi_world_window_w;
@@ -90,7 +89,11 @@ struct MPIRenderParameter{
 //===============================================================================
 class VS_EXPORT IVolumeRenderer{
 public:
+    IVolumeRenderer() = default;
+
     virtual ~IVolumeRenderer(){}
+
+    virtual auto GetBackendName()-> std::string = 0;
 
     virtual void SetMPIRender(MPIRenderParameter) = 0;
 
@@ -100,36 +103,22 @@ public:
 
     virtual void SetTransferFunc(TransferFunc tf) = 0;
 
-    virtual void render() = 0;
+    virtual void render(bool sync) = 0;
 
-    virtual auto GetFrame()-> const Image<uint32_t>& = 0;
+    virtual auto GetImage()->const Image<Color4b>& = 0;
 
     virtual void resize(int w,int h) = 0;
 
+    /**
+     * @brief clear all resources
+     */
     virtual void clear() = 0;
 };
-struct RawRenderPolicy{
 
-};
 class VS_EXPORT IRawVolumeRenderer: public IVolumeRenderer{
 public:
     virtual void SetVolume(std::shared_ptr<RawVolume> raw_volume) = 0;
 
-    void SetMPIRender(MPIRenderParameter) override = 0;
-
-    void SetStep(double step,int steps) override = 0;
-
-    void SetCamera(Camera camera) override = 0;
-
-    void SetTransferFunc(TransferFunc tf) override = 0;
-
-    void render() override = 0;
-
-    auto GetFrame()  -> const Image<uint32_t>&  override = 0;
-
-    void resize(int w,int h) override = 0;
-
-    void clear() override = 0;
 };
 class VS_EXPORT CUDARawVolumeRenderer: public IRawVolumeRenderer{
 public:
@@ -142,11 +131,6 @@ public:
 class VS_EXPORT CPURawVolumeRenderer: public IRawVolumeRenderer{
 public:
     static std::unique_ptr<CPURawVolumeRenderer> Create(int w,int h);
-    virtual auto GetImage()->const Image<Color4b>& = 0;
-    struct RenderParameter{
-        double step;
-
-    };
 };
 
 struct CompRenderPolicy{
@@ -162,21 +146,6 @@ public:
 
     virtual void SetRenderPolicy(CompRenderPolicy) = 0;
 
-    void SetMPIRender(MPIRenderParameter) override = 0;
-
-    void SetStep(double step,int steps) override = 0;
-
-    void SetCamera(Camera camera) override = 0;
-
-    void SetTransferFunc(TransferFunc tf) override = 0;
-
-    void render() override = 0;
-
-    auto GetFrame()  -> const Image<uint32_t>&  override = 0;
-
-    void resize(int w,int h) override = 0;
-
-    void clear() override = 0;
 };
 
 class VS_EXPORT CUDACompVolumeRenderer: public ICompVolumeRenderer{
@@ -191,7 +160,7 @@ public:
 
 class VS_EXPORT IOffScreenCompVolumeRenderer: public ICompVolumeRenderer{
   public:
-    virtual auto GetImage()->const Image<Color4b>& = 0;
+
 };
 /**
  * suitable for off-screen render
@@ -233,4 +202,4 @@ class VS_EXPORT SimpleMeshRenderer: public IMeshRenderer{
 
 VS_END
 
-#endif //VOLUMESLICER_RENDER_HPP
+

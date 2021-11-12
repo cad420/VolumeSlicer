@@ -1,5 +1,4 @@
-#ifndef TF1DMAPPINGCANVAS_H
-#define TF1DMAPPINGCANVAS_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -238,6 +237,3 @@ protected:
     TrivalVolume * m_volume;
 };
 
-
-
-#endif

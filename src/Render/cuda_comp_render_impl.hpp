@@ -2,14 +2,18 @@
 // Created by wyz on 2021/7/21.
 //
 
-#ifndef VOLUMESLICER_CUDA_COMP_RENDER_IMPL_HPP
-#define VOLUMESLICER_CUDA_COMP_RENDER_IMPL_HPP
+#pragma once
+
+#include <unordered_set>
+
 #include <VolumeSlicer/render.hpp>
 #include <VolumeSlicer/volume_cache.hpp>
-#include <unordered_set>
-#include "Common/hash_function.hpp"
 #include <VolumeSlicer/cdf.hpp>
+
+#include "Common/hash_function.hpp"
+
 VS_START
+
 class CUDACompVolumeRendererImpl: public CUDACompVolumeRenderer{
 public:
     CUDACompVolumeRendererImpl(int w,int h,CUcontext ctx);
@@ -17,6 +21,8 @@ public:
     void SetVolume(std::shared_ptr<CompVolume> comp_volume) override;
 
     void SetRenderPolicy(CompRenderPolicy) override;
+
+    auto GetBackendName()-> std::string override;
 
     void SetMPIRender(MPIRenderParameter) override ;
 
@@ -26,9 +32,9 @@ public:
 
     void SetTransferFunc(TransferFunc tf) override;
 
-    void render() override;
+    void render(bool sync) override;
 
-    auto GetFrame()->const Image<uint32_t>& override;
+    auto GetImage()->const Image<Color4b>& override;
 
     void resize(int w,int h) override;
 
@@ -41,9 +47,14 @@ private:
 
     void sendRequests();
 
-    void fetchBlocks();
+    void fetchBlocks(bool sync);
+
+    bool isRenderFinish();
+
+    void clearCurrentInfo();
 
 private:
+    bool is_render_finish;
     int window_w,window_h;
     CUcontext cu_context;
     std::shared_ptr<CompVolume> comp_volume;
@@ -51,7 +62,7 @@ private:
     int steps;
     bool mpi_render;
     Camera camera;
-    Image<uint32_t> image;
+    Image<Color4b> image;
     std::unique_ptr<CUDAVolumeBlockCache> cuda_volume_block_cache;
 
     std::vector<uint32_t> missed_blocks_pool;
@@ -62,11 +73,10 @@ private:
 
     std::unique_ptr<CDFManager> cdf_manager;
     int cdf_block_length;
-//    std::unordered_map<Vec4i,std::vector<uint32_t>> cdf_map;
     int cdf_dim_x,cdf_dim_y,cdf_dim_z;
     std::unordered_map<int,std::vector<uint32_t>> volume_value_map;
 };
 
 
 VS_END
-#endif //VOLUMESLICER_CUDA_COMP_RENDER_IMPL_HPP
+

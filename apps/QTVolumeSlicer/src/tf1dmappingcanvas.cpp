@@ -12,7 +12,7 @@
 #include <QMatrix4x4>
 
 #include "tf1dmappingcanvas.h"
-//#include "../3drender/geometry/volume.h"
+
 #include "TrivalVolume.hpp"
 
 bool sortFunction(TF1DMappingKey* a, TF1DMappingKey* b) 

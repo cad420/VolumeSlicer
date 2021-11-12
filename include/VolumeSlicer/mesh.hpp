@@ -2,11 +2,14 @@
 // Created by wyz on 2021/11/2.
 //
 #pragma once
+
 #include <VolumeSlicer/export.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
 #include <array>
+
 VS_START
 
 class VS_EXPORT Mesh{

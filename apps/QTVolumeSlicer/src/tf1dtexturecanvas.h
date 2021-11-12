@@ -1,5 +1,4 @@
-#ifndef TF1DTEXTURECANVAS_H
-#define TF1DTEXTURECANVAS_H
+#pragma once
 
 
 #include <QtOpenGLWidgets/QOpenGLWidget>
@@ -52,4 +51,3 @@ private:
 					// 2d drawing
 };
 
-#endif

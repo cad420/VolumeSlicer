@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/12.
 //
 
-#ifndef VOLUMESLICER_WINDOWMANAGER_HPP
-#define VOLUMESLICER_WINDOWMANAGER_HPP
+#pragma once
 #include <json.hpp>
 #include <fstream>
 #include <mpi.h>
@@ -105,4 +104,4 @@ public:
     std::string resource_path;
 };
 
-#endif //VOLUMESLICER_WINDOWMANAGER_HPP
+

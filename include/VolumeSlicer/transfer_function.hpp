@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/15.
 //
 
-#ifndef VOLUMESLICER_TRANSFER_FUNCTION_HPP
-#define VOLUMESLICER_TRANSFER_FUNCTION_HPP
+#pragma once
 #include<VolumeSlicer/export.hpp>
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
@@ -33,4 +32,4 @@ public:
 
 VS_END
 
-#endif //VOLUMESLICER_TRANSFER_FUNCTION_HPP
+

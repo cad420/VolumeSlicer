@@ -3,7 +3,7 @@
 //
 #include "MPILargeMeshVisApplication.hpp"
 #include "LargeMeshVisGUI.hpp"
-#include <Utils/logger.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 #include <cmdline.hpp>
 int MPILargeMeshVisApp::run(int argc, char **argv)
 {

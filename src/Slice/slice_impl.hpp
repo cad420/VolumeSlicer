@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/7.
 //
 
-#ifndef VOLUMESLICER_SLICE_IMPL_HPP
-#define VOLUMESLICER_SLICE_IMPL_HPP
+#pragma once
 
 #include<vector>
 #include<glm/glm.hpp>
@@ -81,4 +80,4 @@ private:
 
 VS_END
 
-#endif //VOLUMESLICER_SLICE_IMPL_HPP
+

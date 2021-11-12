@@ -1,10 +1,12 @@
 //
 // Created by wyz on 2021/8/31.
 //
-
 #pragma once
+
 #include <VolumeSlicer/export.hpp>
+
 #include <glm/glm.hpp>
+
 VS_START
 
 template <typename T,int len>
@@ -30,9 +32,6 @@ using Vec4=Vec<T,4>;
 using Vec4i=Vec4<int>;
 using Vec4f=Vec4<float>;
 using Vec4d=Vec4<double>;
-
-
-
 template <typename T>
 T Normalize(const T& t){
     return glm::normalize(t);

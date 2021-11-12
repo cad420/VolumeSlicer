@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/9.
 //
 
-#ifndef VOLUMESLICER_DEFINE_HPP
-#define VOLUMESLICER_DEFINE_HPP
+#pragma once
 
 #define MAX_SLICE_W 10000
 #define MAX_SLICE_H 10000
@@ -15,4 +14,4 @@
 #define FORWARD_IMPL_DECLARATION(cls) \
 class  cls##Impl
 
-#endif //VOLUMESLICER_DEFINE_HPP
+

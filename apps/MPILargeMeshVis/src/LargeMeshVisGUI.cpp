@@ -6,9 +6,9 @@
 #include "WindowManager.hpp"
 #include <SDL.h>
 #include <glad/glad.h>
-#include <Utils/gl_helper.hpp>
-#include <Utils/logger.hpp>
-#include <Utils/timer.hpp>
+#include <VolumeSlicer/Utils/gl_helper.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 #define DEBUG
 #ifdef DEBUG
 #define SDL_EXPR(exec)                                                                                                 \

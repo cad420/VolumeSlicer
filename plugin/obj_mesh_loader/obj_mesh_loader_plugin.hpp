@@ -2,10 +2,13 @@
 // Created by wyz on 2021/11/5.
 //
 #pragma once
-#include <Ext/imesh_loader_plugin_interface.hpp>
-#include <Ext/plugin.hpp>
+
+#include <VolumeSlicer/Ext/imesh_loader_plugin_interface.hpp>
+#include <VolumeSlicer/Ext/plugin.hpp>
+
 VS_START
-class ObjMeshLoaderPlugin: public IMeshLoaderPluginInterface{
+class ObjMeshLoaderPlugin : public IMeshLoaderPluginInterface
+{
   public:
     using Vertex = IMeshLoaderPluginInterface::Vertex;
     using Surface = IMeshLoaderPluginInterface::Surface;
@@ -15,28 +18,36 @@ class ObjMeshLoaderPlugin: public IMeshLoaderPluginInterface{
 
     void Open(std::string path) override;
 
-    auto GetSurfaces() -> const std::vector<Surface>& override;
+    auto GetSurfaces() -> const std::vector<Surface> & override;
 
     void Close() override;
 
   private:
-    void ReadObj(const std::string& name,const std::string& path,const std::array<float,4>& color);
+    void ReadObj(const std::string &name, const std::string &path, const std::array<float, 4> &color);
+
   private:
     std::vector<Surface> surfaces;
 };
 
 VS_END
 
-class ObjMeshLoaderPluginFactory: public vs::IPluginFactory{
+class ObjMeshLoaderPluginFactory : public vs::IPluginFactory
+{
   public:
-    std::string Key() const override { return ".obj"; }
-    void* Create(std::string const& key) override{
-        if(key == ".obj"){
+    std::string Key() const override
+    {
+        return ".obj";
+    }
+    void *Create(std::string const &key) override
+    {
+        if (key == ".obj")
+        {
             return new vs::ObjMeshLoaderPlugin();
         }
         return nullptr;
     }
-    std::string GetModuleID() const override{
+    std::string GetModuleID() const override
+    {
         return "VolumeSlicer.mesh.loader";
     }
 };

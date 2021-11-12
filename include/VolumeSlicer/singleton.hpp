@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/8.
 //
 
-#ifndef CGUTILS_SINGLETON_HPP
-#define CGUTILS_SINGLETON_HPP
+#pragma once
 
 #include <mutex>
 #include <utility>
@@ -73,4 +72,4 @@ T* Singleton<T,typename std::enable_if<!std::is_default_constructible<T>::value>
 template<typename T>
 bool Singleton<T,typename std::enable_if<!std::is_default_constructible<T>::value>::type>::inited=false;
 
-#endif //CGUTILS_SINGLETON_HPP
+

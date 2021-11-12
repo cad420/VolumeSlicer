@@ -1,5 +1,4 @@
-#ifndef TF1DEDITOR_H
-#define TF1DEDITOR_H
+#pragma once
 
 #include <QWidget>
 
@@ -134,4 +133,3 @@ protected:
 
 };
 
-#endif

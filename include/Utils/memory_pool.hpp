@@ -1,8 +1,0 @@
-//
-// Created by wyz on 2021/8/27.
-//
-
-#ifndef VOLUMESLICER_MEMORY_POOL_HPP
-#define VOLUMESLICER_MEMORY_POOL_HPP
-
-#endif // VOLUMESLICER_MEMORY_POOL_HPP
