@@ -1,0 +1,32 @@
+#pragma once
+
+namespace shader{
+    inline const char* slice_render_v = R"(@slice_render_v.glsl@)";
+
+    inline const char* slice_render_f = R"(@slice_render_f.glsl@)";
+
+    inline const char* volume_board_render_v = R"(@volume_board_render_v.glsl@)";
+
+    inline const char* volume_board_render_f = R"(@volume_board_render_f.glsl@)";
+
+    inline const char* volume_render_pos_v = R"(@volume_render_pos_v.glsl@)";
+
+    inline const char* volume_render_pos_f = R"(@volume_render_pos_f.glsl)";
+
+    inline const char* multi_volume_render_v = R"(@multi_volume_render_v.glsl@)";
+
+    inline const char* multi_volume_render_f = R"(@multi_volume_render_f.glsl@)";
+
+    inline const char* comp_render_pos_v = R"(@comp_render_pos_v.glsl@)";
+
+    inline const char* comp_render_pos_f = R"(@comp_render_pos_f.glsl@)";
+
+    inline const char* comp_render_v = R"(@comp_render_v.glsl@)";
+
+    inline const char* comp_render_f = R"(@comp_render_f.glsl@)";
+
+    inline const char* simple_mesh_render_v = R"(@simple_mesh_render_v.glsl@)";
+
+    inline const char* simple_mesh_render_f = R"(@simple_mesh_render_f.glsl@)";
+
+}
