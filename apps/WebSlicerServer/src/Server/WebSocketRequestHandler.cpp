@@ -5,7 +5,7 @@
 #include <Poco/Net/NetException.h>
 #include <Poco/Net/WebSocket.h>
 #include <Poco/Util/Application.h>
-#include <Utils/logger.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 
 #include <DataModel/Slice.hpp>
 #include <seria/deserialize/rapidjson.hpp>

@@ -2,7 +2,7 @@
 // Created by wyz on 2021/10/28.
 //
 #include "MessageQueue.hpp"
-#include <Utils/logger.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 #include <iostream>
 VS_START
 namespace remote

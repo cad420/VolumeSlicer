@@ -40,7 +40,7 @@ class SliceService: public JsonRPCService{
      * @param depth voxels between two slices
      * @param direction 1 represent forward slice's normal, 2 represent backward slice's normal, 3 represent double direction
      */
-    Image render(Slice slice,int d,float depth,int direction);
+    Image render(Slice slice,float depth,int direction);
 
   private:
     std::unique_ptr<RPCMethod> methods;

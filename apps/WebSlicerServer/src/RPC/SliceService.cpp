@@ -1,9 +1,10 @@
 //
 // Created by wyz on 2021/10/28.
 //
-#include "SliceService.hpp"
+#include "RPC/SliceService.hpp"
 #include "Dataset/CompVolume.hpp"
-#include <Utils/logger.hpp>
+
+#include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/volume_sampler.hpp>
 
 VS_START
@@ -11,7 +12,7 @@ namespace remote
 {
 SliceService::SliceService() : methods(std::make_unique<RPCMethod>())
 {
-    methods->register_method("render", {"slice","d","depth","direction"}, RPCMethod::GetHandler(&SliceService::render, *this));
+    methods->register_method("render", {"slice","depth","direction"}, RPCMethod::GetHandler(&SliceService::render, *this));
 }
 void SliceService::process_message(const uint8_t *message, uint32_t size, const SliceService::Callback &callback)
 {
@@ -109,14 +110,28 @@ static void MaxMix(std::vector<uint8_t>& res,std::vector<uint8_t>& v){
 }
 
 //rpc method
-Image SliceService::render(Slice slice,int d,float depth,int direction)
+Image SliceService::render(Slice slice,float depth,int direction)
 {
     cuCtxSetCurrent(GetCUDACtx());
+    static auto space_x = VolumeDataSet::GetVolume()->GetVolumeSpaceX();
+    static auto space_y = VolumeDataSet::GetVolume()->GetVolumeSpaceY();
+    static auto space_z = VolumeDataSet::GetVolume()->GetVolumeSpaceZ();
+    static auto base_space = (std::min)({space_x,space_y,space_z});
+    static auto base_sample_space = base_space * 0.5;
+    int d = depth / base_sample_space;
+    if(d*base_sample_space<depth){
+        depth = depth / d;
+    }
+    //transform to voxel
+    depth = depth / base_space;
+
     auto slicer = Slicer::CreateSlicer(slice);
-    slicer->SetSliceSpaceRatio({1.f,1.f,1.f/0.32f});
+    slicer->SetSliceSpaceRatio({space_x/base_space,space_y/base_space,space_z/base_space});
     const auto& slice_renderer = SliceRenderer::GetSliceRenderer();
+
     std::vector<uint8_t> res(slice.n_pixels_width*slice.n_pixels_height);
     slice_renderer->Sample(slice,res.data(),false);
+
     std::vector<uint8_t> tmp;
     if(d>0){
         tmp.resize(slice.n_pixels_width*slice.n_pixels_height);
@@ -130,7 +145,6 @@ Image SliceService::render(Slice slice,int d,float depth,int direction)
     }
     slicer->SetSlice(slice);
     if((direction & 0b10)){
-
         for(int i=1;i<=d;i++){
             slicer->MoveByNormal(-depth);
             slice_renderer->Sample(slicer->GetSlice(),tmp.data(),false);

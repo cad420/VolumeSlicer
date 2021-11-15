@@ -4,7 +4,7 @@
 #include "SlicerServerApplication.hpp"
 #include "Server/RequestHandlerFactory.hpp"
 #include <Poco/Net/HTTPServer.h>
-#include <Utils/logger.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 #include "Manager/ManagerClient.hpp"
 #include "Common/utils.hpp"
 #include "Dataset/CompVolume.hpp"

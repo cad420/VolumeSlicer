@@ -2,7 +2,7 @@
 // Created by wyz on 2021/10/28.
 //
 #include "RPCMethod.hpp"
-#include <Utils/logger.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 VS_START
 namespace remote
 {

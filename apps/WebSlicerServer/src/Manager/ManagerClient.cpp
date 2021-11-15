@@ -8,7 +8,7 @@
 #include <Poco/Net/HTTPMessage.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
-#include <Utils/logger.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 #include <iostream>
 
 VS_START
