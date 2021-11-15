@@ -20,10 +20,12 @@ public:
 class TransferFunc{
 public:
     TransferFunc()=default;
-    TransferFunc(TransferFunc&& tf){
+    TransferFunc(const TransferFunc&) = default;
+    TransferFunc& operator=(const TransferFunc&) = default;
+    TransferFunc(TransferFunc&& tf) noexcept{
         *this = std::move(tf);
     }
-    TransferFunc& operator=(TransferFunc&& tf){
+    TransferFunc& operator=(TransferFunc&& tf) noexcept{
         this->points=std::move(tf.points);
         return *this;
     }
