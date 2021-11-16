@@ -48,7 +48,7 @@ int main(int argc,char** argv){
         {
             std::cout << "render frame " << i << std::endl;
             renderer->SetCamera(camera);
-            renderer->render();
+            renderer->render(true);
             auto image = renderer->GetImage().ToImage3b();
             video_capture.AddFrame(reinterpret_cast<uint8_t *>(image.GetData()));
             camera.pos[2] -= 0.01f;

@@ -239,7 +239,6 @@ void CUDACompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
 
 void CUDACompVolumeRendererImpl::render(bool sync)
 {
-    assert(image.data.size() == (size_t)window_h * window_w);
 
     // may change every time render
     CUDARenderer::CUDACompRenderParameter cudaCompRenderParameter;

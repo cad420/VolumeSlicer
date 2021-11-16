@@ -7,14 +7,15 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <VolumeSlicer/Utils/logger.hpp>
-#include <VolumeSlicer/Utils/gl_helper.hpp>
-#include <VolumeSlicer/render.hpp>
+
 
 #include "Render/render_impl.hpp"
 #include "Render/shaders.hpp"
 #include "Render/transfer_function_impl.hpp"
 
+#include <VolumeSlicer/Utils/logger.hpp>
+#include <VolumeSlicer/Utils/gl_helper.hpp>
+#include <VolumeSlicer/render.hpp>
 VS_START
 
 std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w, int h)
