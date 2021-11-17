@@ -24,6 +24,7 @@ int SlicerServerApplication::main(const std::vector<std::string> &args)
 {
     SetCUDACtx(0);
     VolumeDataSet::Load("E:/MouseNeuronData/mouse_file_config.json");
+    VolumeDataSet::Load("E:/MouseNeuronData/mouselod6_366_463_161_uint8.raw");
     max_server_num = 6;
     MessageQueue::set_queue_type("slice");
 

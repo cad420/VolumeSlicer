@@ -42,6 +42,12 @@ class SliceService: public JsonRPCService{
      */
     Image render(Slice slice,float depth,int direction);
 
+    /**
+     * @brief get guide map for slice, using max lod down-sample volume to render
+     * @param slice
+     */
+    Image map(Slice slice,int window_w,int window_h);
+
   private:
     std::unique_ptr<RPCMethod> methods;
 

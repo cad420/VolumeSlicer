@@ -11,8 +11,13 @@ class VolumeDataSet{
   public:
     static void Load(const std::string&);
     static auto GetVolume()->const std::shared_ptr<CompVolume>&;
+    static auto GetRawVolume() ->const std::shared_ptr<RawVolume>&;
+  private:
+    static void loadCompVolume(const std::string&);
+    static void loadRawVolume(const std::string&);
   private:
     static std::shared_ptr<CompVolume> comp_volume;
+    static std::shared_ptr<RawVolume> raw_volume;
 };
 
 }

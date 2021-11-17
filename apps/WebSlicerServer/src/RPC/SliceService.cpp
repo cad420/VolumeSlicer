@@ -13,6 +13,7 @@ namespace remote
 SliceService::SliceService() : methods(std::make_unique<RPCMethod>())
 {
     methods->register_method("render", {"slice","depth","direction"}, RPCMethod::GetHandler(&SliceService::render, *this));
+    methods->register_method("map",{"slice","window_w","window_h"},RPCMethod::GetHandler(&SliceService::map,*this));
 }
 void SliceService::process_message(const uint8_t *message, uint32_t size, const SliceService::Callback &callback)
 {
@@ -156,7 +157,158 @@ Image SliceService::render(Slice slice,float depth,int direction)
     SliceRenderer::Release();
     return img;
 }
+Image SliceService::map(Slice slice,int window_w,int window_h)
+{
+    cuCtxSetCurrent(GetCUDACtx());
+    auto world_slice = slice;
+    static auto raw_volume_sampler = VolumeSampler::CreateVolumeSampler(VolumeDataSet::GetRawVolume());
+    static int raw_lod =6;
+    static auto volume_space_x = VolumeDataSet::GetVolume()->GetVolumeSpaceX();
+    static auto volume_space_y = VolumeDataSet::GetVolume()->GetVolumeSpaceY();
+    static auto volume_space_z = VolumeDataSet::GetVolume()->GetVolumeSpaceZ();
+    static auto raw_dim_x = VolumeDataSet::GetRawVolume()->GetVolumeDimX();
+    static auto raw_dim_y = VolumeDataSet::GetRawVolume()->GetVolumeDimY();
+    static auto raw_dim_z = VolumeDataSet::GetRawVolume()->GetVolumeDimZ();
 
+    static float ratio = pow(2,raw_lod);
+    slice.origin={slice.origin[0]/ratio,slice.origin[1]/ratio,slice.origin[2]/ratio,1.f};
+    static float base_space=(std::min)({volume_space_x,volume_space_y,volume_space_z});
+    static float space_ratio_x=volume_space_x/base_space;
+    static float space_ratio_y=volume_space_y/base_space;
+    static float space_ratio_z=volume_space_z/base_space;
+    float A = slice.normal[0]*space_ratio_x;
+    float B = slice.normal[1]*space_ratio_y;
+    float C = slice.normal[2]*space_ratio_z;
+    float length = std::sqrt(A*A+B*B+C*C);
+    A /= length;
+    B /= length;
+    C /= length;
+    float x0 = slice.origin[0];
+    float y0 = slice.origin[1];
+    float z0 = slice.origin[2];
+    float D  = A*x0 + B*y0 + C*z0;
+    static std::array<std::array<float,3>,8> pts={
+        std::array<float,3>{0.0f,0.0f,0.0f},
+        std::array<float,3>{raw_dim_x*1.f,0.f,0.f},
+        std::array<float,3>{raw_dim_x*1.f,1.f*raw_dim_y,0.f},
+        std::array<float,3>{0.f,1.f*raw_dim_y,0.f},
+        std::array<float,3>{0.f,0.f,1.f*raw_dim_z},
+        std::array<float,3>{1.f*raw_dim_x,0.f,1.f*raw_dim_z},
+        std::array<float,3>{1.f*raw_dim_x,1.f*raw_dim_y,1.f*raw_dim_z},
+        std::array<float,3>{0.f,1.f*raw_dim_y,1.f*raw_dim_z}
+    };
+    static std::array<std::array<int,2>,12> line_index={
+        std::array<int,2>{0,1},
+        std::array<int,2>{1,2},
+        std::array<int,2>{2,3},
+        std::array<int,2>{3,0},
+        std::array<int,2>{4,5},
+        std::array<int,2>{5,6},
+        std::array<int,2>{6,7},
+        std::array<int,2>{7,4},
+        std::array<int,2>{0,4},
+        std::array<int,2>{1,5},
+        std::array<int,2>{2,6},
+        std::array<int,2>{3,7}
+    };
+    int intersect_pts_cnt=0;
+    float t,k;
+    std::array<float,3> intersect_pts={0.f,0.f,0.f};
+    std::array<float,3> tmp;
+    float x1,y1,z1,x2,y2,z2;
+    for(int i=0;i<line_index.size();i++){
+        x1=pts[line_index[i][0]][0];
+        y1=pts[line_index[i][0]][1];
+        z1=pts[line_index[i][0]][2];
+        x2=pts[line_index[i][1]][0];
+        y2=pts[line_index[i][1]][1];
+        z2=pts[line_index[i][1]][2];
+        k=A*(x1-x2)+B*(y1-y2)+C*(z1-z2);
+        if(std::abs(k)>0.0001f){
+            t=( D - (A*x2+B*y2+C*z2) ) / k;
+            if(t>=0.f && t<1.f){
+                intersect_pts_cnt++;
+                tmp={t*x1+(1-t)*x2,t*y1+(1-t)*y2,t*z1+(1-t)*z2};
+                intersect_pts={intersect_pts[0]+tmp[0],
+                               intersect_pts[1]+tmp[1],
+                               intersect_pts[2]+tmp[2]};
+            }
+        }
+    }
+    intersect_pts={intersect_pts[0]/intersect_pts_cnt,
+                   intersect_pts[1]/intersect_pts_cnt,
+                   intersect_pts[2]/intersect_pts_cnt};
+    slice.origin={intersect_pts[0],
+                  intersect_pts[1],
+                  intersect_pts[2],1.f};
+    slice.voxel_per_pixel_width=slice.voxel_per_pixel_height=0.8f;
+    slice.n_pixels_width=window_w;
+    slice.n_pixels_height=window_h;
+
+    Image img;
+    img.width = window_w;
+    img.height = window_h;
+    img.channels = 1;
+    img.data.resize(window_w*window_h);
+    static auto img1to3 = [](Image& image){
+        assert(image.channels == 1);
+        assert(image.data.size()==image.width*image.height);
+        image.channels = 3;
+        std::vector<uint8_t> data(image.data.size()*3);
+        for(int i =0;i<image.data.size();i++){
+            data[i*3+0] = image.data[i];
+            data[i*3+1] = image.data[i];
+            data[i*3+2] = image.data[i];
+        }
+        image.data = std::move(data);
+    };
+    static auto setPixelColor = [](Image&image,int row,int col,uint8_t r,uint8_t g,uint8_t b){
+        assert(image.channels==3);
+        int c = image.channels;
+        int offset = (row*image.width+col) * c;
+
+        image.data[offset+0] = r;
+        image.data[offset+1] = g;
+        image.data[offset+2] = b;
+    };
+
+    raw_volume_sampler->Sample(slice,img.data.data(),true);
+
+    img1to3(img);
+
+    float p =world_slice.voxel_per_pixel_height/ratio;
+    glm::vec3 right={world_slice.right[0],world_slice.right[1],world_slice.right[2]};
+    glm::vec3 up={world_slice.up[0],world_slice.up[1],world_slice.up[2]};
+
+    glm::vec3 offset={(world_slice.origin[0]/ratio-slice.origin[0])*space_ratio_x,
+                      (world_slice.origin[1]/ratio-slice.origin[1])*space_ratio_y,
+                      (world_slice.origin[2]/ratio-slice.origin[2])*space_ratio_z};
+    float x_offset=glm::dot(right,offset);
+    float y_offset=-glm::dot(up,offset);
+    int min_p_x=x_offset/slice.voxel_per_pixel_width
+                + slice.n_pixels_width/2 - world_slice.n_pixels_width/2*p/slice.voxel_per_pixel_width;
+    int min_p_y=y_offset/slice.voxel_per_pixel_height
+                + slice.n_pixels_height/2 - world_slice.n_pixels_height/2*p/slice.voxel_per_pixel_width;
+    int max_p_x=x_offset/slice.voxel_per_pixel_width
+                + slice.n_pixels_width/2 + world_slice.n_pixels_width/2*p/slice.voxel_per_pixel_width;
+    int max_p_y=y_offset/slice.voxel_per_pixel_height
+                + slice.n_pixels_height/2 + world_slice.n_pixels_height/2*p/slice.voxel_per_pixel_width;
+    min_p_x=min_p_x<0?0:min_p_x;
+    max_p_x=max_p_x<slice.n_pixels_width?max_p_x:slice.n_pixels_width-1;
+    min_p_y=min_p_y<0?0:min_p_y;
+    max_p_y=max_p_y<slice.n_pixels_height?max_p_y:slice.n_pixels_height-1;
+
+    for(int i=min_p_x;i<=max_p_x;i++){
+        setPixelColor(img,i,min_p_y,255,0,0);
+        setPixelColor(img,i,max_p_y,255,0,0);
+    }
+    for(int i =min_p_y;i<=max_p_y;i++){
+        setPixelColor(img,min_p_x,i,255,0,0);
+        setPixelColor(img,max_p_x,i,255,0,0);
+    }
+    return Image::encode(img.data.data(),img.width,img.height,3,
+                         Image::Format::JPEG,Image::Quality::MEDIUM);
+}
 
 }
 VS_END
