@@ -1,9 +1,7 @@
 //
 // Created by wyz on 2021/8/3.
 //
-
-#ifndef VOLUMESLICER_TRIVALVOLUME_HPP
-#define VOLUMESLICER_TRIVALVOLUME_HPP
+#pragma once
 #include <iostream>
 #include <spdlog/spdlog.h>
 enum TVoxelType { UInt8, Float32 };
@@ -180,4 +178,4 @@ inline void TrivalVolume::calcIsoStat()
         m_maxIsoValue = std::max(m_maxIsoValue, m_isoStat[i]);
     }
 }
-#endif //VOLUMESLICER_TRIVALVOLUME_HPP
+

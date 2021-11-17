@@ -28,7 +28,7 @@ void SliceRenderWidget::paintEvent(QPaintEvent *event) {
     frame.data.resize((size_t)frame.width*frame.height*frame.channels,0);
     bool complete;
 
-    complete=volume_sampler->Sample(slicer->GetSlice(),frame.data.data());
+    complete=volume_sampler->Sample(slicer->GetSlice(),frame.data.data(),true);
 
 
 //#pragma omp parallel for

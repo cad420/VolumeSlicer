@@ -2,12 +2,12 @@
 // Created by wyz on 2021/6/8.
 //
 
-#ifndef VOLUMESLICER_READER_HPP
-#define VOLUMESLICER_READER_HPP
+#pragma once
 
 #include<array>
 #include<vector>
 #include<memory>
+
 #include<VolumeSlicer/export.hpp>
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
@@ -37,4 +37,4 @@ public:
 
 VS_END
 
-#endif //VOLUMESLICER_READER_HPP
+

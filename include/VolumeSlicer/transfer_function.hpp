@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/15.
 //
 
-#ifndef VOLUMESLICER_TRANSFER_FUNCTION_HPP
-#define VOLUMESLICER_TRANSFER_FUNCTION_HPP
+#pragma once
 #include<VolumeSlicer/export.hpp>
 #include<VolumeSlicer/status.hpp>
 #include<VolumeSlicer/define.hpp>
@@ -21,10 +20,12 @@ public:
 class TransferFunc{
 public:
     TransferFunc()=default;
-    TransferFunc(TransferFunc&& tf){
+    TransferFunc(const TransferFunc&) = default;
+    TransferFunc& operator=(const TransferFunc&) = default;
+    TransferFunc(TransferFunc&& tf) noexcept{
         *this = std::move(tf);
     }
-    TransferFunc& operator=(TransferFunc&& tf){
+    TransferFunc& operator=(TransferFunc&& tf) noexcept{
         this->points=std::move(tf.points);
         return *this;
     }
@@ -33,4 +34,4 @@ public:
 
 VS_END
 
-#endif //VOLUMESLICER_TRANSFER_FUNCTION_HPP
+

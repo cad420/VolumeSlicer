@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/22.
 //
 
-#ifndef VOLUMESLICER_LARGEVOLUMEVISGUI_HPP
-#define VOLUMESLICER_LARGEVOLUMEVISGUI_HPP
+#pragma once
 #include <VolumeSlicer/render.hpp>
 #include <VolumeSlicer/volume.hpp>
 #include <VolumeSlicer/volume_cache.hpp>
@@ -48,4 +47,4 @@ private:
 
 };
 
-#endif //VOLUMESLICER_LARGEVOLUMEVISGUI_HPP
+

@@ -2,7 +2,7 @@
 // Created by wyz on 2021/10/6.
 //
 #include <VolumeSlicer/volume.hpp>
-#include <Utils/plugin_loader.hpp>
+#include <VolumeSlicer/Utils/plugin_loader.hpp>
 using namespace vs;
 void test_raw_volume(){
     PluginLoader::LoadPlugins("./plugins");

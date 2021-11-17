@@ -2,10 +2,7 @@
 // Created by wyz on 2021/4/7.
 //
 
-#ifndef NEURONVISUALIZATIONGL_SHADER_PROGRAM_H
-#define NEURONVISUALIZATIONGL_SHADER_PROGRAM_H
-
-
+#pragma once
 
 #include<string>
 #include<fstream>
@@ -14,7 +11,6 @@
 
 #include<glad/glad.h>
 #include<glm/glm.hpp>
-
 
 
 class Shader{
@@ -274,6 +270,3 @@ inline void Shader::setShader(const char *vertexShader, const char *fragmentShad
 
 
 
-
-
-#endif //NEURONVISUALIZATIONGL_SHADER_PROGRAM_H

@@ -3,68 +3,81 @@
 //
 
 #pragma once
+
+#include <VolumeSlicer/Utils/box.hpp>
 #include <VolumeSlicer/cuda_context.hpp>
-#include <Utils/box.hpp>
+
 #include "Algorithm/helper_math.h"
 
 #include <unordered_set>
-using namespace  vs;
-namespace CUDAOffRenderer{
-    struct CUDAOffCompRenderPolicy{
-        double lod_dist[10];
-    };
-    struct CUDAOffCompRenderParameter{
 
-        int    image_w;
-        int    image_h;
-        float3 camera_pos;
-        float3 right;
-        float3 up;
-        float3 front;
-        double fov;
-        float  step;
-    };
-    struct CompVolumeParameter{
-        float3 volume_board;//volume_dim * volume_space
-        float3 volume_space;
-        int3   volume_dim;
-        int3   block_dim;
-        float  voxel;
-        int    block_length;
-        int    padding;
-        int    no_padding_block_length;
-        int    min_lod,max_lod;
-        int4   volume_texture_shape;
-    };
-    struct ShadingParameter{
-        float ka;
-        float ks;
-        float kd;
-        float shininess;
-    };
+using namespace vs;
 
+namespace CUDAOffRenderer
+{
 
-    void UploadTransferFunc(float* data,size_t size=256);
+struct CUDAOffCompRenderPolicy
+{
+    double lod_dist[10];
+};
 
-    void UploadPreIntTransferFunc(float* data,size_t size=65536);
+struct CUDAOffCompRenderParameter
+{
 
-    void UploadCUDAOffCompRenderPolicy(const CUDAOffCompRenderPolicy&);
+    int image_w;
+    int image_h;
+    float3 camera_pos;
+    float3 right;
+    float3 up;
+    float3 front;
+    double fov;
+    float step;
+};
 
-    void UploadCUDAOffCompRenderParameter(const CUDAOffCompRenderParameter&);
+struct CompVolumeParameter
+{
+    float3 volume_board; // volume_dim * volume_space
+    float3 volume_space;
+    int3 volume_dim;
+    int3 block_dim;
+    float voxel;
+    int block_length;
+    int padding;
+    int no_padding_block_length;
+    int min_lod, max_lod;
+    int4 volume_texture_shape;
+};
 
-    void UploadCompVolumeParameter(const CompVolumeParameter&);
+struct ShadingParameter
+{
+    float ka;
+    float ks;
+    float kd;
+    float shininess;
+};
 
-    void UploadShadingParameter(const ShadingParameter&);
+void UploadTransferFunc(float *data, size_t size = 256);
 
-    void UploadMappingTable(const uint32_t* data,size_t size);
+void UploadPreIntTransferFunc(float *data, size_t size = 65536);
 
-    void UploadLodMappingTableOffset(const uint32_t* data,size_t size);
+void UploadCUDAOffCompRenderPolicy(const CUDAOffCompRenderPolicy &);
 
-    void SetCUDATextureObject(cudaTextureObject_t* textures,size_t size);
+void UploadCUDAOffCompRenderParameter(const CUDAOffCompRenderParameter &);
 
-    void CUDARenderPrepare(int w,int h);
+void UploadCompVolumeParameter(const CompVolumeParameter &);
 
-    void CUDARender(std::unordered_set<int4,Hash_Int4>& missed_blocks);
+void UploadShadingParameter(const ShadingParameter &);
 
-    void GetRenderImage(uint8_t* data);
-}
+void UploadMappingTable(const uint32_t *data, size_t size);
+
+void UploadLodMappingTableOffset(const uint32_t *data, size_t size);
+
+void SetCUDATextureObject(cudaTextureObject_t *textures, size_t size);
+
+void CUDARenderPrepare(int w, int h);
+
+void CUDARender(std::unordered_set<int4, Hash_Int4> &missed_blocks);
+
+void GetRenderImage(uint8_t *data);
+
+} // namespace CUDAOffRenderer

@@ -7,9 +7,9 @@
 #include <iostream>
 #include <vector>
 
-#include <Utils/block_array.hpp>
-#include <Utils/linear_array.hpp>
-#include <Utils/block_cache.hpp>
+#include <VolumeSlicer/Utils/block_array.hpp>
+#include <VolumeSlicer/Utils/linear_array.hpp>
+#include <VolumeSlicer/Utils/block_cache.hpp>
 #include <cuda_runtime.h>
 using namespace vs;
 void test_texture();

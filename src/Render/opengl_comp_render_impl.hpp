@@ -2,13 +2,12 @@
 // Created by wyz on 2021/7/30.
 //
 
-#ifndef VOLUMESLICER_OPENGL_COMP_RENDER_IMPL_HPP
-#define VOLUMESLICER_OPENGL_COMP_RENDER_IMPL_HPP
+#pragma once
 
 #include <VolumeSlicer/render.hpp>
 #include <VolumeSlicer/volume_cache.hpp>
 #include <unordered_set>
-#include "Utils/hash.hpp"
+#include <VolumeSlicer/Utils/hash.hpp>
 #include <VolumeSlicer/cdf.hpp>
 //#include "Render/wgl_wrap.hpp"
 #include "Render/shader_program.hpp"
@@ -28,6 +27,8 @@ public:
 
     void SetRenderPolicy(CompRenderPolicy) override;
 
+    auto GetBackendName()-> std::string override;
+
     void SetMPIRender(MPIRenderParameter) override ;
 
     void SetStep(double step,int steps) override;
@@ -36,9 +37,9 @@ public:
 
     void SetTransferFunc(TransferFunc tf) override ;
 
-    void render() override ;
+    void render(bool sync) override ;
 
-    auto GetFrame()  -> const Image<uint32_t>&  override ;
+    auto GetImage()->const Image<Color4b>&  override ;
 
     void resize(int w,int h) override ;
 
@@ -51,26 +52,41 @@ private:
 
     void sendRequests();
 
-    void fetchBlocks();
+    void fetchBlocks(bool sync);
   private:
     void uploadMappingTable(const uint32_t* data,size_t size);
+
     void createMappingTable(const uint32_t* data,size_t size);
+
     void createMissedBlockMapping();
+
     void createVolumeBoundary();
+
     void createScreenQuad();
+
     void createShader();
+
     void createPosFramebuffer();
+
     void bindShaderUniform();
+
     void createVolumeSampler();
+
+    bool isRenderFinish();
+
+    void clearCurrentInfo();
+
+    void deleteGLResource();
 private:
     void setCurrentCtx(){glfwMakeContextCurrent(window);}
 private:
-    Image<uint32_t> image;
-//    HDC window_handle;
-//    HGLRC gl_context;
+    Image<Color4b> image;
+
     GLFWwindow* window = nullptr;
     int window_w,window_h;
     Camera camera;
+
+    bool is_render_finish;
 
     std::shared_ptr<CompVolume> comp_volume;
     std::unique_ptr<OpenGLVolumeBlockCache> opengl_volume_block_cache;
@@ -100,4 +116,4 @@ private:
 
 VS_END
 
-#endif //VOLUMESLICER_OPENGL_COMP_RENDER_IMPL_HPP
+

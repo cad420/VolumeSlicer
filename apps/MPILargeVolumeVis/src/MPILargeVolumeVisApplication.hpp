@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/22.
 //
 
-#ifndef VOLUMESLICER_MPILARGEVOLUMEVISAPPLICATION_HPP
-#define VOLUMESLICER_MPILARGEVOLUMEVISAPPLICATION_HPP
+#pragma once
 
 class MPILargeVolumeVisApp{
 public:
@@ -11,4 +10,4 @@ public:
     int run(int argc,char** argv);
 };
 
-#endif //VOLUMESLICER_MPILARGEVOLUMEVISAPPLICATION_HPP
+

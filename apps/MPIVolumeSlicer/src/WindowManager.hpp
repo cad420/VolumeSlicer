@@ -2,8 +2,7 @@
 // Created by wyz on 2021/7/12.
 //
 
-#ifndef VOLUMESLICER_WINDOWMANAGER_HPP
-#define VOLUMESLICER_WINDOWMANAGER_HPP
+#pragma once
 #include <json.hpp>
 #include <fstream>
 #include <mpi.h>
@@ -145,4 +144,4 @@ public:
     int raw_dim_x,raw_dim_y,raw_dim_z;
 };
 
-#endif //VOLUMESLICER_WINDOWMANAGER_HPP
+

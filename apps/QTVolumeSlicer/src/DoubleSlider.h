@@ -1,5 +1,4 @@
-#ifndef DOUBLESLIDER_H
-#define DOUBLESLIDER_H
+#pragma once
 
 #include <QWidget>
 
@@ -149,4 +148,3 @@ private:
     bool rightSliderActive_;   ///< true when right slider was clicked, false otherwise
 };
 
-#endif

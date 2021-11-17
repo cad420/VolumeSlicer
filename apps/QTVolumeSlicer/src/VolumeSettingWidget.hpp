@@ -1,10 +1,7 @@
 //
 // Created by wyz on 2021/6/28.
 //
-
-#ifndef VOLUMESLICER_VOLUMESETTINGWIDGET_HPP
-#define VOLUMESLICER_VOLUMESETTINGWIDGET_HPP
-
+#pragma once
 #include<QtWidgets/QWidget>
 class SliceRenderWidget;
 class VolumeRenderWidget;
@@ -40,4 +37,3 @@ private:
 
 };
 
-#endif //VOLUMESLICER_VOLUMESETTINGWIDGET_HPP

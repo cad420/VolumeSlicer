@@ -2,16 +2,17 @@
 // Created by wyz on 2021/7/21.
 //
 
-#ifndef VOLUMESLICER_VOLUME_CACHE_HPP
-#define VOLUMESLICER_VOLUME_CACHE_HPP
+#pragma once
 #include <VolumeSlicer/define.hpp>
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/cuda_memory.hpp>
-#include <Utils/block_array.hpp>
+#include <VolumeSlicer/Utils/block_array.hpp>
+
 #include <cstdint>
 #include <map>
 #include <array>
 #include <vector>
+
 VS_START
 
 /**
@@ -44,7 +45,8 @@ public:
     //get number of block which is not valid, and don't care of whether is cached
     virtual int  GetRemainEmptyBlock() const = 0;
 
-    //set all blocks invalid
+    //todo
+    //different for derived class
     virtual void clear() = 0;
 
     //if target block is cached, then set it valid and return true and update mapping table
@@ -90,4 +92,3 @@ VS_END
 
 
 
-#endif //VOLUMESLICER_VOLUME_CACHE_HPP

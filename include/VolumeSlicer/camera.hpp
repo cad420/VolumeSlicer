@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/15.
 //
 
-#ifndef VOLUMESLICER_CAMERA_HPP
-#define VOLUMESLICER_CAMERA_HPP
+#pragma once
 
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/status.hpp>
@@ -25,4 +24,4 @@ public:
 VS_END
 
 
-#endif //VOLUMESLICER_CAMERA_HPP
+

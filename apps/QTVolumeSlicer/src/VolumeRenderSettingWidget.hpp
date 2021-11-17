@@ -1,9 +1,7 @@
 //
 // Created by wyz on 2021/6/28.
 //
-
-#ifndef VOLUMESLICER_VOLUMERENDERSETTINGWIDGET_HPP
-#define VOLUMESLICER_VOLUMERENDERSETTINGWIDGET_HPP
+#pragma once
 
 #include<QtWidgets/QWidget>
 class VolumeRenderWidget;
@@ -27,4 +25,3 @@ private:
     std::vector<float> tf;
 };
 
-#endif //VOLUMESLICER_VOLUMERENDERSETTINGWIDGET_HPP

@@ -2,15 +2,16 @@
 // Created by wyz on 2021/6/7.
 //
 
-#ifndef VOLUMESLICER_SLICE_HPP
-#define VOLUMESLICER_SLICE_HPP
+#pragma once
 
 #include <cstdint>
 #include <array>
 #include <memory>
+
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/status.hpp>
 #include <VolumeSlicer/define.hpp>
+
 VS_START
 
 
@@ -90,4 +91,4 @@ public:
 
 VS_END
 
-#endif //VOLUMESLICER_SLICE_HPP
+

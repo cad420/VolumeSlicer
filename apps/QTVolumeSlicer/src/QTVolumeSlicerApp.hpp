@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/11.
 //
 
-#ifndef VOLUMESLICER_QTVOLUMESLICERAPP_HPP
-#define VOLUMESLICER_QTVOLUMESLICERAPP_HPP
+#pragma once
 //qt
 #include <QMainWindow>
 //std
@@ -110,4 +109,4 @@ private:
 
 
 
-#endif //VOLUMESLICER_QTVOLUMESLICERAPP_HPP
+

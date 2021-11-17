@@ -3,8 +3,10 @@
 //
 
 #pragma once
+
 #include <VolumeSlicer/render.hpp>
 #include <VolumeSlicer/volume_cache.hpp>
+
 VS_START
 
 class CUDAOffScreenCompVolumeRendererImpl: public CUDAOffScreenCompVolumeRenderer{
@@ -17,6 +19,8 @@ class CUDAOffScreenCompVolumeRendererImpl: public CUDAOffScreenCompVolumeRendere
 
     void SetRenderPolicy(CompRenderPolicy) override;
 
+    auto GetBackendName()-> std::string override;
+
     void SetMPIRender(MPIRenderParameter) override;
 
     void SetStep(double step,int steps) override;
@@ -25,9 +29,7 @@ class CUDAOffScreenCompVolumeRendererImpl: public CUDAOffScreenCompVolumeRendere
 
     void SetTransferFunc(TransferFunc tf) override;
 
-    void render() override;
-
-    auto GetFrame()  -> const Image<uint32_t>&  override;
+    void render(bool sync) override;
 
     void resize(int w,int h) override;
 
@@ -35,7 +37,6 @@ class CUDAOffScreenCompVolumeRendererImpl: public CUDAOffScreenCompVolumeRendere
 
   private:
     int window_w,window_h;
-    Image<uint32_t> frame;
     Image<Color4b> image;
     CUcontext cu_context;
     float step;

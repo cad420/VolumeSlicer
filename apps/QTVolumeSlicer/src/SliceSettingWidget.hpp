@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/28.
 //
 
-#ifndef VOLUMESLICER_SLICESETTINGWIDGET_HPP
-#define VOLUMESLICER_SLICESETTINGWIDGET_HPP
+#pragma once
 
 #include<QtWidgets/QWidget>
 #include <VolumeSlicer/slice.hpp>
@@ -89,4 +88,3 @@ private:
 };
 
 
-#endif //VOLUMESLICER_SLICESETTINGWIDGET_HPP

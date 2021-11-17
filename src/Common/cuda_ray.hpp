@@ -5,7 +5,9 @@
 #pragma once
 
 #include <VolumeSlicer/export.hpp>
+
 #include "Algorithm/helper_math.h"
+
 VS_START
 
 class CUDASimpleRay{

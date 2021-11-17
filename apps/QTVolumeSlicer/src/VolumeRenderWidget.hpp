@@ -1,9 +1,7 @@
 //
 // Created by wyz on 2021/6/15.
 //
-
-#ifndef VOLUMESLICER_VOLUMERENDERWIDGET_HPP
-#define VOLUMESLICER_VOLUMERENDERWIDGET_HPP
+#pragma once
 #include<QtWidgets/QWidget>
 
 #include <VolumeSlicer/volume.hpp>
@@ -53,6 +51,3 @@ private:
 };
 
 
-
-
-#endif //VOLUMESLICER_VOLUMERENDERWIDGET_HPP

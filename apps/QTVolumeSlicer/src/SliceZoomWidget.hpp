@@ -2,8 +2,7 @@
 // Created by wyz on 2021/6/28.
 //
 
-#ifndef VOLUMESLICER_SLICEZOOMWIDGET_HPP
-#define VOLUMESLICER_SLICEZOOMWIDGET_HPP
+#pragma once
 
 #include<QtWidgets/QWidget>
 
@@ -39,4 +38,4 @@ private:
 
 };
 
-#endif //VOLUMESLICER_SLICEZOOMWIDGET_HPP
+

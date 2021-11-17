@@ -2,12 +2,15 @@
 // Created by wyz on 2021/7/21.
 //
 
-#ifndef VOLUMESLICER_CUDA_COMP_RENDER_IMPL_CUH
-#define VOLUMESLICER_CUDA_COMP_RENDER_IMPL_CUH
+#pragma once
+
 #include <VolumeSlicer/cuda_context.hpp>
 #include <VolumeSlicer/render.hpp>
+
 using namespace vs;
+
 namespace CUDARenderer{
+
     struct CUDACompRenderParameter{
         float3 view_pos;
         int w,h;
@@ -63,10 +66,10 @@ namespace CUDARenderer{
 
     void CUDACalcBlock(uint32_t* missed_blocks,size_t size,uint32_t w,uint32_t h);
 
-    void CUDARender(uint32_t w,uint32_t h,uint32_t* image);
+    void CUDARender(uint32_t w,uint32_t h,uint8_t * image);
 
     void UploadCDFMap(const uint32_t** data,int n,size_t* size);
 }
 
 
-#endif //VOLUMESLICER_CUDA_COMP_RENDER_IMPL_CUH
+
