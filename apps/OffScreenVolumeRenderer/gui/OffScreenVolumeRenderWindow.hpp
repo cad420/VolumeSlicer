@@ -21,10 +21,9 @@ class OffScreenVolumeRenderWindow:public QMainWindow{
   public:
     OffScreenVolumeRenderWindow();
 
-    explicit OffScreenVolumeRenderWindow(const std::string& config_file);
-
     void open(const std::string& config_file);
 
+    void StartRender();
   private:
 
     /**
@@ -48,4 +47,5 @@ class OffScreenVolumeRenderWindow:public QMainWindow{
     QDockWidget* render_progress_dock_widget;
 
     OffScreenVolumeRenderer::RenderConfig render_config;
+    bool opened;
 };

@@ -15,7 +15,7 @@ CameraVisWidget::CameraVisWidget(QWidget *parent)
 }
 void CameraVisWidget::SetCameraPoints(std::vector<CameraPoint> camera_points)
 {
-    LOG_INFO("camera points size: {0}",camera_points.size());
+    clear();
     this->camera_points = std::move(camera_points);
     this->index = 0;
     normalizeCameraPoints();
@@ -31,7 +31,7 @@ void CameraVisWidget::UpdateCameraIndex(int index)
 void CameraVisWidget::initializeGL()
 {
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [&](){
-
+        clear();
     });
 
     initializeOpenGLFunctions();
@@ -113,11 +113,7 @@ void CameraVisWidget::mouseReleaseEvent(QMouseEvent *event)
 }
 CameraVisWidget::~CameraVisWidget()
 {
-    makeCurrent();
-    m_vbo.destroy();
-    m_ebo.destroy();
-    delete m_program;
-    doneCurrent();
+    clear();
 }
 
 void CameraVisWidget::createCameraIndices()
@@ -178,4 +174,12 @@ void CameraVisWidget::wheelEvent(QWheelEvent *event)
     camera->processMouseScroll(event->angleDelta().y());
     event->accept();
     repaint();
+}
+void CameraVisWidget::clear()
+{
+    makeCurrent();
+    m_vbo.destroy();
+    m_ebo.destroy();
+    delete m_program;
+    doneCurrent();
 }

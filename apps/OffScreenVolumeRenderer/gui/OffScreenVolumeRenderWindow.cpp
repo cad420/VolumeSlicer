@@ -19,23 +19,19 @@ OffScreenVolumeRenderWindow::OffScreenVolumeRenderWindow()
     createMenu();
 }
 
-OffScreenVolumeRenderWindow::OffScreenVolumeRenderWindow(const std::string& config_file)
-:OffScreenVolumeRenderWindow()
-{
-    open(config_file);
-    startRender();
-}
-
 void OffScreenVolumeRenderWindow::open(const std::string &config_file)
 {
     try{
+        opened = false;
         if(config_file.empty()) return;
         this->render_config = OffScreenVolumeRenderer::LoadRenderConfigFromFile(config_file.c_str());
         render_progress_widget->SetRenderConfig(config_file,render_config);
         loadCameras(render_config.camera_sequence_config);
+        opened = true;
     }
     catch (const std::exception& err)
     {
+        opened = false;
         LOG_ERROR("open config file error: {0}",err.what());
     }
 }
@@ -121,4 +117,9 @@ void OffScreenVolumeRenderWindow::loadCameras(const std::string &camera_file)
         camera_pts.emplace_back(camera.pos);
     }
     camera_vis_widget->SetCameraPoints(std::move(camera_pts));
+}
+void OffScreenVolumeRenderWindow::StartRender()
+{
+    if(!opened) return;
+    startRender();
 }

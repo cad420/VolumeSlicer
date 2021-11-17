@@ -6,8 +6,10 @@
 int main(int argc,char** argv){
     QApplication app(argc,argv);
     if(argc>1){
-        OffScreenVolumeRenderWindow w(argv[1]);
+        OffScreenVolumeRenderWindow w;
         w.show();
+        w.open(argv[1]);
+        w.StartRender();
         return QApplication::exec();
     }
     else{

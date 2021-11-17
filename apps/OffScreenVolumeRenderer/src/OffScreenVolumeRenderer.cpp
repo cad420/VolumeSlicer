@@ -18,7 +18,9 @@ static std::string GetName(const std::string& name){
     return s.substr(0,pos);
 }
 static void InitLogger(const std::string& name){
-    logger=spdlog::rotating_logger_mt("offscreen_render_logger","logs/"+GetName(name)+"_logfile.txt",1024*1024*10,10);
+    logger = spdlog::get("offscreen_render_logger");
+    if(!logger)
+        logger=spdlog::rotating_logger_mt("offscreen_render_logger","logs/"+GetName(name)+"_logfile.txt",1024*1024*10,10);
 }
 static void LogInfo(std::string str){
     logger->info(str);

@@ -26,6 +26,7 @@ class CameraVisWidget:public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core{
     void createCameraIndices();
     void setCameraPoints();
     void normalizeCameraPoints();
+    void clear();
   protected:
     void initializeGL() override;
     void paintGL() override;
