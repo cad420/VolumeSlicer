@@ -9,7 +9,7 @@ int main(int argc,char** argv){
         return 0;
     }
     try{
-        std::cout<<"Config file: "<<argv[1]<<std::endl;
+        std::cout<<"Json config file: "<<argv[1]<<std::endl;
         OffScreenVolumeRenderer::RenderFrames(argv[1]);
     }
     catch (const std::exception& err)

@@ -1,0 +1,10 @@
+//
+// Created by wyz on 2021/11/17.
+//
+#pragma once
+namespace shader{
+    inline const char* line_shader_v = R"(@line_shader_v.glsl@)";
+
+    inline const char* line_shader_f = R"(@line_shader_f.glsl@)";
+
+}
