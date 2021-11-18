@@ -57,6 +57,7 @@ class OpenGLVolumeBlockCacheImpl : public OpenGLVolumeBlockCache
         std::array<uint32_t, 4> pos_index;
         bool valid;
         bool cached;
+        size_t t;
     };
 
   private:

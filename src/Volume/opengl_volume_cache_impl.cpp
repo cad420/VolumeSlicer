@@ -81,7 +81,7 @@ void OpenGLVolumeBlockCacheImpl::CreateMappingTable(const std::map<uint32_t, std
     }
     mapping_table.assign(lod_mapping_table_offset.at(max_lod + 1), 0);
 }
-
+static size_t count = 0;
 void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size,
                                                    bool device)
 {
@@ -139,6 +139,7 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
             it.block_index = index;
             it.valid = true;
             it.cached = true;
+            it.t = ++count;
         }
     }
 
@@ -255,6 +256,7 @@ void OpenGLVolumeBlockCacheImpl::createBlockCacheTable()
                     item.block_index = {INVALID, INVALID, INVALID, INVALID};
                     item.valid = false;
                     item.cached = false;
+                    item.t = 0;
                     block_cache_table.push_back(item);
                 }
             }
@@ -291,6 +293,7 @@ void OpenGLVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4
 
 bool OpenGLVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &target, std::array<uint32_t, 4> &pos)
 {
+    block_cache_table.sort([](const BlockCacheItem &it1, const BlockCacheItem &it2) { return it1.t < it2.t; });
     for (const auto &it : block_cache_table)
     {
         if (it.block_index == target && it.cached)
