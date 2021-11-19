@@ -29,6 +29,9 @@ public:
         world_window_height=j.at("height");
         row_num=j.at("row");
         col_num=j.at("col");
+        frame_time_lock = j.at("frame_time_lock");
+        renderer_backend = j.at("renderer_backend");
+        iGPU = j.at("iGPU");
         auto space=j.at("space");
         space_x=space.at(0);
         space_y=space.at(1);
@@ -87,6 +90,15 @@ public:
     std::string GetNodeResourcePath() const{
         return resource_path;
     }
+    int GetFrameTimeLock() const{
+        return frame_time_lock;
+    }
+    std::string GetRendererBackend() const{
+        return renderer_backend;
+    };
+    int GetGPUIndex() const{
+        return iGPU;
+    }
 public:
     //same for each node
     int world_window_width;
@@ -95,6 +107,9 @@ public:
     int row_num;
     int col_num;
     float space_x,space_y,space_z;
+    int frame_time_lock;
+    int iGPU;
+    std::string renderer_backend;
 
     char processName[MPI_MAX_PROCESSOR_NAME];
     int processNameLength;

@@ -288,10 +288,15 @@ __device__ float3 PhongShading(int lod, int lod_t, const float3 &samplePos, floa
     if (dot(N, L) < 0.f)
         N = -N;
 
-    float3 ambient = lightParameter.ka * diffuseColor;
+    float3 ambient =
+//        lightParameter.ka
+        0.05* diffuseColor;
     float3 specular =
-        lightParameter.ks * pow(max(dot(N, (L + R) / 2.f), 0.f), lightParameter.shininess) * make_float3(1.f);
-    float3 diffuse = lightParameter.kd * max(dot(N, L), 0.f) * diffuseColor;
+//        lightParameter.ks
+        1.f* pow(max(dot(N, (L + R) / 2.f), 0.f), lightParameter.shininess) * make_float3(1.f);
+    float3 diffuse =
+//        lightParameter.kd
+        1.f* max(dot(N, L), 0.f) * diffuseColor;
     return ambient + specular + diffuse;
 }
 

@@ -217,6 +217,10 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
                                  glm::vec3{camera.look_at[0], camera.look_at[1], camera.look_at[2]},
                                  glm::vec3{camera.up[0], camera.up[1], camera.up[2]});
     glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.001f, 20.f);
+    projection[0][0] *= mpi.mpi_world_col_num;
+    projection[1][1] *= mpi.mpi_world_row_num;
+    projection[2][0] = -mpi.mpi_world_col_num + 1 + 2 * mpi.mpi_node_x_index;
+    projection[2][1] = mpi.mpi_world_row_num - 1 - 2 * (mpi.mpi_world_row_num-1-mpi.mpi_node_y_index);
     glm::mat4 mvp = projection * view;
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -320,9 +324,10 @@ void OpenGLCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
     comp_render_pass_shader->setFloatArray("lod_dist", lod_dist, 10);
 }
 
-void OpenGLCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter)
+void OpenGLCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpi)
 {
-    setCurrentCtx();
+//    setCurrentCtx();
+    this->mpi = mpi;
 }
 
 void OpenGLCompVolumeRendererImpl::SetStep(double step, int steps)

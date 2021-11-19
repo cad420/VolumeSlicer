@@ -16,15 +16,15 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#define DEBUG
-#ifdef DEBUG
+
+#ifndef NDEBUG
 #define SDL_EXPR(exec)                                                                                                 \
     exec;                                                                                                              \
     {                                                                                                                  \
         std::string __err_str = SDL_GetError();                                                                              \
         if (__err_str.length() > 0)                                                                                          \
         {                                                                                                              \
-            spdlog::error("SDL call error: {0} in {1} function: {2} line: {3}",__err_str,__FILE__,__FUNCTION__,__LINE__);\
+            LOG_ERROR("SDL call error: {0} in {1} function: {2} line: {3}",__err_str,__FILE__,__FUNCTION__,__LINE__);\
         }                                                                                                              \
     }
 
@@ -33,36 +33,15 @@
         std::string __err_str = SDL_GetError();                                                                              \
         if (__err_str.length() > 0)                                                                                          \
         {                                                                                                              \
-            spdlog::error("SDL call error: {0} in {1} before line: {2}",__err_str,__FILE__,__LINE__);\
+            LOG_ERROR("SDL call error: {0} in {1} before line: {2}",__err_str,__FILE__,__LINE__);\
         }                                                                                                               \
     }
 
 #else
 #define SDL_EXPR(exec) exec
-#define SCL_CHECK
+#define SDL_CHECK
 #endif
-#ifdef DEBUG
-#define GL_EXPR(exec) \
-        {             \
-            GLenum gl_err; \
-            exec;     \
-            if((gl_err=glGetError())!=GL_NO_ERROR){ \
-                 spdlog::error("OpenGL error:{0:x} caused by {1} on line {2} of file:{3}",static_cast<unsigned int>(gl_err),#exec,__LINE__,__FILE__);     \
-            }\
-        };
 
-#define GL_CHECK \
-         {       \
-            GLenum gl_err; \
-            if((gl_err=glGetError())!=GL_NO_ERROR){     \
-            spdlog::error("OpenGL error: {0} caused before  on line {1} of file:{2}",static_cast<unsigned int>(gl_err),__LINE__,__FILE__);     \
-            }\
-         }
-
-#else
-#define GL_EXPR(exec) exec
-#define GL_CHECK
-#endif
 
 void LargeVolumeVisGUI::init(const char * config_file) {
     this->window_manager=std::make_unique<WindowManager>(config_file);
@@ -70,8 +49,8 @@ void LargeVolumeVisGUI::init(const char * config_file) {
     this->window_h=window_manager->GetNodeWindowHeight();
     window_manager->GetWorldVolumeSpace(volume_space_x,volume_space_y,volume_space_z);
     base_space=(std::min)({volume_space_x,volume_space_y,volume_space_z});
-    //todo replace 0 with iGPU
-    SetCUDACtx(0);
+
+    SetCUDACtx(window_manager->GetGPUIndex());
 
 //    PluginLoader::LoadPlugins("./plugins");
 
@@ -88,7 +67,7 @@ void LargeVolumeVisGUI::show() {
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
         //camera pos according to volume dim count in voxel
-        static control::FPSCamera fpsCamera({4.9f,5.85f,5.93f});
+        static control::FPSCamera fpsCamera({4.88f,5.85f,7.23f});
         static bool right_mouse_press;
         while(SDL_PollEvent(&event)){
             switch(event.type){
@@ -107,13 +86,14 @@ void LargeVolumeVisGUI::show() {
                 }
                 case SDL_KEYDOWN:{
                     switch (event.key.keysym.sym) {
-                        case SDLK_ESCAPE:{exit=true;
+                        case SDLK_ESCAPE:{
+                            exit=true;
                             auto pos=fpsCamera.getCameraPos();
                             LOG_ERROR("camera pos {0} {1} {2}",pos.x,pos.y,pos.z);
                             break;}
                         case SDLK_LCTRL:{
-//                            motion=true;
-                            break;}
+                            break;
+                        }
                         case SDLK_a:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Left,0.0001);motion=true;break;}
                         case SDLK_d:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Right,0.0001);motion=true;break;}
                         case SDLK_w:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Forward,0.0001);motion=true;break;}
@@ -131,12 +111,10 @@ void LargeVolumeVisGUI::show() {
                         }
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
-
                             break;
                         }
                         case SDLK_RIGHT:
                         case SDLK_UP:{
-
                             break;
                         }
                     }
@@ -145,7 +123,6 @@ void LargeVolumeVisGUI::show() {
                 case SDL_KEYUP:{
                     switch (event.key.keysym.sym) {
                         case SDLK_LCTRL:{
-//                            motion=false;
                             break;
                         }
                     }
@@ -163,7 +140,6 @@ void LargeVolumeVisGUI::show() {
                     break;
                 }
                 case SDL_MOUSEBUTTONDOWN:{
-
                     if(event.button.button==1){
                         right_mouse_press=true;
                         fpsCamera.processMouseButton(control::CameraDefinedMouseButton::Left,true,event.button.x,event.button.y);
@@ -172,7 +148,6 @@ void LargeVolumeVisGUI::show() {
                     break;
                 }
                 case SDL_MOUSEBUTTONUP:{
-
                     if(event.button.button==1){
                         right_mouse_press=false;
                         fpsCamera.processMouseButton(control::CameraDefinedMouseButton::Left,false,event.button.x,event.button.y);
@@ -205,6 +180,10 @@ void LargeVolumeVisGUI::show() {
         static float center_y=window_manager->GetWindowRowNum()*1.f/2-0.5f;
         mpiRenderParameter.mpi_node_x_offset=(window_manager->GetWorldRankOffsetX()-center_x);
         mpiRenderParameter.mpi_node_y_offset=(window_manager->GetWorldRankOffsetY()-center_y);
+        mpiRenderParameter.mpi_world_row_num=window_manager->GetWindowRowNum();
+        mpiRenderParameter.mpi_world_col_num=window_manager->GetWindowColNum();
+        mpiRenderParameter.mpi_node_x_index=window_manager->GetWorldRankOffsetX();
+        mpiRenderParameter.mpi_node_y_index=window_manager->GetWorldRankOffsetY();
         comp_volume_renderer->SetMPIRender(mpiRenderParameter);
         Camera camera{};
         camera.pos={camera_pos.x,camera_pos.y,camera_pos.z};
@@ -217,54 +196,45 @@ void LargeVolumeVisGUI::show() {
     SDL_EXPR(sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED));
     SDL_Rect rect{0,0,(int)window_w,(int)window_h};
     SDL_PixelFormatEnum format=SDL_PIXELFORMAT_UNKNOWN;
-    if(this->comp_volume_renderer->GetBackendName()=="cuda"){
-        format = SDL_PIXELFORMAT_RGBA8888;
-    }
-    else if(this->comp_volume_renderer->GetBackendName()=="opengl"){
+
+    if(this->comp_volume_renderer->GetBackendName()=="opengl"){
         format = SDL_PIXELFORMAT_ABGR8888;
     }
+    else if(this->comp_volume_renderer->GetBackendName()=="cuda"){
+        format = SDL_PIXELFORMAT_ABGR8888;
+    }
+    else{
+        format = SDL_PIXELFORMAT_RGBA8888;
+    }
     SDL_Texture* texture=SDL_CreateTexture(sdl_renderer,format,SDL_TEXTUREACCESS_STREAMING,window_w,window_h);
-    SDL_Texture* low_texture=SDL_CreateTexture(sdl_renderer,format,SDL_TEXTUREACCESS_STREAMING,window_w/2,window_h/2);
     SDL_CHECK
     decltype(SDL_GetTicks()) cur_frame_t;
-    uint32_t interval;
-    bool motioned=false;
+    uint32_t interval = window_manager->GetFrameTimeLock();
+    bool flip = window_manager->GetRendererBackend() == "opengl";
     while(!exit){
         motion=false;
         cur_frame_t=SDL_GetTicks();
         process_event();
 
-
-//        if(motion || motioned){
-//            if(motion)
-//                motioned=true;
-//            else
-//                motioned=false;
-//            interval=66;
-//            comp_volume_renderer->resize(window_w/2,window_h/2);
-//            comp_volume_renderer->SetStep(base_space*0.5,4000);
-//            comp_volume_renderer->render();
-//            SDL_UpdateTexture(low_texture, NULL, comp_volume_renderer->GetFrame().data.data(), window_w *2);
-//            SDL_RenderClear(sdl_renderer);
-//            SDL_RenderCopy(sdl_renderer, low_texture, nullptr, &rect);
-//            SDL_RenderPresent(sdl_renderer);
-//
-//        }
-//        else{
-            motioned=false;
-            interval=100;
             comp_volume_renderer->resize(window_w,window_h);
-            comp_volume_renderer->SetStep(base_space*0.3,6000);
+            comp_volume_renderer->SetStep(base_space*0.5,6000);
             comp_volume_renderer->render(true);
+
             SDL_UpdateTexture(texture, NULL, comp_volume_renderer->GetImage().GetData(), window_w * 4);
             SDL_RenderClear(sdl_renderer);
-            SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
+            if(flip){
+                SDL_RenderCopyEx(sdl_renderer,texture,&rect,&rect,0.0,nullptr,SDL_RendererFlip::SDL_FLIP_VERTICAL);
+            }
+            else{
+                SDL_RenderCopy(sdl_renderer, texture, nullptr, &rect);
+            }
             SDL_RenderPresent(sdl_renderer);
-//        }
+
 //        render_imgui();
-        SDL_CHECK
+
         while(SDL_GetTicks()<cur_frame_t+interval){
         }
+        SDL_CHECK
     }
 
 }
@@ -302,7 +272,7 @@ void LargeVolumeVisGUI::initSDL() {
     SDL_GL_MakeCurrent(sdl_window,gl_context);
     SDL_GL_SetSwapInterval(1);
     if(!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)){
-        spdlog::critical("GLAD: OpenGL load failed.");
+        LOG_CRITICAL("GLAD: OpenGL load failed.");
         throw std::runtime_error("GLAD: OpenGL load failed.");
     }
     glEnable(GL_DEPTH_TEST);
@@ -343,28 +313,35 @@ void LargeVolumeVisGUI::initRendererResource() {
     this->comp_volume->SetSpaceY(volume_space_y);
     this->comp_volume->SetSpaceZ(volume_space_z);
 
-//    this->comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w, window_h);
-    this->comp_volume_renderer=OpenGLCompVolumeRenderer::Create(window_w,window_h);
+    if(this->window_manager->GetRendererBackend() == "cuda"){
+        this->comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w, window_h);
+    }
+    else if(this->window_manager->GetRendererBackend() == "opengl"){
+        this->comp_volume_renderer=OpenGLCompVolumeRenderer::Create(window_w,window_h);
+    }
+    else{
+        LOG_ERROR("Not supported renderer backend, use opengl as default");
+        this->comp_volume_renderer=OpenGLCompVolumeRenderer::Create(window_w,window_h);
+    }
+
     this->comp_volume_renderer->SetVolume(comp_volume);
 
 
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
-//    tf.points.emplace_back(25,std::array<double,4>{0.1,0.0,0.0,0.0});
-//    tf.points.emplace_back(30,std::array<double,4>{1.0,0.75,0.7,0.0});
     tf.points.emplace_back(74,std::array<double,4>{0.0,0.0,0.0,0.0});
-    tf.points.emplace_back(127,std::array<double,4>{0.75,0.75,0.75,0.6});
-    tf.points.emplace_back(128,std::array<double,4>{1.0,1.0,0.0,1.0});
-    tf.points.emplace_back(255,std::array<double,4>{1.0,0.0,0.0,1.0});
+    tf.points.emplace_back(127,std::array<double,4>{0.8,0.7,0.2,0.6});
+    tf.points.emplace_back(128,std::array<double,4>{0.8,0.7,0.2,1.0});
+    tf.points.emplace_back(255,std::array<double,4>{1.0,0.2,0.1,1.0});
     this->comp_volume_renderer->SetTransferFunc(std::move(tf));
 
     CompRenderPolicy policy;
-    policy.lod_dist[0]=0.6;
-    policy.lod_dist[1]=1.2;
-    policy.lod_dist[2]=2.4;
-    policy.lod_dist[3]=4.8;
-    policy.lod_dist[4]=9.6;
-    policy.lod_dist[5]=19.2;
+    policy.lod_dist[0]=0.3;
+    policy.lod_dist[1]=0.6;
+    policy.lod_dist[2]=1.2;
+    policy.lod_dist[3]=2.4;
+    policy.lod_dist[4]=4.8;
+    policy.lod_dist[5]=9.6;
     policy.lod_dist[6]=std::numeric_limits<double>::max();
     policy.cdf_value_file="chebyshev_dist_mouse_cdf_config.json";
 //    policy.volume_value_file="volume_value_mouse_cdf_config.json";

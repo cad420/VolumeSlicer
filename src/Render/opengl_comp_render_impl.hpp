@@ -111,6 +111,8 @@ private:
 
     std::unique_ptr<Shader> comp_render_pos_shader;
     std::unique_ptr<Shader> comp_render_pass_shader;
+
+    MPIRenderParameter mpi;
 };
 
 

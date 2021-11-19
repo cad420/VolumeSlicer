@@ -81,7 +81,26 @@ int VirtualSample(int lod,int lod_t,in vec3 sample_pos,out float scalar,bool wri
     return 1;
 }
 vec3 PhongShading(int lod,int lod_t,in vec3 sample_pos,in vec3 diffuse_color,in vec3 view_direction){
-    return diffuse_color;
+    vec3 N;
+    float x1,x2;
+    VirtualSample(lod,lod_t,sample_pos+vec3(lod_t,0.f,0.f),x1,false);
+    VirtualSample(lod,lod_t,sample_pos+vec3(-lod_t,0.f,0.f),x2,false);
+    N.x = x1-x2;
+    VirtualSample(lod,lod_t,sample_pos+vec3(0.f,lod_t,0.f),x1,false);
+    VirtualSample(lod,lod_t,sample_pos+vec3(0.f,-lod_t,0.f),x2,false);
+    N.y = x1-x2;
+    VirtualSample(lod,lod_t,sample_pos+vec3(0.f,0.f,lod_t),x1,false);
+    VirtualSample(lod,lod_t,sample_pos+vec3(0.f,0.f,-lod_t),x2,false);
+    N.z = x1-x2;
+    N = -normalize(N);
+    vec3 L = -view_direction;
+    vec3 R = L;
+    if(dot(N,L)<0.f)
+        N = -N;
+    vec3 ambient = 0.05f * diffuse_color;
+    vec3 diffuse =  max(dot(N,L),0.f) * diffuse_color;
+    vec3 specular = pow(max(dot(N,(L+R)/2.f),0.f),36.f) *vec3(1.f);
+    return ambient + diffuse + specular;
 }
 
 void main() {
@@ -110,10 +129,11 @@ void main() {
     int steps = int(dot(ray_direction,start2end) / step / last_lod_t);
     steps = min(steps,max_view_steps);
     float sample_scalar;
+    float last_sample_scalar = 0.f;
     if(render){
         for(int i=0;i<steps;i++){
-            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,last_lod_t);
-//            float dist=length(camera_pos-ray_sample_pos);
+//            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,last_lod_t);
+            float dist=length(camera_pos-ray_sample_pos);
             int cur_lod = EvaluateLod(dist);
             int cur_lod_t = PowTwo(cur_lod);
             if(cur_lod>max_lod){
@@ -138,14 +158,16 @@ void main() {
             }
 
             if(sample_scalar > 0.f){
-                vec4 sample_color = texture(transferFunc,sample_scalar);
+//                vec4 sample_color = texture(transferFunc,sample_scalar);
+                vec4 sample_color = texture(preIntTransferFunc,vec2(last_sample_scalar,sample_scalar));
                 if(sample_color.w > 0.f){
-                    //                sample_color.rgb = PhongShading(cur_lod,cur_lod_t,ray_sample_pos/volume_space,sample_color.rgb,ray_direction);
+                    sample_color.rgb = PhongShading(cur_lod,cur_lod_t,ray_sample_pos/volume_space,sample_color.rgb,ray_direction);
                     color = color + sample_color*vec4(sample_color.a,sample_color.a,sample_color.a,1.f)*(1.f-color.a);
                     if(color.a > 0.99f){
                         break;
                     }
                 }
+                last_sample_scalar = sample_scalar;
             }
 
             ray_sample_pos = lod_sample_start_pos + (i+1-lod_steps)*ray_direction*step*cur_lod_t;
@@ -153,12 +175,12 @@ void main() {
     }
     else{
         float l_step = step * 8;
-        for(int i =0;i<steps;i++){
-            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,last_lod_t);
-            if(dist>max_view_distance){
-                break;
-            }
-//            float dist=length(camera_pos-ray_sample_pos);
+        for(int i =0;i<steps/4;i++){
+//            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,last_lod_t);
+//            if(dist>max_view_distance){
+//                break;
+//            }
+            float dist=length(camera_pos-ray_sample_pos);
             int cur_lod = EvaluateLod(dist);
             int cur_lod_t = PowTwo(cur_lod);
             if(cur_lod>max_lod){
@@ -193,6 +215,7 @@ void main() {
         }
         discard;
     }
-
+    color.rgb = pow(color.rgb,vec3(1/2.2f));
+    color.a = 1.f;
     frag_color = color;
 }
