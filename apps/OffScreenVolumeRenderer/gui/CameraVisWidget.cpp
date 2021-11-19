@@ -15,7 +15,6 @@ CameraVisWidget::CameraVisWidget(QWidget *parent)
 }
 void CameraVisWidget::SetCameraPoints(std::vector<CameraPoint> camera_points)
 {
-    clear();
     this->camera_points = std::move(camera_points);
     this->index = 0;
     normalizeCameraPoints();
