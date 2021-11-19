@@ -42,7 +42,7 @@ __device__ uint rgbaFloatToUInt(float4 rgba)
     rgba.y = __saturatef(rgba.y);
     rgba.z = __saturatef(rgba.z);
     rgba.w = __saturatef(rgba.w);
-    return (uint(rgba.x * 255) << 24) | (uint(rgba.y * 255) << 16) | (uint(rgba.z * 255) << 8) | uint(rgba.w * 255);
+    return (uint(rgba.w * 255) << 24) | (uint(rgba.z * 255) << 16) | (uint(rgba.y * 255) << 8) | uint(rgba.x * 255);
 }
 
 __device__ int evaluateLod(float distance)
@@ -385,11 +385,10 @@ __global__ void CUDARenderKernel()
                     last_scalar = sample_scalar;
                     //                    color=sample_color;
                     //                    break;
-                    //                      auto shading_color =
-                    //                      PhongShading(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,make_float3(sample_color),ray_direction);
-                    //                      sample_color.x=shading_color.x;
-                    //                      sample_color.y=shading_color.y;
-                    //                      sample_color.z=shading_color.z;
+                    auto shading_color = PhongShading(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,make_float3(sample_color),ray_direction);
+                    sample_color.x=shading_color.x;
+                    sample_color.y=shading_color.y;
+                    sample_color.z=shading_color.z;
                     color = color + sample_color * make_float4(sample_color.w, sample_color.w, sample_color.w, 1.f) *
                                         (1.f - color.w);
                     if (color.w > 0.9f)
