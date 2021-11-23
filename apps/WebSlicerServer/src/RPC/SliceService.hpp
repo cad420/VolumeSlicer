@@ -4,6 +4,7 @@
 #pragma once
 #include "DataModel/Slice.hpp"
 #include "DataModel/Image.hpp"
+#include "DataModel/Volume.hpp"
 #include "Service/JsonRPCService.hpp"
 #include "RPCMethod.hpp"
 #include <functional>
@@ -33,6 +34,12 @@ class SliceService: public JsonRPCService{
 
   protected:
     //rpc method
+
+    /**
+     * @brief get volume information about
+     */
+    Volume get();
+
     /**
      * @brief
      * @param slice
@@ -46,7 +53,7 @@ class SliceService: public JsonRPCService{
      * @brief get guide map for slice, using max lod down-sample volume to render
      * @param slice
      */
-    Image map(Slice slice,int window_w,int window_h);
+    Image map(Slice slice);
 
   private:
     std::unique_ptr<RPCMethod> methods;

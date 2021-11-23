@@ -12,8 +12,9 @@ namespace remote
 {
 SliceService::SliceService() : methods(std::make_unique<RPCMethod>())
 {
+    methods->register_method("get",{},RPCMethod::GetHandler(&SliceService::get,*this));
     methods->register_method("render", {"slice","depth","direction"}, RPCMethod::GetHandler(&SliceService::render, *this));
-    methods->register_method("map",{"slice","window_w","window_h"},RPCMethod::GetHandler(&SliceService::map,*this));
+    methods->register_method("map",{"slice"},RPCMethod::GetHandler(&SliceService::map,*this));
 }
 void SliceService::process_message(const uint8_t *message, uint32_t size, const SliceService::Callback &callback)
 {
@@ -111,6 +112,19 @@ static void MaxMix(std::vector<uint8_t>& res,std::vector<uint8_t>& v){
 }
 
 //rpc method
+Volume SliceService::get()
+{
+    cuCtxSetCurrent(GetCUDACtx());
+    Volume volume;
+    volume.volume_name="neuron";
+    volume.volume_dim={VolumeDataSet::GetVolume()->GetVolumeDimX(),
+                       VolumeDataSet::GetVolume()->GetVolumeDimY(),
+                       VolumeDataSet::GetVolume()->GetVolumeDimZ()};
+    volume.volume_space={VolumeDataSet::GetVolume()->GetVolumeSpaceX(),
+                         VolumeDataSet::GetVolume()->GetVolumeSpaceY(),
+                         VolumeDataSet::GetVolume()->GetVolumeSpaceZ()};
+    return volume;
+}
 Image SliceService::render(Slice slice,float depth,int direction)
 {
     cuCtxSetCurrent(GetCUDACtx());
@@ -157,7 +171,7 @@ Image SliceService::render(Slice slice,float depth,int direction)
     SliceRenderer::Release();
     return img;
 }
-Image SliceService::map(Slice slice,int window_w,int window_h)
+Image SliceService::map(Slice slice)
 {
     cuCtxSetCurrent(GetCUDACtx());
     auto world_slice = slice;
@@ -169,7 +183,8 @@ Image SliceService::map(Slice slice,int window_w,int window_h)
     static auto raw_dim_x = VolumeDataSet::GetRawVolume()->GetVolumeDimX();
     static auto raw_dim_y = VolumeDataSet::GetRawVolume()->GetVolumeDimY();
     static auto raw_dim_z = VolumeDataSet::GetRawVolume()->GetVolumeDimZ();
-
+    static int window_w = 500;
+    static int window_h = 500;
     static float ratio = pow(2,raw_lod);
     slice.origin={slice.origin[0]/ratio,slice.origin[1]/ratio,slice.origin[2]/ratio,1.f};
     static float base_space=(std::min)({volume_space_x,volume_space_y,volume_space_z});
@@ -241,7 +256,7 @@ Image SliceService::map(Slice slice,int window_w,int window_h)
     slice.origin={intersect_pts[0],
                   intersect_pts[1],
                   intersect_pts[2],1.f};
-    slice.voxel_per_pixel_width=slice.voxel_per_pixel_height=0.8f;
+    slice.voxel_per_pixel_width=slice.voxel_per_pixel_height=1.f;
     slice.n_pixels_width=window_w;
     slice.n_pixels_height=window_h;
 
@@ -309,6 +324,7 @@ Image SliceService::map(Slice slice,int window_w,int window_h)
     return Image::encode(img.data.data(),img.width,img.height,3,
                          Image::Format::JPEG,Image::Quality::MEDIUM);
 }
+
 
 }
 VS_END
