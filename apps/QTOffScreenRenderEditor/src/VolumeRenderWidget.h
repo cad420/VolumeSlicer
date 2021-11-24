@@ -7,24 +7,24 @@
 
 #include <fstream>
 #include <ctime>
+#include <filesystem>
 
 #include<QtWidgets>
 #include <QImage>
 
 #include "OffScreenRenderSetting.h"
 
-#include <VolumeSlicer/render.hpp>
 #include "json.hpp"
 #include "camera.hpp"
 #include "SettingWidget.h"
-#include "VideoCapture.hpp"
-#include "utils/timer.hpp"
 #include "direct.h"
-#include <filesystem>
+
+#include "VolumeSlicer/utils/timer.hpp"
+#include <VolumeSlicer/render.hpp>
+
 #include <spdlog/sinks/rotating_file_sink.h>
 
 class SettingWidget;
-class VideoCapture;
 class OffScreenRenderSettingWidget;
 
 using namespace vs;
@@ -47,13 +47,10 @@ public:
 
     void setWidget(SettingWidget* in_settingWidget);
 
-    //void offScreenRender();
     void startRecording();
     void stopRecording();
 
     void draw();
-
-    //int getFPS();
 
 private:
     void updateCamera();
@@ -70,14 +67,9 @@ private:
     int frameWidth;
 
     SettingWidget* settingWidget;
-//    OffScreenRenderSettingWidget* offScreenRenderSettingWidget;
 
     std::unique_ptr<OpenGLCompVolumeRenderer> realTimeRenderer;
     std::shared_ptr<CompVolume> volumeForRealTime;
-//    std::shared_ptr<RawVolume> rawVolume;
-
-//    std::unique_ptr<CUDAOffScreenCompVolumeRenderer> offScreenRenderer;
-//    std::shared_ptr<CompVolume> volumeForOffScreen;
 
     std::unique_ptr<Camera> baseCamera;
     std::unique_ptr<control::FPSCamera> fpsCamera;
@@ -85,19 +77,14 @@ private:
     std::vector<std::unique_ptr<Camera> > cameraSequence;
 
     QTimer* timer;
-    //std::string output_file_name;
+
     int fps;
 
     bool left_pressed;
-    //bool save_image;
-
-    //std::string m_comp_volume_path;
-
-    int sequenceNum;
 
     std::vector<float> space;
 
-    std::string curCameraFile;
+    std::string curCameraFile;  //camera sequence file path
 };
 
 #endif // QTOffScreenRenderEditor_VOLUMERENDERWIDGET_H

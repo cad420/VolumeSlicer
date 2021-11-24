@@ -19,7 +19,7 @@ static std::string GetName(const std::string& name){
 }
 
 SettingWidget::SettingWidget(VolumeRenderWidget* volumeRenderWidget, QWidget* parent):volumeRenderWidget(volumeRenderWidget),
-    QWidget(parent)
+      QWidget(parent)
 {
     auto widgetLayout = new QVBoxLayout;
     widgetLayout->setAlignment(Qt::AlignTop);
@@ -46,11 +46,10 @@ SettingWidget::SettingWidget(VolumeRenderWidget* volumeRenderWidget, QWidget* pa
     cameraGroupBox->setLayout(cameraGroupBoxLayout);
     loadCameraButton = new QPushButton("load");
     optimizeCameraButton = new QPushButton("optimize");
-//    editCameraButton = new QPushButton("edit camera sequence");
     cameraGroupBoxLayout->addWidget(loadCameraButton);
     cameraGroupBoxLayout->addWidget(optimizeCameraButton);
-//    cameraGroupBoxLayout->addWidget(editCameraButton);
     widgetLayout->addWidget(cameraGroupBox);
+    optimizeCameraButton->setVisible(false);
 
     auto tfGroupBox = new QGroupBox("Transfer function");
     tfGroupBox->setFixedHeight(500);
@@ -101,7 +100,6 @@ SettingWidget::SettingWidget(VolumeRenderWidget* volumeRenderWidget, QWidget* pa
     loadSettingButton = new QPushButton("load setting file");
     settingButtonLayout->addWidget(loadSettingButton);
     saveSettingButton = new QPushButton("save setting file");
-//    saveSettingButton->setEnabled(false);
     settingButtonLayout->addWidget(saveSettingButton);
     widgetLayout->addLayout(settingButtonLayout);
 
@@ -138,13 +136,6 @@ SettingWidget::SettingWidget(VolumeRenderWidget* volumeRenderWidget, QWidget* pa
         this->tf_editor->getTransferFunction(tf.data(),256,1.0);
         this->volumeRenderWidget->setTransferFunction(tf.data(),256);
 
-//        tf.clear();
-//        index.clear();
-//        tf.resize(256*4,0.f);
-//        index.resize(256,0.f);
-//        int num[1];
-//        this->tf_editor->getTransferFunction(tf.data(),index.data(),num, 256,1.0);
-//        this->volumeRenderWidget->setTransferFunction(tf.data(),index.data(), *num);
     });
 
     connect(loadCameraButton,&QPushButton::clicked,[this](){
@@ -166,16 +157,55 @@ SettingWidget::SettingWidget(VolumeRenderWidget* volumeRenderWidget, QWidget* pa
       ).toStdString();
       this->loadSettingFile();
     });
+
+    connect(optimizeCameraButton,&QPushButton::clicked,[this](){
+       //this->optimizeCameraRoute();
+    });
+}
+
+void SettingWidget::optimizeCameraRoute(){
+//    std::vector<float> camera_pos;
+//    camera_pos.resize(cameraSequence.size()*3);
+//    for(auto& item:cameraSequence){
+//        camera_pos.push_back(item->pos[0]);
+//        camera_pos.push_back(item->pos[1]);
+//        camera_pos.push_back(item->pos[2]);
+//    }
+//    BSplineCurve curve;
+//    auto optimized_camera_pos = curve.getInterpolationP(camera_pos);
+//
+//    std::vector<float> camera_front;
+//    camera_front.resize(cameraSequence.size()*3);
+//    for(auto& item:cameraSequence){
+//        camera_front.push_back(item->look_at[0]-item->pos[0]);
+//        camera_front.push_back(item->look_at[1]-item->pos[1]);
+//        camera_front.push_back(item->look_at[2]-item->pos[2]);
+//    }
+//    auto optimized_camera_front = curve.getInterpolationP(camera_front);
+//    std::vector<float> camera_look_at;
+//    camera_look_at.resize(camera_front.size());
+//    for(int i=0;i<camera_look_at.size();i++){
+//        camera_look_at.push_back(optimized_camera_front[i] - optimized_camera_pos[i]);
+//    }
+//
+//    std::vector<float> camera_up;
+//    camera_up.resize(cameraSequence.size()*3);
+//    for(auto& item:cameraSequence){
+//        camera_up.push_back(item->up[0]);
+//        camera_up.push_back(item->up[1]);
+//        camera_up.push_back(item->up[2]);
+//    }
+//    auto optimized_camera_up = curve.getInterpolationP(camera_up);
+//
+//    std::vector<float> optimized_camera_right;
+//    optimized_camera_right.reserve(optimized_camera_pos.size());
+
 }
 
 void SettingWidget::saveSettingFile()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save TF1D"), QString::fromStdString(setting_path), tr("Camera Sequence(*.json);;All Files (*)"));
     setting_path = QFileInfo(fileName).absolutePath().toStdString();
-//    auto time = std::time(0);
-//    auto tm = localtime(&time);
-//    std::string tmStr = std::to_string(tm->tm_mon)+"-"+std::to_string(tm->tm_mday)+" "+std::to_string(tm->tm_hour)+"h"+std::to_string(tm->tm_min)+"m"+std::to_string(tm->tm_sec)+"s";
-//    std::string fileName = tmStr + " offscreen_render_config.json";
 
     nlohmann::json j;
     j["volume_file"] = volume_file;
@@ -270,7 +300,6 @@ void SettingWidget::loadSettingFile(){
 
     if(j.find("output_video_name")!=j.end())
     {
-        //        output_video_name = j.at("output_video_name");
         name->setText(QString::fromStdString(GetName(j.at("output_video_name"))));
     }
     else{
@@ -288,7 +317,6 @@ void SettingWidget::loadSettingFile(){
     if(j.find("TF1D")!=j.end()){
         tfFile = j.at("TF1D");
         tf_editor->loadTransferFunction(QString::fromStdString(tfFile));
-//        loadTransferFuncFile();
     }
     else{
         spdlog::error("transfer func config not provided.");
@@ -333,7 +361,8 @@ void SettingWidget::loadCameraSequenceFile(){
         spdlog::error("Not provide fps, use default fps(30)");
     }
 
-//    this->cameraList->clear();
+    std::vector<float> cameras;
+    cameras.reserve(frame_count*3);
     this->cameraSequence.clear();
     this->cameraSequence.reserve(frame_count);
     for(int i=0;i<frame_count;i++){
@@ -346,9 +375,11 @@ void SettingWidget::loadCameraSequenceFile(){
         camera->up = {frame_camera[3][0],frame_camera[3][1],frame_camera[3][2]};
         camera->right = {frame_camera[4][0],frame_camera[4][1],frame_camera[4][2]};
 
-//        this->cameraList->addItem(frame_idx.c_str());
-
         this->cameraSequence.emplace_back(std::move(camera));
+
+        cameras.push_back(frame_camera[1][0]);
+        cameras.push_back(frame_camera[1][1]);
+        cameras.push_back(frame_camera[1][2]);
     }
 }
 
@@ -371,15 +402,10 @@ void SettingWidget::initQualitySetting()
     float data4[] = {0.8,1.6,3.2,6.4,8.0,9.6,max};
     renderPolicy.emplace_back(std::vector<float>(data4,data4+7));
 
-//    float data5[] = {0.8,1.6,3.2,6.4,8.0,9.6,-1.0};
-//    renderPolicy.emplace_back(std::vector<float>(data5,data5+7));
 }
 
-std::string SettingWidget::saveTFFile(){
-    auto time = std::time(0);
-    auto tm = localtime(&time);
-    std::string tmStr = std::to_string(tm->tm_mon)+"-"+std::to_string(tm->tm_mday)+" "+std::to_string(tm->tm_hour)+"h"+std::to_string(tm->tm_min)+"m"+std::to_string(tm->tm_sec)+"s";
-    std::string fileName = tmStr + " transfer_function.json";
+std::string SettingWidget::saveTFFile(std::string in_name){
+    std::string fileName = in_name + " transfer_function.json";
 
     nlohmann::json j;
     for(int i=0;i < 256;i++){
@@ -399,34 +425,6 @@ std::string SettingWidget::saveTFFile(){
     return fileName;
 }
 
-void SettingWidget::setTF(float* tfData, int num){
-    tf_editor->setTF(tfData,num);
-}
-
-void SettingWidget::volumeLoaded(std::string file, std::string comp_volume_config,std::string raw_volume_path,uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, float space_x,float space_y, float space_z)
-{
-
-    comp_config_path=comp_volume_config;
-    volume_file=file;
-
-    volumeRenderWidget->setRenderPolicy(renderPolicy[0].data(), renderPolicy[0].size());
-
-    rawVolume=RawVolume::Load(raw_volume_path.c_str(),VoxelType::UInt8, {dim_x, dim_y, dim_z}, {space_x, space_y, space_z});
-
-    trivalVolume = std::make_unique<TrivalVolume>(rawVolume->GetData(),rawVolume->GetVolumeDimX(),
-                                                rawVolume->GetVolumeDimY(),rawVolume->GetVolumeDimZ());
-    tf_editor->setVolumeInformation(trivalVolume.get());
-    tf_editor->setFixedHeight(400);
-    tf.resize(256*4,0.f);
-    tf_editor->setEnabled(true);
-    tf_editor->getTransferFunction(tf.data(),256,1.0);
-    volumeRenderWidget->setTransferFunction(tf.data(),256);
-
-//    tf_editor->getTransferFunction(tf.data(),index.data(),256,1.0);
-//    volumeRenderWidget->setTransferFunction(tf,index);
-
-}
-
 void SettingWidget::volumeLoaded(std::string filename){
     std::ifstream in(filename);
     volume_file=filename;
@@ -444,7 +442,6 @@ void SettingWidget::volumeLoaded(std::string filename){
         comp_config_path=comp_volume_info.at("comp_config_file_path");
         volumeRenderWidget->loadVolume(comp_config_path);
         volumeRenderWidget->setRenderPolicy(renderPolicy[0].data(), renderPolicy[0].size());
-//        offscreen_render_setting_widget->volumeLoaded(comp_volume_path);
 
         auto raw_volume_info=j["raw_volume"];
         std::string raw_volume_path=raw_volume_info.at("raw_volume_path");
@@ -466,6 +463,7 @@ void SettingWidget::volumeLoaded(std::string filename){
         tf_editor->setEnabled(true);
         tf_editor->getTransferFunction(tf.data(),256,1.0);
         volumeRenderWidget->setTransferFunction(tf.data(),256);
+
     }
     catch (const std::exception& err) {
         QMessageBox::critical(NULL,"Error","Config file format error!",QMessageBox::Yes);
@@ -474,17 +472,11 @@ void SettingWidget::volumeLoaded(std::string filename){
 
 void SettingWidget::volumeClosed(){
     spdlog::info("{0}.",__FUNCTION__ );
-//    space_x->setEnabled(true);
-//    space_y->setEnabled(true);
-//    space_z->setEnabled(true);
-    volumeFileLabel = new QLabel("volume not loaded");
     trivalVolume.reset();
     rawVolume.reset();
     tf_editor->resetTransferFunction();
     tf_editor->setEnabled(false);
     tf.clear();
-    renderPolicy.clear();
-//    render_policy_editor->volumeClosed();
 }
 
 void SettingWidget::setCameraName(std::string filename){

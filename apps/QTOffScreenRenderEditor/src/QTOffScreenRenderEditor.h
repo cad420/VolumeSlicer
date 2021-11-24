@@ -22,11 +22,10 @@
 #include "VolumeRenderWidget.h"
 #include "OffScreenRenderSetting.h"
 
-//class RealTimeRenderSettingWidget;
 class OffScreenRenderSettingWidget;
-//class VolumeRenderWidget;
 class SettingWidget;
 class VolumeRenderWidget;
+class CameraRouteWidget;
 
 class QTOffScreenRenderEditor: public QMainWindow{
     Q_OBJECT
@@ -45,23 +44,12 @@ class QTOffScreenRenderEditor: public QMainWindow{
     QMenu* view_menu;
 
     QAction* open_file_action;
-//    QAction* real_time_setting_action;
-//    QAction* off_screen_setting_action;
-    QAction* volume_render_action;
-
 
     SettingWidget*  setting_widget;
     QDockWidget* setting_dock_widget;
 
     VolumeRenderWidget* volume_render_widget;
     QDockWidget* volume_render_dock_widget;
-//
-//    RealTimeRenderSettingWidget* realtime_render_setting_widget;
-//    QDockWidget* realtime_render_setting_dock_widget;
-//
-//    OffScreenRenderSettingWidget* offscreen_render_setting_widget;
-//    QDockWidget* offscreen_render_setting_dock_widget;
-
 
 };
 

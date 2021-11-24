@@ -17,19 +17,14 @@ list(
         main.cpp
         QTOffScreenRenderEditor.cpp
         SettingWidget.cpp
-        #RealTimeRenderSetting.cpp
-        OffScreenRenderSetting.cpp
         VolumeRenderWidget.cpp
-        RenderPolicyEditor.cpp
-        MultiSlider.cpp
         TransferFunctionWidget.cpp
         TFCanvas.cpp
         DoubleSlider.cpp
         tf1deditor.cpp
         tf1dmappingcanvas.cpp
         tf1dtexturecanvas.cpp
-        VideoCapture.cpp
-        CameraRouteWidget.cpp
+        BSplineCurve.cpp
 )
 
 add_executable(QTOffScreenRenderEditor ${QTOffScreenRenderEditor_SRCS})
@@ -40,10 +35,12 @@ target_include_directories(QTOffScreenRenderEditor
         s)
 
 set(OpenCV_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencv)
+set(EIGEN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
 target_include_directories(
         QTOffScreenRenderEditor
         PRIVATE
         ${OpenCV_INCLUDE_DIRS}
+        ${EIGEN_INCLUDE_DIR}
 )
 target_link_libraries(
         QTOffScreenRenderEditor

@@ -21,8 +21,6 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent):QWidget(parent),
 
 void VolumeRenderWidget::loadVolume(const std::string& volume_config_file_path)
 {
-    sequenceNum = 0;
-
     int iGPU = 0;
     SetCUDACtx(iGPU);//used for cuda-renderer and volume
     realTimeRenderer = OpenGLCompVolumeRenderer::Create(frameWidth,frameHeight);
@@ -39,39 +37,6 @@ void VolumeRenderWidget::loadVolume(const std::string& volume_config_file_path)
     fpsCamera = std::make_unique<control::FPSCamera>(glm::vec3( {4.9f,5.85f,5.93f}));
     updateCamera();
 
-    //Render Policy
-//    int max_lod = sizeof(CompRenderPolicy::lod_dist) / sizeof(CompRenderPolicy::lod_dist[0]);
-//    std::vector<double> lod_policy(max_lod);
-//    lod_policy[0] = std::numeric_limits<double>::max();
-
-//    CompRenderPolicy policy;
-//    for(int i = 0 ; i < max_lod ; i++){
-//        policy.lod_dist[i] = lod_policy[i];
-//    }
-//    policy.cdf_value_file="chebyshev_dist_mouse_cdf_config.json";
-//    realTimeRenderer->SetRenderPolicy(policy);
-
-    //            tf.points.emplace_back(0,std::array<double,4>{0.1,0.0,0.0,0.0});
-//            tf.points.emplace_back(74,std::array<double,4>{0.0,0.0,0.0,0.0});
-//            tf.points.emplace_back(127,std::array<double,4>{0.75,0.75,0.75,0.6});
-//            tf.points.emplace_back(128,std::array<double,4>{1.0,1.0,0.0,1.0});
-//            tf.points.emplace_back(255,std::array<double,4>{1.0,0.0,0.0,1.0});
-
-    //Transfer Function
-//    TransferFunc tf;
-//    tf.points.emplace_back(0,std::array<double,4>{0.0,0.0,0.0,0.0});
-//    tf.points.emplace_back(255,std::array<double,4>{1.0,1.0,1.0,1.0});
-//
-//    std::vector<float> info;
-//    for(size_t i = 0;i < tf.points.size();i++){
-//        info.push_back(std::floor(tf.points[i].key / 255.0f + 0.5f));
-//        info.push_back(std::floor(tf.points[i].value[0] * 255.0f + 0.5f));
-//        info.push_back(std::floor(tf.points[i].value[1] * 255.0f + 0.5f));
-//        info.push_back(std::floor(tf.points[i].value[2] * 255.0f + 0.5f));
-//        info.push_back(std::floor(tf.points[i].value[3] * 255.0f + 0.5f));
-//    }
-//    settingWidget->setTF(info.data(), tf.points.size());
-//    realTimeRenderer->SetTransferFunc(std::move(tf));
 }
 
 void VolumeRenderWidget::paintEvent(QPaintEvent *event)
@@ -81,9 +46,9 @@ void VolumeRenderWidget::paintEvent(QPaintEvent *event)
     if(!realTimeRenderer || !volumeForRealTime) return;
     QPainter p(this);
 
-    realTimeRenderer->render();
-    auto& frame = realTimeRenderer->GetFrame();
-    QImage image((uint8_t *)frame.data.data(),frame.width,frame.height,QImage::Format_RGBA8888,nullptr, nullptr);
+    realTimeRenderer->render(true);
+    auto& frame = realTimeRenderer->GetImage();
+    QImage image((uint8_t *)frame.GetData(),frame.Width(),frame.Height(),QImage::Format_RGBA8888,nullptr, nullptr);
 
     image.mirror(false,true);
 
@@ -201,24 +166,6 @@ void VolumeRenderWidget::setRenderPolicy(const float* renderPolicy,int num)
     repaint();
 }
 
-//void VolumeRenderWidget::setTransferFunction(float* tfData, int* index,int num, bool type)
-//{
-//    if(!realTimeRenderer || !offScreenRenderer)
-//        return;
-//
-//    TransferFunc tf;
-//    int i = 0;
-//    for(;i < num;i++){
-//        tf.points.emplace_back(index[i],std::array<double,4>{tfData[i * 4 + 0],tfData[i * 4 + 1],tfData[i * 4 + 2],tfData[i * 4 + 3]});
-//    }
-//    if(type == false){
-//        realTimeRenderer->SetTransferFunc(std::move(tf));
-//        repaint();
-//    }
-//    else
-//        offScreenRenderer->SetTransferFunc(std::move(tf));
-//}
-
 void VolumeRenderWidget::setTransferFunction(const float* tfData, int num)
 {
     if(!realTimeRenderer)
@@ -251,14 +198,9 @@ void VolumeRenderWidget::volumeClosed()
     repaint();
 }
 
-//int VolumeRenderWidget::getFPS(){
-//    return fps;
-//}
-
 void VolumeRenderWidget::setWidget(SettingWidget* in_settingWidget)
 {
     settingWidget = in_settingWidget;
-//    offScreenRenderSettingWidget = in_offScreenRenderSettingWidget;
 }
 
 void VolumeRenderWidget::setFPS(const int in_fps){
@@ -287,11 +229,6 @@ void VolumeRenderWidget::stopRecording(){
 
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save TF1D"), QString::fromStdString(curCameraFile), tr("Camera Sequence(*.json);;All Files (*)"));
 
-//    auto time = std::time(0);
-//    auto tm = localtime(&time);
-//    std::string tmStr = std::to_string(tm->tm_mon)+"-"+std::to_string(tm->tm_mday)+" "+std::to_string(tm->tm_hour)+"h"+std::to_string(tm->tm_min)+"m"+std::to_string(tm->tm_sec)+"s";
-//    std::string fileName = tmStr + " camera_sequence_"+  std::to_string(sequenceNum + 1 )+  ".json";
-
     nlohmann::json j;
     j["fps"] = fps;
     j["frame_count"] = cameraSequence.size();
@@ -314,21 +251,6 @@ void VolumeRenderWidget::stopRecording(){
     curCameraFile = QFileInfo(fileName).absolutePath().toStdString();
 
     settingWidget->setCameraName(fileName.toStdString());
-
-//    std::vector<float> tf;
-//    tf.resize(256*4);
-//    settingWidget->getTransferFunc(tf.data());
-//    for(int i=0;i < tf.size()/4;i++){
-//        std::string idx=std::to_string(i);
-//        j["tf"][idx]={
-//            tf[i*4+0],
-//            tf[i*4+1],
-//            tf[i*4+2],
-//            tf[i*4+3]
-//        };
-//    }
-
-    sequenceNum++;
 }
 
 void VolumeRenderWidget::draw(){
