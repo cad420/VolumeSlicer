@@ -59,8 +59,8 @@ class QTOffScreenRenderEditor: public QMainWindow{
 //    RealTimeRenderSettingWidget* realtime_render_setting_widget;
 //    QDockWidget* realtime_render_setting_dock_widget;
 //
-    OffScreenRenderSettingWidget* offscreen_render_setting_widget;
-    QDockWidget* offscreen_render_setting_dock_widget;
+//    OffScreenRenderSettingWidget* offscreen_render_setting_widget;
+//    QDockWidget* offscreen_render_setting_dock_widget;
 
 
 };

@@ -30,10 +30,24 @@ class OffScreenRenderSettingWidget:public QWidget{
 
     void volumeClosed();
 
+
   signals:
 
   private:
-    void initCameraDialog();
+
+   //void initCameraDialog();
+    void initQualitySetting();
+
+    void loadCameraSequenceFile();
+    void loadTransferFuncFile();
+    void loadSettingFile();
+
+
+
+  private slots:
+    void saveSettingFile();
+    void render();
+    void smoothCameraRoute();
   private:
     VolumeRenderWidget* volumeRenderWidget;
     SettingWidget* settingWidget;
@@ -41,47 +55,55 @@ class OffScreenRenderSettingWidget:public QWidget{
     std::unique_ptr<CUDAOffScreenCompVolumeRenderer> offScreenRenderer;
     std::shared_ptr<CompVolume> volumeForOffScreen;
 
-    QSlider* qualitySlider;
+    QLabel* volumeNameLabel;
 
-//    QDoubleSpinBox* space_x;
-//    QDoubleSpinBox* space_y;
-//    QDoubleSpinBox* space_z;
+    QSlider* qualitySlider;
+    std::vector<std::vector<float> > renderPolicy;
+
+    QPushButton* loadTFButton;
+    QLabel* tfLabel;
+    std::string tfFile;
 
     QPushButton* loadCameraButton;
-    QPushButton* editCameraButton;
     QLabel* cameraFileLabel;
-    QDialog* cameraDialog;
-    QListWidget* cameraList;
-    QPushButton* quitButton;
-    QDoubleSpinBox* zoomBox;
-    QDoubleSpinBox* posxBox;
-    QDoubleSpinBox* posyBox;
-    QDoubleSpinBox* poszBox;
-    QDoubleSpinBox* lookAtxBox;
-    QDoubleSpinBox* lookAtyBox;
-    QDoubleSpinBox* lookAtzBox;
-    QDoubleSpinBox* upxBox;
-    QDoubleSpinBox* upyBox;
-    QDoubleSpinBox* upzBox;
+    QPushButton* smoothCameraButton;
+//    QPushButton* editCameraButton;
+//    QDialog* cameraDialog;
+//    QListWidget* cameraList;
+//    QPushButton* quitButton;
+//    QDoubleSpinBox* zoomBox;
+//    QDoubleSpinBox* posxBox;
+//    QDoubleSpinBox* posyBox;
+//    QDoubleSpinBox* poszBox;
+//    QDoubleSpinBox* lookAtxBox;
+//    QDoubleSpinBox* lookAtyBox;
+//    QDoubleSpinBox* lookAtzBox;
+//    QDoubleSpinBox* upxBox;
+//    QDoubleSpinBox* upyBox;
+//    QDoubleSpinBox* upzBox;
 //    QDoubleSpinBox* rightxBox;
 //    QDoubleSpinBox* rightyBox;
 //    QDoubleSpinBox* rightzBox;
 
-    QPushButton* startButton;
     QPushButton* saveButton;
+    QPushButton* renderButton;
 
     QCheckBox* imageSaving;
     QLineEdit* name;
+
+    std::string settingFile;
+    QPushButton* loadSettingButton;
 
     int frameHeight;
     int frameWidth;
     std::string output_video_name;
     std::string volume_data_config;
     std::vector<float> space;
-    std::vector<float> render_policy;
+    //std::vector<float> render_policy;
     std::vector<float> tf;
     std::string camera_sequence_config;
     std::vector<std::unique_ptr<Camera> > cameraSequence;
+    int fps;
 
 //    "fps": 30,
 //    "backend": "cuda",

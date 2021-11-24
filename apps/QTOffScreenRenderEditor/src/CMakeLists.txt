@@ -29,6 +29,7 @@ list(
         tf1dmappingcanvas.cpp
         tf1dtexturecanvas.cpp
         VideoCapture.cpp
+        CameraRouteWidget.cpp
 )
 
 add_executable(QTOffScreenRenderEditor ${QTOffScreenRenderEditor_SRCS})

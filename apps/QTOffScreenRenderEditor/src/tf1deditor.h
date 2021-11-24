@@ -58,7 +58,12 @@ public:
 
 	void setVolumeInformation(TrivalVolume * volume);
 
-signals:
+    void saveTransferFunctionWithTitle(std::string name);
+
+    void loadTransferFunction(const QString &TFName);
+
+
+  signals:
     // This signal is emitted when the transfer function has changed.
     void TF1DChanged();
 
@@ -75,11 +80,12 @@ public slots:
     // Slot for a click on load button. Opens a fileDialog and loads the selected
     // file. The gradient widget and the mapping canvas are updated with new transfer function.
     void loadTransferFunction();
-	void loadTransferFunction(const QString &TFName);
+//	void loadTransferFunction(const QString &TFName);
 
     // Slot for a click on save button. Opens a fileDialog and saves the transfer function
     // to the desired file.
-    void saveTransferFunction(); 
+    void saveTransferFunction();
+//    void saveTransferFunctionWithTitle(std::string name);
 	
 	// Tells the transfer function that the texture is invalid and emits repaint signal for the
     // volume rendering.

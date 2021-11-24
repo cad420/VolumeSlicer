@@ -19,6 +19,7 @@
 #include "SettingWidget.h"
 #include "VideoCapture.hpp"
 #include "utils/timer.hpp"
+#include "direct.h"
 #include <filesystem>
 #include <spdlog/sinks/rotating_file_sink.h>
 
@@ -36,17 +37,15 @@ public:
 
     void loadVolume(const std::string& volume_config_file_path);
 
-    //std::shared_ptr<CompVolume> getVolumeForOffScreen();
-    std::shared_ptr<CompVolume> getVolumeForRealTime();
-
-    //void setTransferFunction(float* tfData, int* index, int num, bool type = false);
+    void setFPS(int in_fps);
     void setTransferFunction(const float* tfData, int num);
     void setRenderPolicy(const float* renderPolicy,int num);
-    void setFPS(int in_fps);
+
+    std::shared_ptr<CompVolume> getVolumeForRealTime();
 
     void volumeClosed();
 
-    void setWidget(SettingWidget* in_settingWidget,OffScreenRenderSettingWidget* in_offScreenRenderSettingWidget);
+    void setWidget(SettingWidget* in_settingWidget);
 
     //void offScreenRender();
     void startRecording();
@@ -54,9 +53,10 @@ public:
 
     void draw();
 
+    //int getFPS();
+
 private:
     void updateCamera();
-
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -66,12 +66,11 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
-
     int frameHeight;
     int frameWidth;
 
     SettingWidget* settingWidget;
-    OffScreenRenderSettingWidget* offScreenRenderSettingWidget;
+//    OffScreenRenderSettingWidget* offScreenRenderSettingWidget;
 
     std::unique_ptr<OpenGLCompVolumeRenderer> realTimeRenderer;
     std::shared_ptr<CompVolume> volumeForRealTime;
@@ -97,6 +96,8 @@ private:
     int sequenceNum;
 
     std::vector<float> space;
+
+    std::string curCameraFile;
 };
 
 #endif // QTOffScreenRenderEditor_VOLUMERENDERWIDGET_H

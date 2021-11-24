@@ -230,7 +230,7 @@ void OffScreenVolumeRenderer::RenderFrames(const char *config_file)
     }
 
     VideoCapture video_capture(output_video_name.c_str(),width,height,fps);
-    for(int i = 0 ; i < frame_count ; i++){
+    for(int i = 0 ; i < 30 ; i++){
         Timer timer;
         timer.start();
         renderer->SetCamera(camera_sequence[i]);

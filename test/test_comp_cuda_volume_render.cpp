@@ -19,11 +19,13 @@ int main(){
     camera.up={0.0,1.0,0.0};
     camera.right={1.0,0.0,0.0};
     renderer->SetCamera(camera);
-    auto volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
+
+    auto volume=CompVolume::Load("D:/MouseNeuronData/mouse_file_config.json");
     volume->SetSpaceX(0.00032);
     volume->SetSpaceY(0.00032);
     volume->SetSpaceZ(0.001);
     renderer->SetVolume(std::move(volume));
+
     TransferFunc tf;
     tf.points.emplace_back(0,std::array<double,4>{0.0,0.0,0.0,0.0});
 //    tf.points.emplace_back(25,std::array<double,4>{0.1,0.0,0.0,0.0});

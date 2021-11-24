@@ -84,6 +84,8 @@ public:
 	// Get the 1D transfer function
 	void getTransferFunction(float* transferFunction, size_t dimension, float factor);
 
+    void getTransferFunction(float* transferFunction,size_t* index, size_t dimension, float factor);
+
 	// Save the 1D transfer function
 	void save(const char* filename);
 

@@ -202,6 +202,16 @@ void TF1DEditor::saveTransferFunction()
 	}
 }
 
+void TF1DEditor::saveTransferFunctionWithTitle(std::string name)
+{
+    QString fileName = QString::fromStdString(name + ".TF1D");
+//        QFileDialog::getSaveFileName(this, tr("Save TF1D"), curTFFile, tr("TF1D (*.TF1D);;All Files (*)"));
+    if (!fileName.isEmpty()) {
+        transCanvas->save(fileName.toLocal8Bit().data());
+        curTFFile = QFileInfo(fileName).absolutePath();
+    }
+}
+
 void TF1DEditor::resetTransferFunction() 
 {
 	resetThresholds();

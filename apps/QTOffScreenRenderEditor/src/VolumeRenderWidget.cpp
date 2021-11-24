@@ -251,51 +251,19 @@ void VolumeRenderWidget::volumeClosed()
     repaint();
 }
 
-void VolumeRenderWidget::setWidget(SettingWidget* in_settingWidget,OffScreenRenderSettingWidget* in_offScreenRenderSettingWidget)
+//int VolumeRenderWidget::getFPS(){
+//    return fps;
+//}
+
+void VolumeRenderWidget::setWidget(SettingWidget* in_settingWidget)
 {
     settingWidget = in_settingWidget;
-    offScreenRenderSettingWidget = in_offScreenRenderSettingWidget;
+//    offScreenRenderSettingWidget = in_offScreenRenderSettingWidget;
 }
 
 void VolumeRenderWidget::setFPS(const int in_fps){
     fps = in_fps;
 }
-
-//void VolumeRenderWidget::offScreenRender(){
-//    int iGPU = 0;
-//    SetCUDACtx(iGPU);//used for cuda-renderer and volume
-//
-//    VideoCapture video_capture((output_file_name + ".avi").c_str(),frameWidth,frameHeight,fps);
-//
-//    for(int i = 0 ;i < cameraSequence.size() ; i++){
-//
-//        if(i > 0 && cameraSequence[i]->equal(*(cameraSequence[i - 1])))
-//        {
-//            video_capture.AddLastFrame();
-//            continue;
-//        }
-//        Timer mTimer;
-//        mTimer.start();
-//        offScreenRenderer->SetCamera(*cameraSequence[i]);
-//        offScreenRenderer->render();
-//        auto image = offScreenRenderer->GetImage();
-//        if(save_image){
-//            if(!std::filesystem::exists("images")){
-//                std::filesystem::create_directory("images");
-//            }
-//            image.SaveToFile(("images/"+output_file_name+"_frame_"+std::to_string(i)+".jpeg").c_str());
-//        }
-//        std::cout<<"before"<<" "<<i<<std::endl;
-//        auto img = image.ToImage3b();
-//        video_capture.AddFrame(reinterpret_cast<uint8_t*>(img.GetData()));
-//        std::cout<<"after"<<std::endl;
-//        mTimer.stop();
-////        spdlog::set_level(spdlog::level::info);
-////        LogInfo("render frame "+std::to_string(i)+" cost time "+mTimer.duration().s().fmt());
-//        //for gpu take a rest
-//        Sleep(2000);
-//    }
-//}
 
 void VolumeRenderWidget::startRecording(){
     cameraSequence.clear();
@@ -317,12 +285,15 @@ void VolumeRenderWidget::startRecording(){
 void VolumeRenderWidget::stopRecording(){
     timer->stop();
 
-    auto time = std::time(0);
-    auto tm = localtime(&time);
-    std::string tmStr = std::to_string(tm->tm_mon)+"-"+std::to_string(tm->tm_mday)+" "+std::to_string(tm->tm_hour)+"h"+std::to_string(tm->tm_min)+"m"+std::to_string(tm->tm_sec)+"s";
-    std::string fileName = tmStr + " camera_sequence_"+  std::to_string(sequenceNum + 1 )+  ".json";
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save TF1D"), QString::fromStdString(curCameraFile), tr("Camera Sequence(*.json);;All Files (*)"));
+
+//    auto time = std::time(0);
+//    auto tm = localtime(&time);
+//    std::string tmStr = std::to_string(tm->tm_mon)+"-"+std::to_string(tm->tm_mday)+" "+std::to_string(tm->tm_hour)+"h"+std::to_string(tm->tm_min)+"m"+std::to_string(tm->tm_sec)+"s";
+//    std::string fileName = tmStr + " camera_sequence_"+  std::to_string(sequenceNum + 1 )+  ".json";
 
     nlohmann::json j;
+    j["fps"] = fps;
     j["frame_count"] = cameraSequence.size();
     j["property"] = {"zoom","pos","look_at","up","right"};
     for(int i=0;i < cameraSequence.size();i++){
@@ -335,9 +306,27 @@ void VolumeRenderWidget::stopRecording(){
             cameraSequence[i]->right
         };
     }
-    std::ofstream out(fileName);
+
+    std::ofstream out(fileName.toStdString());
     out << j <<std::endl;
     out.close();
+
+    curCameraFile = QFileInfo(fileName).absolutePath().toStdString();
+
+    settingWidget->setCameraName(fileName.toStdString());
+
+//    std::vector<float> tf;
+//    tf.resize(256*4);
+//    settingWidget->getTransferFunc(tf.data());
+//    for(int i=0;i < tf.size()/4;i++){
+//        std::string idx=std::to_string(i);
+//        j["tf"][idx]={
+//            tf[i*4+0],
+//            tf[i*4+1],
+//            tf[i*4+2],
+//            tf[i*4+3]
+//        };
+//    }
 
     sequenceNum++;
 }
