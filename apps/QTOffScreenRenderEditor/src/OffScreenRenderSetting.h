@@ -9,12 +9,10 @@
 
 #include <VolumeSlicer/render.hpp>
 
-#include "RenderPolicyEditor.h"
 #include "VolumeRenderWidget.h"
 #include "SettingWidget.h"
 #include "VolumeSlicer/volume.hpp"
 
-class RenderPolicyEditor;
 class TrivalVolume;
 class VolumeRenderWidget;
 class SettingWidget;
