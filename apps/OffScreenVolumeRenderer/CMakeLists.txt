@@ -10,8 +10,7 @@ list(
 )
 add_executable(OffScreenVolumeRenderer src/main.cpp ${OffScreenVolumeRenderer_SRCS})
 
-set(OpenCV_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencv)
-find_package(OpenCV REQUIRED)
+
 
 target_include_directories(
         OffScreenVolumeRenderer

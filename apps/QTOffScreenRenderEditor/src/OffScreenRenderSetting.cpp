@@ -356,7 +356,7 @@ void OffScreenRenderSettingWidget::render(){
         mTimer.start();
         offScreenRenderer->SetCamera(*cameraSequence[i]);
         std::cout<<"after set camera "<<std::endl;
-        offScreenRenderer->render(true);
+        offScreenRenderer->render();
         std::cout<<"after render"<<std::endl;
         auto image = offScreenRenderer->GetImage();
         std::cout<<"get image "<<i<<std::endl;
@@ -462,7 +462,7 @@ void OffScreenRenderSettingWidget::saveSettingFile()
     if(!tfFile.empty())
         j["transfer_func_config"]=tfFile;
     else{
-        j["transfer_func_config"]=settingWidget->saveTFFile(name->text().toStdString());
+        j["transfer_func_config"]=settingWidget->saveTFFile();
     }
 
     std::ofstream out(fileName);
