@@ -51,6 +51,7 @@ void CameraVisWidget::initializeGL()
 void CameraVisWidget::paintGL()
 {
     if(camera_points.empty()) return;
+
     makeCurrent();
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -65,7 +66,7 @@ void CameraVisWidget::paintGL()
                     mvp[0][3],mvp[1][3],mvp[2][3],mvp[3][3]);
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-    assert(m_program->bind());
+    m_program->bind();
     m_program->setUniformValue(m_program->uniformLocation("MVPMatrix"),qmvp);
     m_program->setUniformValue(m_program->uniformLocation("line_color"),1.f,0.f,0.f,1.f);
 
@@ -132,8 +133,8 @@ void CameraVisWidget::setCameraPoints()
     m_vao.bind();
 
     m_vbo = QOpenGLBuffer(QOpenGLBuffer::Type::VertexBuffer);
-    assert(m_vbo.create());
-    assert(m_vbo.bind());
+    m_vbo.create();
+    m_vbo.bind();
     m_vbo.allocate(camera_points.data(),camera_points.size()*sizeof(CameraPoint));
 
     m_ebo = QOpenGLBuffer(QOpenGLBuffer::Type::IndexBuffer);
@@ -143,7 +144,6 @@ void CameraVisWidget::setCameraPoints()
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(GLfloat),nullptr);
-
     GL_CHECK
 }
 void CameraVisWidget::normalizeCameraPoints()

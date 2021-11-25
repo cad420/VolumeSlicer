@@ -81,7 +81,7 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     compVolumeParameter.block_length = block_length[0];
     compVolumeParameter.padding = block_length[1];
     compVolumeParameter.no_padding_block_length = block_length[0] - 2 * block_length[1];
-    compVolumeParameter.voxel = 0.2f;
+    compVolumeParameter.voxel = 0.5f;
     compVolumeParameter.block_dim = make_int3(block_dim[0], block_dim[1], block_dim[2]);
     compVolumeParameter.volume_texture_shape = make_int4(1024, 1024, 1024, 12);
     compVolumeParameter.volume_dim =
@@ -130,7 +130,7 @@ void CUDAOffScreenCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
     shadingParameter.ka = 0.35f;
     shadingParameter.kd = 0.55f;
     shadingParameter.ks = 0.2f;
-    shadingParameter.shininess = 48.f;
+    shadingParameter.shininess = 36.f;
     CUDAOffRenderer::UploadShadingParameter(shadingParameter);
 }
 

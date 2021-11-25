@@ -68,6 +68,7 @@ void LargeMeshVisGUI::show()
         static SDL_Event event;
         static control::FPSCamera fpsCamera({1.12f,0.94f,4.0f});
         static bool right_mouse_press;
+        static bool show_mouse = false;
         while(SDL_PollEvent(&event)){
             switch (event.type)
             {
@@ -99,6 +100,7 @@ void LargeMeshVisGUI::show()
                         case SDLK_s:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Backward,0.0001);break;}
                         case SDLK_q:{ fpsCamera.processKeyEvent(control::CameraDefinedKey::Up,0.0001);break;}
                         case SDLK_e:{fpsCamera.processKeyEvent(control::CameraDefinedKey::Bottom,0.0001);break;}
+                        case SDLK_h:{show_mouse = !show_mouse;SDL_ShowCursor(show_mouse);break;}
                         case SDLK_LEFT:
                         case SDLK_DOWN:{
 
@@ -209,6 +211,7 @@ void LargeMeshVisGUI::initSDL()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_EXPR(sdl_window = SDL_CreateWindow("MPILargeMeshVis", window_manager->GetNodeScreenOffsetX(),window_manager->GetNodeScreenOffsetY() ,
                                            window_manager->GetNodeWindowWidth(), window_manager->GetNodeWindowHeight(), SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI));
+    SDL_ShowCursor(false);
 }
 
 void LargeMeshVisGUI::initResource()

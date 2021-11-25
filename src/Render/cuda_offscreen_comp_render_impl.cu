@@ -261,7 +261,7 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4, Hash_Int4> missed_blo
     }
 
     color.w = 1.f;
-    double gamma = 1.0 / 2.2;
+    float gamma = 1.0 / 2.2;
     color.x = powf(color.x, gamma);
     color.y = powf(color.y, gamma);
     color.z = powf(color.z, gamma);
@@ -291,14 +291,17 @@ __device__ float3 PhongShading(int lod, int lod_t, stdgpu::unordered_set<int4, H
     float3 R = L;
 
     float3 ambient =
-//        shadingParameter.ka
-        0.05f* diffuse_color;
+        shadingParameter.ka
+//        0.05f
+        * diffuse_color;
     float3 specular =
-//        shadingParameter.ks
-        1.f* pow(max(dot(N, (L + R) / 2.f), 0.f), shadingParameter.shininess) * make_float3(1.f);
+        shadingParameter.ks
+//        1.f
+        * pow(max(dot(N, (L + R) / 2.f), 0.f), shadingParameter.shininess) * make_float3(1.f);
     float3 diffuse =
-//        shadingParameter.kd
-        1.f* max(dot(N, L), 0.f) * diffuse_color;
+        shadingParameter.kd
+//        1.f
+        * max(dot(N, L), 0.f) * diffuse_color;
     return ambient + specular + diffuse;
 }
 void CreateDeviceRenderImages(int w, int h)

@@ -86,7 +86,7 @@ void SimpleMeshRendererImpl::render()
     glm::mat4 view = glm::lookAt(glm::vec3{camera.pos[0], camera.pos[1], camera.pos[2]},
                                  glm::vec3{camera.look_at[0], camera.look_at[1], camera.look_at[2]},
                                  glm::vec3{camera.up[0], camera.up[1], camera.up[2]});
-    glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.01f, 3.f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.001f, 3.f);
     //    glm::mat4 projection =
     //    glm::ortho(-glm::radians(camera.zoom),glm::radians(camera.zoom),-glm::radians(camera.zoom),glm::radians(camera.zoom),0.001f,5.f);
     projection[0][0] *= mpi.mpi_world_col_num;

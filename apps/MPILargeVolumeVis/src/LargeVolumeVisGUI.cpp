@@ -67,7 +67,7 @@ void LargeVolumeVisGUI::show() {
         static SDL_Event event;
         ImGui_ImplSDL2_ProcessEvent(&event);
         //camera pos according to volume dim count in voxel
-        static control::FPSCamera fpsCamera({4.88f,5.85f,7.23f});
+        static control::FPSCamera fpsCamera({4.90f,5.858f,7.23f});
         static bool right_mouse_press;
         while(SDL_PollEvent(&event)){
             switch(event.type){
