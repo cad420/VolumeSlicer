@@ -77,14 +77,14 @@ VS_EXPORT std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w,int h);
 //==============================================================================
 
 struct alignas(16) MPIRenderParameter{
-    float mpi_node_x_offset;
-    float mpi_node_y_offset;
-    int mpi_world_window_w;
-    int mpi_world_window_h;
-    int mpi_world_col_num;
-    int mpi_world_row_num;
-    int mpi_node_x_index;
-    int mpi_node_y_index;
+    float mpi_node_x_offset=0.f;
+    float mpi_node_y_offset=0.f;
+    int mpi_world_window_w=0;
+    int mpi_world_window_h=0;
+    int mpi_world_col_num=1;
+    int mpi_world_row_num=1;
+    int mpi_node_x_index=0;
+    int mpi_node_y_index=0;
 };
 //===============================================================================
 class VS_EXPORT IVolumeRenderer{
