@@ -45,6 +45,8 @@ class BlockLoader : public IBlockVolumeProviderPluginInterface
 
     auto GetBlockLength() const -> std::array<uint32_t, 4> override;
 
+    auto GetVolumeSpace() const -> std::array<float,3> override;
+
   private:
     size_t block_size_bytes;
 

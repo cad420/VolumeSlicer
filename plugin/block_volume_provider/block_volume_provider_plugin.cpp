@@ -177,6 +177,10 @@ bool BlockVolumeProviderPlugin::IsAllAvailable()
 {
     return GetAvailableNum() == worker_num;
 }
+auto BlockVolumeProviderPlugin::GetVolumeSpace() const -> std::array<float, 3>
+{
+    return packet_reader->GetVolumeSpace();
+}
 
 VS_END
 

@@ -28,6 +28,8 @@ class IH264VolumeReaderPluginInterface
 
     virtual auto GetBlockDim(int lod) const -> std::array<uint32_t, 3> = 0;
 
+    virtual auto GetVolumeSpace() const -> std::array<float,3> = 0;
+
     virtual auto GetFrameShape() const -> std::array<uint32_t, 2> = 0;
 };
 

@@ -25,6 +25,8 @@ class IBlockVolumeProviderPluginInterface
     //{block_length,padding,min_lod,max_lod}
     virtual auto GetBlockLength() const -> std::array<uint32_t, 4> = 0;
 
+    virtual auto GetVolumeSpace() const -> std::array<float,3> = 0;
+
     // return true if the block index is valid and GetAvailableNum()>0
     // todo: bool or void
     virtual bool AddTask(std::array<uint32_t, 4> const &) = 0;

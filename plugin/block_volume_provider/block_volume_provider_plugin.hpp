@@ -29,6 +29,8 @@ class BlockVolumeProviderPlugin : public IBlockVolumeProviderPluginInterface
     //{block_length,padding,min_lod,max_lod}
     auto GetBlockLength() const -> std::array<uint32_t, 4> override;
 
+    auto GetVolumeSpace() const -> std::array<float,3> override;
+
     // return true if the block index is valid and GetAvailableNum()>0
     // todo: bool or void
     bool AddTask(std::array<uint32_t, 4> const &) override;

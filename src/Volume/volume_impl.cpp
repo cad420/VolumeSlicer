@@ -147,6 +147,10 @@ CompVolumeImpl::VolumeImpl(const char *file_name) : pause(false), stop(false)
     this->n_voxels_x = dim[0] * (block_length[0] - block_length[1] * 2);
     this->n_voxels_y = dim[1] * (block_length[0] - block_length[1] * 2);
     this->n_voxels_z = dim[2] * (block_length[0] - block_length[1] * 2);
+    auto space = block_loader->GetVolumeSpace();
+    this->space_x = space[0];
+    this->space_y = space[1];
+    this->space_z = space[2];
 }
 
 void VolumeImpl<VolumeType::Comp>::ClearRequestBlock() noexcept

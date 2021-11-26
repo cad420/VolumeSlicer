@@ -26,10 +26,12 @@ std::unique_ptr<Reader> Reader::CreateReader(const char *file_name)
     }
     auto min_lod = lod_file.get_min_lod();
     auto max_lod = lod_file.get_max_lod();
+    auto volume_space = lod_file.get_volume_space();
     for (int i = min_lod; i <= max_lod; i++)
     {
         reader->AddLodData(i, lod_file.get_lod_file_path(i).c_str());
     }
+    reader->SetVolumeSpace(volume_space);
     LOG_INFO("Successfully Create Reader, min_lod({0}),max_lod({1}).", min_lod, max_lod);
     return reader;
 }
@@ -144,6 +146,14 @@ auto ReaderImpl::GetFrameShape() const -> std::array<uint32_t, 2>
 
 ReaderImpl::ReaderImpl() : min_lod(0x0fffffff), max_lod(0), packet_cache(500)
 {
+}
+auto ReaderImpl::GetVolumeSpace() const -> std::array<float, 3>
+{
+    return volume_space;
+}
+void ReaderImpl::SetVolumeSpace(const std::array<float, 3> & space)
+{
+    this->volume_space = space;
 }
 
 VS_END

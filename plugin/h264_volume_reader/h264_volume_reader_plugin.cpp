@@ -30,6 +30,7 @@ void H264VolumeReaderPlugin::Open(const std::string &filename)
     }
     this->min_lod = lod_file.get_min_lod();
     this->max_lod = lod_file.get_max_lod();
+    this->volume_space = lod_file.get_volume_space();
     for (int i = min_lod; i <= max_lod; i++)
     {
         AddLodData(i, lod_file.get_lod_file_path(i));
@@ -142,6 +143,10 @@ auto H264VolumeReaderPlugin::GetFrameShape() const -> std::array<uint32_t, 2>
         LOG_ERROR("GetFrameShape: {0}.", err.what());
         return {0, 0};
     }
+}
+auto H264VolumeReaderPlugin::GetVolumeSpace() const -> std::array<float, 3>
+{
+    return this->volume_space;
 }
 
 VS_END

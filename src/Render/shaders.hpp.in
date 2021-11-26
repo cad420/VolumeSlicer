@@ -11,7 +11,7 @@ namespace shader{
 
     inline const char* volume_render_pos_v = R"(@volume_render_pos_v.glsl@)";
 
-    inline const char* volume_render_pos_f = R"(@volume_render_pos_f.glsl)";
+    inline const char* volume_render_pos_f = R"(@volume_render_pos_f.glsl@)";
 
     inline const char* multi_volume_render_v = R"(@multi_volume_render_v.glsl@)";
 
