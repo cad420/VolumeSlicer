@@ -44,22 +44,22 @@ void TF1DEditor::createWidgets()
 	hboxButton->setSpacing(0);
 
 	clearButton = new QToolButton();
-    clearButton->setIcon(QIcon("../icon/TFClear.png"));
+    clearButton->setIcon(QIcon("./icons/TFClear.png"));
     clearButton->setToolTip(tr("Reset to default 1D transfer function"));
 	hboxButton->addWidget(clearButton);
 
     loadButton = new QToolButton();
-    loadButton->setIcon(QIcon("../icons/TFOpen.png"));
+    loadButton->setIcon(QIcon("./icons/TFOpen.png"));
     loadButton->setToolTip(tr("Load 1D transfer function"));
 	hboxButton->addWidget(loadButton);
 
     saveButton = new QToolButton();
-    saveButton->setIcon(QIcon("../icons/TFSave.png"));
+    saveButton->setIcon(QIcon("./icons/TFSave.png"));
     saveButton->setToolTip(tr("Save 1D transfer function"));
     hboxButton->addWidget(saveButton);
 
 	expandButton = new QToolButton();
-	expandButton->setIcon(QIcon("../icons/arrowLeftRight.png"));
+	expandButton->setIcon(QIcon("./icons/arrowLeftRight.png"));
 	expandButton->setToolTip(tr("Zoom-in on the area between lower and upper thresholds"));
 	expandButton->setCheckable(true);
 	expandButton->setChecked(false);

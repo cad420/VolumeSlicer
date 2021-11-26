@@ -6,7 +6,7 @@
 #define B_SPLINE_BSPLINE_H
 
 #include <vector>
-#include "Config.h"
+#include "config.hpp"
 class BSpline{
 public:
     BSpline()

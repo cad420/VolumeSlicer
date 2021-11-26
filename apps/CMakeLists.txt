@@ -1,3 +1,13 @@
+
+option(VS_BUILD_APP_MPILargeMeshVis "" ON)
+option(VS_BUILD_APP_MPILargeVolumeVis "" ON)
+option(VS_BUILD_APP_MPIVolumeSlicer "" ON)
+option(VS_BUILD_APP_OffScreenVolumeRenderer "" ON)
+option(VS_BUILD_APP_QTOffScreenRenderEditor "" ON)
+option(VS_BUILD_APP_QTVolumeSlicer "" ON)
+option(VS_BUILD_APP_RawVolumeRenderer "" OFF)
+option(VS_BUILD_APP_WebSlicerServer "" ON)
+
 include(${PROJECT_SOURCE_DIR}/third_party/glfw.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/sdl2.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/imgui.cmake)

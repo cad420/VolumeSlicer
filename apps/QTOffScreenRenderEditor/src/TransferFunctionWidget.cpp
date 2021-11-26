@@ -16,11 +16,11 @@ TransferFunctionWidget::TransferFunctionWidget(QWidget *parent) {
     widget_layout->addLayout(buttons_layout);
     auto load_tf_button=new QPushButton(
             QIcon(
-                            "C:\\Users\\wyz\\projects\\VolumeSlicer\\apps\\QTVolumeSlicer\\icons\\TFOpen.png"
+                            "./icons/TFOpen.png"
                     ),"Load transfer function file"
             );
     auto save_tf_button=new QPushButton(
-            QIcon("C:\\Users\\wyz\\projects\\VolumeSlicer\\apps\\QTVolumeSlicer\\icons\\TFSave.png"),
+            QIcon("./icons/TFSave.png"),
             "Save transfer function to file"
             );
     buttons_layout->addWidget(load_tf_button);

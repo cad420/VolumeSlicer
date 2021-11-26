@@ -18,13 +18,13 @@
 #include<VolumeSlicer/volume_sampler.hpp>
 #include <VolumeSlicer/utils.hpp>
 
-#include "SettingWidget.h"
-#include "VolumeRenderWidget.h"
-#include "OffScreenRenderSetting.h"
+#include "OffScreenRenderSettingWidget.hpp"
+#include "RealTimeRenderSettingWidget.hpp"
+#include "RealTimeVolumeRenderWidget.hpp"
 
 class OffScreenRenderSettingWidget;
-class SettingWidget;
-class VolumeRenderWidget;
+class RealTimeRenderSettingWidget;
+class RealTimeVolumeRenderWidget;
 class CameraRouteWidget;
 
 class QTOffScreenRenderEditor: public QMainWindow{
@@ -33,23 +33,30 @@ class QTOffScreenRenderEditor: public QMainWindow{
     explicit QTOffScreenRenderEditor(QWidget* parent = nullptr);
 
     void open(std::string filename);
+    void close();
+
 
   private:
-    void CreateMenu();
-    void CreateAction();
-    void CreateWidgets();
+    void createMenu();
+    void createAction();
+    void createWidgets();
 
   private:
     QMenu* file_menu;
     QMenu* view_menu;
 
     QAction* open_file_action;
+    QAction* close_file_action;
 
-    SettingWidget*  setting_widget;
+
+    RealTimeRenderSettingWidget *  setting_widget;
     QDockWidget* setting_dock_widget;
 
-    VolumeRenderWidget* volume_render_widget;
+    RealTimeVolumeRenderWidget* volume_render_widget;
     QDockWidget* volume_render_dock_widget;
+
+    OffScreenRenderSettingWidget* off_setting_widget;
+    QDockWidget* off_setting_dock_widget;
 
 };
 

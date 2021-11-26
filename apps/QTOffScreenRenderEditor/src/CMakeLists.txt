@@ -15,8 +15,8 @@ list(
         QTOffScreenRenderEditor_SRCS
         main.cpp
         QTOffScreenRenderEditor.cpp
-        SettingWidget.cpp
-        VolumeRenderWidget.cpp
+        RealTimeRenderSettingWidget.cpp
+        RealTimeVolumeRenderWidget.cpp
         TransferFunctionWidget.cpp
         TFCanvas.cpp
         DoubleSlider.cpp
@@ -24,6 +24,8 @@ list(
         tf1dmappingcanvas.cpp
         tf1dtexturecanvas.cpp
         BSplineCurve.cpp
+        OffScreenRenderSettingWidget.cpp
+        CameraVisWidget.cpp
 )
 
 add_executable(QTOffScreenRenderEditor ${QTOffScreenRenderEditor_SRCS})
@@ -65,3 +67,9 @@ target_link_libraries(QTOffScreenRenderEditor
         OpenMP::OpenMP_CXX
         glm::glm
         )
+
+embed_shaders(
+        CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders.hpp.in
+        TARGET ${CMAKE_CURRENT_SOURCE_DIR}/shaders.hpp
+        DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+)

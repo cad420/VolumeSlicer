@@ -1,9 +1,9 @@
 //
 // Created by csh on 10/20/2021.
 //
-#include"QTOffScreenRenderEditor.h"
-#include <QtWidgets>
+#include "QTOffScreenRenderEditor.hpp"
 #include <QApplication>
+#include <QtWidgets>
 
 int main(int argc,char** argv)
 {
