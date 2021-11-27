@@ -9,7 +9,7 @@
 #include <QProcess>
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <json.hpp>
-#include "BSplineCurve.h"
+#include "splines.hpp"
 struct RenderConfig;
 static auto LoadCameraSequenceFromFile(const std::string&)->std::vector<Camera>;
 static void SaveCameraSequenceToFile(const std::string&,const std::vector<Camera>& cameras);
@@ -131,12 +131,16 @@ OffScreenRenderSettingWidget::OffScreenRenderSettingWidget(QWidget *parent)
             );
     });
     connect(camera_export_pb,&QPushButton::clicked,this,[this](){
-       if(camera_item_widget->count()==0) return;
-       auto items = camera_item_widget->selectedItems();
-       if(items.size() != 1) return;
-       auto name = items.front()->text().toStdString();
-       LOG_INFO("export name {}",name);
-       exportCamerasToFile(name);
+        if(camera_item_widget->count()==0) return;
+        auto items = camera_item_widget->selectedItems();
+        if(items.size() != 1) return;
+        auto name = items.front()->text().toStdString();
+        auto path = QFileDialog::getSaveFileName(
+        this,QString("Export As"),
+        QString("."),QString("(*.json)")
+        ).toStdString();
+        LOG_INFO("export name {}",path);
+        exportCamerasToFile(name,path);
     });
     connect(camera_del_pb,&QPushButton::clicked,this,[this](){
       if(camera_item_widget->count()==0) return;
@@ -241,11 +245,11 @@ void OffScreenRenderSettingWidget::importCamerasFromFile(const std::string &path
     }
 }
 
-void OffScreenRenderSettingWidget::exportCamerasToFile(const std::string &name)
+void OffScreenRenderSettingWidget::exportCamerasToFile(const std::string &name,const std::string& filename)
 {
     try{
         const auto& cameras = camera_map.at(name);
-        SaveCameraSequenceToFile(name.c_str(),cameras);
+        SaveCameraSequenceToFile(filename.c_str(),cameras);
     }
     catch (const std::exception& err)
     {
@@ -272,10 +276,115 @@ void OffScreenRenderSettingWidget::deleteCamerasItem(const std::string &name)
         LOG_ERROR("deleteCamerasItem error: {}",err.what());
     }
 }
-void OffScreenRenderSettingWidget::smoothCamerasItem(const std::string &)
+void OffScreenRenderSettingWidget::smoothCamerasItem(const std::string &name)
 {
     try{
+        auto& cameras = camera_map.at(name);
+        if(cameras.empty()) return;
+        using Vec3 = glm::vec3;
+        std::vector<Vec3> pos;
+        std::vector<Vec3> dir;
+        std::vector<float> zoom;
+        pos.reserve(cameras.size());
+        dir.reserve(cameras.size());
+        zoom.reserve(cameras.size());
+#ifdef REMOVE_DUPLICATE
+        glm::vec3 last_pos ={ cameras.front().pos[0],cameras.front().pos[1],cameras.front().pos[2]};
+        glm::vec3 last_dir = glm::normalize(glm::vec3{
+            cameras.front().look_at[0]-cameras.front().pos[0],
+            cameras.front().look_at[1]-cameras.front().pos[1],
+            cameras.front().look_at[2]-cameras.front().pos[2]
+        });
+        float last_zoom = cameras.front().zoom;
+        pos.emplace_back(last_pos);
 
+        dir.emplace_back(last_dir);
+
+        zoom.emplace_back(Vec3{last_zoom,0.f,0.f});
+#endif
+
+        for(auto& cam:cameras){
+            glm::vec3 cur_pos = {cam.pos[0],cam.pos[1],cam.pos[2]};
+            glm::vec3 direction = {cam.look_at[0]-cam.pos[0],cam.look_at[1]-cam.pos[1],cam.look_at[2]-cam.pos[2]};
+            auto cur_dir = glm::normalize(direction);
+            float cur_zoom = cam.zoom;
+#ifdef REMOVE_DUPLICATE
+            if(cur_pos != last_pos){
+                pos.emplace_back(cur_pos);
+
+                last_pos = cur_pos;
+            }
+            if(cur_dir != last_dir){
+                dir.emplace_back(cur_dir);
+
+                last_dir = cur_dir;
+            }
+            if(cur_zoom != last_zoom){
+                zoom.emplace_back(Vec3{cur_zoom,0.f,0.f});
+
+                last_zoom = cur_zoom;
+            }
+#else
+            pos.emplace_back(cur_pos);
+            dir.emplace_back(cur_dir);
+            zoom.emplace_back(cur_zoom);
+#endif
+        }
+        LOG_INFO("cameras num: {}",cameras.size());
+
+        int frame_count = cameras.size();
+        Spline<Vec3,float> spline(3);
+        std::vector<Vec3> res_pos;res_pos.reserve(frame_count);
+        std::vector<Vec3> res_dir;res_dir.reserve(frame_count);
+
+        spline.set_ctrl_points(pos);
+        for(int i=0;i<frame_count;i++){
+            res_pos.emplace_back(spline.eval_f(1.0*i/(frame_count-1)));
+        }
+        float delta = 0.f;
+        for(int i =0;i<frame_count;i++){
+            delta += glm::length(pos[i]-res_pos[i]);
+        }
+        LOG_INFO("pos delta: {}",delta);
+        spline.set_ctrl_points(dir);
+        for(int i=0;i<frame_count;i++){
+            res_dir.emplace_back(spline.eval_f(1.0*i/(frame_count-1)));
+        }
+        delta = 0.f;
+        for(int i =0;i<frame_count;i++){
+            delta += glm::length(dir[i]-res_dir[i]);
+        }
+        LOG_INFO("dir delta: {}",delta);
+
+        Spline<float,float> spline2(3);
+        std::vector<float> res_zoom;res_zoom.reserve(frame_count);
+        spline2.set_ctrl_points(zoom);
+        for(int i=0;i<frame_count;i++){
+            res_zoom.emplace_back(spline2.eval_f(1.0*i/(frame_count-1)));
+        }
+        delta = 0.f;
+        for(int i =0;i<frame_count;i++){
+            delta += glm::length(zoom[i]-res_zoom[i]);
+        }
+        LOG_INFO("zoom delta: {}",delta);
+
+        glm::vec3 world_up = {0.f,1.f,0.f};
+        for(int i=0;i<cameras.size();i++){
+            auto& camera = cameras[i];
+
+            glm::vec3 pos = res_pos[i];
+            glm::vec3 dir = glm::normalize(res_dir[i]);
+            glm::vec3 lookat = pos+dir;
+            glm::vec3 right = glm::normalize(glm::cross(dir,world_up));
+            glm::vec3 up = glm::normalize(glm::cross(right,dir));
+            float zoom = res_zoom[i];
+            camera.pos = {pos.x,pos.y,pos.z};
+            camera.look_at = {lookat.x,lookat.y,lookat.z};
+            camera.right = {right.x,right.y,right.z};
+            camera.up = {up.x,up.y,up.z};
+            camera.zoom = zoom;
+        }
+        sendCameraPosToVis(cameras);
     }
     catch (const std::exception& err)
     {
@@ -363,6 +472,8 @@ bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::s
 #define OffScreenVolumeRendererTmpConfigFile "tmp-offscreen-render-config.json"
 void OffScreenRenderSettingWidget::startRenderProgram()
 {
+    //todo add a check messagebox
+
     if(!saveOffScreenRenderSettingToFile(OffScreenVolumeRendererTmpConfigFile,false)) return;
 
     bool s = QProcess::startDetached(OffScreenVolumeRendererName,{OffScreenVolumeRendererTmpConfigFile},".");

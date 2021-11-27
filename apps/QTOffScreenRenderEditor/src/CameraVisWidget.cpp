@@ -12,7 +12,9 @@
 CameraVisWidget::CameraVisWidget(QWidget *parent)
 :QOpenGLWidget(parent)
 {
-
+    QSurfaceFormat format;
+    format.setSamples(8);
+    setFormat(format);
 }
 void CameraVisWidget::SetCameraPoints(std::vector<CameraPoint> camera_points)
 {
@@ -47,7 +49,8 @@ void CameraVisWidget::initializeGL()
         LOG_ERROR("shader link failed");
     }
     GL_CHECK
-
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST);
 }
 void CameraVisWidget::paintGL()
 {

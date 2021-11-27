@@ -37,7 +37,7 @@ class OffScreenRenderSettingWidget:public QWidget{
   private:
     void sendCameraPosToVis(const std::vector<Camera>&);
     void importCamerasFromFile(const std::string&);
-    void exportCamerasToFile(const std::string&);
+    void exportCamerasToFile(const std::string&,const std::string&);
     void deleteCamerasItem(const std::string&);
     void smoothCamerasItem(const std::string&);
     void clear();
