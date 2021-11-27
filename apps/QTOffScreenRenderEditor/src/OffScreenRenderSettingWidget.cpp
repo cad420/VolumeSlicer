@@ -84,8 +84,11 @@ OffScreenRenderSettingWidget::OffScreenRenderSettingWidget(QWidget *parent)
     render_width_sb = new QSpinBox();
     render_height_sb = new QSpinBox();
     render_width_sb->setRange(1,10000);
+    render_width_sb->setValue(1920);
     render_height_sb->setRange(1,10000);
+    render_height_sb->setValue(1080);
     render_fps_sb = new QSpinBox();
+    render_fps_sb->setValue(30);
     render_fps_sb->setRange(1,60);
     render_paras_layout->addWidget(render_width_lb);
     render_paras_layout->addWidget(render_width_sb);
@@ -163,7 +166,7 @@ OffScreenRenderSettingWidget::OffScreenRenderSettingWidget(QWidget *parent)
                         QString("."),QString("(*.json)")
             ).toStdString();
       if(path.empty()) return;
-      saveOffScreenRenderSettingToFile(path);
+      saveOffScreenRenderSettingToFile(path,true);
     });
     connect(start_off_render_pb,&QPushButton::clicked,this,[this](){
         startRenderProgram();
@@ -294,7 +297,7 @@ struct RenderConfig{
     std::string camera_sequence_config;
     std::string image_save_path;
 };
-bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::string &path)
+bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::string &path,bool notice)
 {
     try{
         RenderConfig render_config;
@@ -320,6 +323,7 @@ bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::s
         {
             render_config.fps = fps;
             render_config.backend = backend;
+            render_config.iGPU = iGPU;
             render_config.width = width;
             render_config.height = height;
             render_config.output_video_name = output_video_name;
@@ -334,18 +338,24 @@ bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::s
             for(int i =0;i<10;i++) render_config.lod_policy[i] = render_policy[i];
         }
 
-        QMessageBox::information(this,
-                                 "Save successfully",
-                                 QString("Successfully save off-screen render setting to file: %1")
-                                 .arg(path.c_str()));
+        SaveRenderConfigToFile(path,render_config);
+
+        if(notice){
+            QMessageBox::information(this,
+                                     "Save successfully",
+                                     QString("Successfully save off-screen render setting to file: %1")
+                                         .arg(path.c_str()));
+        }
         return true;
     }
     catch (const std::exception& err)
     {
-        QMessageBox::warning(this,
-                             "Save failed",
-                             "Save off-screen render setting to file failed! Please check if all parameters are set and valid");
-        LOG_ERROR("Save render setting to file failed!");
+        LOG_ERROR("Save render setting to file failed! Error: {}",err.what());
+        if(notice){
+            QMessageBox::warning(this,
+                                 "Save failed",
+                                 "Save off-screen render setting to file failed! Please check if all parameters are set and valid");
+        }
         return false;
     }
 }
@@ -353,7 +363,7 @@ bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::s
 #define OffScreenVolumeRendererTmpConfigFile "tmp-offscreen-render-config.json"
 void OffScreenRenderSettingWidget::startRenderProgram()
 {
-    if(!saveOffScreenRenderSettingToFile(OffScreenVolumeRendererTmpConfigFile)) return;
+    if(!saveOffScreenRenderSettingToFile(OffScreenVolumeRendererTmpConfigFile,false)) return;
 
     bool s = QProcess::startDetached(OffScreenVolumeRendererName,{OffScreenVolumeRendererTmpConfigFile},".");
 
@@ -380,7 +390,7 @@ auto OffScreenRenderSettingWidget::getCurrentRenderPolicy() -> std::array<double
 
     return lod_policy;
 }
-void OffScreenRenderSettingWidget::setTranferFuncHandle(const OffScreenRenderSettingWidget::Handle &handle)
+void OffScreenRenderSettingWidget::setTransferFuncHandle(const OffScreenRenderSettingWidget::Handle &handle)
 {
     this->tf_handle = handle;
 }
@@ -439,11 +449,48 @@ auto LoadCameraSequenceFromFile(const std::string& camera_file)->std::vector<Cam
 
 void SaveCameraSequenceToFile(const std::string& filename,const std::vector<Camera>& cameras)
 {
-
-
+    nlohmann::json j;
+    j["frame_count"] = cameras.size();
+    j["property"] = {"zoom","pos","look_at","up","right"};
+    for(int i =0;i<cameras.size();i++){
+        std::string idx= "frame_" + std::to_string(i+1);
+        const auto& camera = cameras[i];
+        j[idx] = {
+            camera.zoom,
+            camera.pos,
+            camera.look_at,
+            camera.up,
+            camera.right
+        };
+    }
+    std::ofstream out(filename);
+    if(!out.is_open()) throw std::runtime_error("Save cameras to file which open failed");
+    out<< j <<std::endl;
+    out.close();
 }
 
-void SaveRenderConfigToFile(const std::string &, const RenderConfig &)
+void SaveRenderConfigToFile(const std::string &path, const RenderConfig &render_config)
 {
-
+    nlohmann::json j;
+    j["fps"] = render_config.fps;
+    j["backend"] = render_config.backend;
+    j["iGPU"] = render_config.iGPU;
+    j["width"] = render_config.width;
+    j["height"] = render_config.height;
+    j["output_video_name"] = render_config.output_video_name;
+    j["save_image"] = render_config.save_image?"yes":"no";
+    j["save_image_path"] = render_config.image_save_path;
+    j["volume_data_config"] = render_config.volume_data_config_file;
+    j["space"] = {render_config.space_x,render_config.space_y,render_config.space_z};
+    j["lod_policy"] = render_config.lod_policy;
+    j["camera_sequence_config"] = render_config.camera_sequence_config;
+    std::map<std::string,std::array<double,4>> m;
+    for(auto& p:render_config.tf.points){
+        m[std::to_string(p.key)] = p.value;
+    }
+    j["tf"] = m;
+    std::ofstream out(path);
+    if(!out.is_open()) throw std::runtime_error("Save render config to file which open failed");
+    out<< j <<std::endl;
+    out.close();
 }

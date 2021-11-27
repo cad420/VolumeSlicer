@@ -92,6 +92,10 @@ void QTOffScreenRenderEditor::createWidgets()
         this->setting_widget->resetTransferFunc();
         this->setting_widget->resetSteps();
         this->off_setting_widget->volumeLoaded(comp_volume);
+        std::function<TransferFunc()> handle = [this](){
+            return this->setting_widget->getTransferFunc();
+        };
+        this->off_setting_widget->setTransferFuncHandle(handle);
     });
     connect(volume_render_widget,&RealTimeVolumeRenderWidget::volumeClosed,this,[this](){
         this->setting_widget->volumeClosed();
