@@ -155,9 +155,12 @@ void OffScreenVolumeRenderer::RenderFrames(const char *config_file)
     }
 
     auto volume = CompVolume::Load(volume_data_config.c_str());
-    volume->SetSpaceX(space_x);
-    volume->SetSpaceY(space_y);
-    volume->SetSpaceZ(space_z);
+    if(space_x!=0.0 && space_y!=0.0 && space_z!=0.0)
+    {
+        volume->SetSpaceX(space_x);
+        volume->SetSpaceY(space_y);
+        volume->SetSpaceZ(space_z);
+    }
     renderer->SetVolume(std::move(volume));
 
     TransferFunc tf;
@@ -271,9 +274,12 @@ void OffScreenVolumeRenderer::RenderFrames(OffScreenVolumeRenderer::RenderConfig
     }
 
     auto volume = CompVolume::Load(config.volume_data_config_file.c_str());
-    volume->SetSpaceX(config.space_x);
-    volume->SetSpaceY(config.space_y);
-    volume->SetSpaceZ(config.space_z);
+    if(config.space_x!=0.0 && config.space_y!=0.0 && config.space_z!=0.0)
+    {
+        volume->SetSpaceX(config.space_x);
+        volume->SetSpaceY(config.space_y);
+        volume->SetSpaceZ(config.space_z);
+    }
     renderer->SetVolume(std::move(volume));
 
     renderer->SetTransferFunc(std::move(config.tf));

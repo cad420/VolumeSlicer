@@ -113,11 +113,9 @@ public:
         }
 
         ~VolumeBlock(){
-            if(valid)
-                Release();
             block_data.reset();
         }
-
+        //must explict call, cant's auto call by destructor
         void Release(){
             block_data->Release();
             valid = false;

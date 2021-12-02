@@ -203,7 +203,7 @@ void OffScreenRenderSettingWidget::volumeLoaded(const std::shared_ptr<CompVolume
         auto volume_space_z = comp_volume->GetVolumeSpaceZ();
         auto base_space = std::sqrt(volume_space_x*volume_space_x+volume_space_y*volume_space_y+volume_space_z*volume_space_z);
         auto block_length = comp_volume->GetBlockLength()[0];
-        auto base_lod = base_space * block_length * 2;
+        auto base_lod = base_space * (block_length + 2) / 2 ;
         LOG_INFO("base lod {0}",base_lod);
         for(int i=0;i<9;i++){
             low_render_policy[i] = base_lod * std::pow(2,i);
@@ -495,8 +495,10 @@ auto OffScreenRenderSettingWidget::getCurrentRenderPolicy() -> std::array<double
     std::array<double,10> lod_policy;
 
     int q = render_policy_slider->value();
+    LOG_INFO("q {}",q);
     for(int i=0;i<9;i++){
         lod_policy[i] = low_render_policy[i] * q;
+        LOG_INFO("lod {0}: {1}",i,low_render_policy[i]);
     }
 
     return lod_policy;
