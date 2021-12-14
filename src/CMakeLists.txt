@@ -16,6 +16,7 @@ list(
         Volume/cuda_volume_cache_impl.cpp
         Volume/opengl_volume_cache_impl.cpp
         Volume/cpu_volume_cache_impl.cpp
+        Volume/chunk_cache.cpp
         Slice/volume_sampler_impl.cpp
         Slice/raw_volume_sample.cu
         Slice/comp_volume_sample.cu

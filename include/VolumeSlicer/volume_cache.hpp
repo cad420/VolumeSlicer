@@ -6,6 +6,7 @@
 #include <VolumeSlicer/define.hpp>
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/cuda_memory.hpp>
+#include <VolumeSlicer/memory_cache.hpp>
 #include <VolumeSlicer/Utils/block_array.hpp>
 
 #include <cstdint>

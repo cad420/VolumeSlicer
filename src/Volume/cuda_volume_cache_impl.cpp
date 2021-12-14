@@ -6,6 +6,7 @@
 
 #include <VolumeSlicer/volume_cache.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 
 #include "Common/cuda_utils.hpp"
 #include "Volume/cuda_volume_cache_impl.hpp"
@@ -33,6 +34,9 @@ CUDAVolumeBlockCacheImpl::CUDAVolumeBlockCacheImpl(CUcontext ctx)
 void CUDAVolumeBlockCacheImpl::SetCacheBlockLength(uint32_t block_length)
 {
     this->block_length = block_length;
+
+    this->chunk_cache = std::make_unique<ChunkCache>(block_length*block_length*block_length);
+    this->chunk_cache->SetCacheStorage(12);
 }
 
 void CUDAVolumeBlockCacheImpl::SetCacheCapacity(uint32_t num, uint32_t x, uint32_t y, uint32_t z)
@@ -71,9 +75,47 @@ static size_t count = 0;
 void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &index, uint8_t *data, size_t size,
                                                  bool device)
 {
+    static auto BlockIndexToCacheID = [this](const std::array<uint32_t,4> index){
+      size_t id = ((size_t)index[2] * lod_block_dim.at(index[3])[0] * lod_block_dim.at(index[3])[1] +
+                  index[1] * lod_block_dim.at(index[3])[0] + index[0]) * 4 +
+                 lod_mapping_table_offset.at(index[3]);
+      return id/4;
+    };
     // upload data to texture
     std::array<uint32_t, 4> pos{INVALID, INVALID, INVALID, INVALID};
     bool cached = getCachedPos(index, pos);
+    //copy origin data to cache
+    {
+        for(auto& it:block_cache_table){
+            if(it.pos_index == pos && it.block_index!=index && it.cached && it.block_index[0]!=INVALID){
+                //cuda memory copy from cuda array to cpu memory
+                {
+                    auto cache = chunk_cache->GetCacheRef(BlockIndexToCacheID(it.block_index));
+
+                    CUDA_MEMCPY3D m{};
+                    m.srcMemoryType = CU_MEMORYTYPE_ARRAY;
+                    m.srcArray = (CUarray)cu_arrays[pos[3]];
+                    m.srcXInBytes = it.pos_index[0]*block_length;
+                    m.srcY = it.pos_index[1]*block_length;
+                    m.srcZ = it.pos_index[2]*block_length;
+
+                    m.dstMemoryType = CU_MEMORYTYPE_HOST;
+                    m.dstHost = cache.data;
+
+                    m.WidthInBytes = block_length;
+                    m.Height = block_length;
+                    m.Depth = block_length;
+
+                    CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+
+                    LOG_INFO("Copy block({} {} {} {}) data from cuda texture to chunk cache",
+                             it.block_index[0],it.block_index[1],it.block_index[2],it.block_index[3]);
+
+                }
+                break;
+            }
+        }
+    }
     if (!cached)
     {
         if (device)
@@ -106,6 +148,7 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
             it.valid = true;
             it.cached = true;
             it.t = ++count;
+            break;
         }
     }
 
@@ -115,13 +158,30 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
 
 bool CUDAVolumeBlockCacheImpl::IsCachedBlock(const std::array<uint32_t, 4> &target)
 {
+    static auto BlockIndexToCacheID = [this](const std::array<uint32_t,4> index){
+      size_t id = ((size_t)index[2] * lod_block_dim.at(index[3])[0] * lod_block_dim.at(index[3])[1] +
+                   index[1] * lod_block_dim.at(index[3])[0] + index[0]) * 4 +
+                  lod_mapping_table_offset.at(index[3]);
+      return id/4;
+    };
     for (auto &it : block_cache_table)
     {
         if (it.block_index == target)
         {
-            return it.cached;
+            if(it.cached){
+                return true;
+            }
         }
     }
+    //query chunk cache
+    {
+        bool cached = chunk_cache->Query(BlockIndexToCacheID(target));
+        if(cached){
+            return true;
+        }
+    }
+    return false;
+
 }
 
 bool CUDAVolumeBlockCacheImpl::IsValidBlock(const std::array<uint32_t, 4> &target)
@@ -168,6 +228,12 @@ void CUDAVolumeBlockCacheImpl::clear()
 
 bool CUDAVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 4> &target)
 {
+    static auto BlockIndexToCacheID = [this](const std::array<uint32_t,4> index){
+      size_t id = ((size_t)index[2] * lod_block_dim.at(index[3])[0] * lod_block_dim.at(index[3])[1] +
+                   index[1] * lod_block_dim.at(index[3])[0] + index[0]) * 4 +
+                  lod_mapping_table_offset.at(index[3]);
+      return id/4;
+    };
     for (auto &it : block_cache_table)
     {
         if (it.block_index == target && it.cached)
@@ -175,6 +241,20 @@ bool CUDAVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 4>
             it.valid = true;
             it.t = ++count;
             this->updateMappingTable(target, it.pos_index, true);
+            return true;
+        }
+    }
+    //query chunk cache
+    {
+        size_t cacheID = BlockIndexToCacheID(target);
+        bool cached = chunk_cache->Query(cacheID);
+        if(cached){
+
+            auto cache = chunk_cache->GetCache(cacheID);
+            assert(cache.data);
+            UploadVolumeBlock(target,reinterpret_cast<uint8_t*>(cache.data),cache.size,false);
+            LOG_INFO("Upload volume block({} {} {} {}) from chunk cache",
+                     target[0],target[1],target[2],target[3]);
             return true;
         }
     }

@@ -5,7 +5,7 @@
 #pragma once
 
 #include <VolumeSlicer/volume_cache.hpp>
-
+#include "Volume/chunk_cache.hpp"
 VS_START
 
 class CUDAVolumeBlockCacheImpl : public CUDAVolumeBlockCache
@@ -84,6 +84,8 @@ class CUDAVolumeBlockCacheImpl : public CUDAVolumeBlockCache
     std::map<uint32_t, std::array<uint32_t, 3>> lod_block_dim;
     std::map<uint32_t, uint32_t> lod_mapping_table_offset;
     uint32_t min_lod, max_lod;
+
+    std::unique_ptr<ChunkCache> chunk_cache;
 };
 
 VS_END
