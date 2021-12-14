@@ -122,6 +122,16 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data, bo
     comp_sampler_parameter.space = make_float3(space.x, space.y, space.z);
     comp_sampler_parameter.space_ratio = make_float3(space.x / base_space, space.y / base_space, space.z / base_space);
     comp_sampler_parameter.voxels_per_pixel = make_float2(slice.voxel_per_pixel_width, slice.voxel_per_pixel_height);
+    //params for slice that has depth attribute
+    {
+        comp_sampler_parameter.normal = make_float3(normal.x,normal.y,normal.z);
+        float sample_space = base_space * 0.5f;
+        int steps = std::ceil(slice.depth / sample_space );
+        comp_sampler_parameter.step = steps==0 ? 0 : slice.depth / steps;
+        LOG_INFO("sample steps {}",steps);
+        comp_sampler_parameter.steps = steps;
+        comp_sampler_parameter.direction = slice.direction;
+    }
     cuda_comp_volume_sampler->UploadCompSampleParameter(comp_sampler_parameter);
 
     calcIntersectBlocks(obb);

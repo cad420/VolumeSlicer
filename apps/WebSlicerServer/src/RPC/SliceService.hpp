@@ -43,11 +43,8 @@ class SliceService: public JsonRPCService{
     /**
      * @brief
      * @param slice
-     * @param d number of slice should be sampled except the central slice
-     * @param depth voxels between two slices
-     * @param direction 1 represent forward slice's normal, 2 represent backward slice's normal, 3 represent double direction
      */
-    Image render(Slice slice,float depth,int direction);
+    Image render(Slice slice);
 
     /**
      * @brief get guide map for slice, using max lod down-sample volume to render

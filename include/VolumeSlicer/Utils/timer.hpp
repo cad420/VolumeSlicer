@@ -195,18 +195,19 @@ class Timer
 class AutoTimer : public Timer
 {
   public:
-    AutoTimer(std::string unit = "ms") : unit(unit)
+    AutoTimer(std::string msg="",std::string unit = "ms") : msg(std::move(msg)),unit(unit)
     {
         start();
     }
     ~AutoTimer()
     {
         stop();
-        std::cout << "AutoTimer ";
+        std::cout << "AutoTimer ("<<msg<<") ";
         print_duration(unit);
     }
 
   private:
+    std::string msg;
     std::string unit;
 };
 

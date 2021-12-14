@@ -64,8 +64,22 @@ __global__ void CUDACompVolumeSample(uint8_t* image){
             +(image_y-compSampleParameter.image_h/2)*compSampleParameter.voxels_per_pixel.y*compSampleParameter.down)
                     /compSampleParameter.space_ratio;
 //    virtual_sample_pos=virtual_sample_pos*0.01f/compSampleParameter.space;
+    int stop_step=0,start_step=0;
+    if(compSampleParameter.direction & 0b1){
+        stop_step = compSampleParameter.steps;
+    }
+    if(compSampleParameter.direction & 0b10){
+        start_step = - compSampleParameter.steps;
+    }
+    float max_scalar = 0.f;
+    for(int i_step = start_step;i_step <= stop_step; i_step++){
+        float3 sample_pos = virtual_sample_pos + (i_step * compSampleParameter.step * compSampleParameter.normal/compSampleParameter.space);
+        float sample_scalar = VirtualSample(sample_pos);
+        if(sample_scalar>max_scalar) max_scalar = sample_scalar;
+    }
 
-    image[image_idx]=VirtualSample(virtual_sample_pos)*255;
+    image[image_idx] = max_scalar * 255;
+//    image[image_idx]=VirtualSample(virtual_sample_pos)*255;
 //    image[image_idx]=128;
 }
 

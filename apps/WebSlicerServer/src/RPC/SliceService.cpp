@@ -5,6 +5,7 @@
 #include "Dataset/CompVolume.hpp"
 
 #include <VolumeSlicer/Utils/logger.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 #include <VolumeSlicer/volume_sampler.hpp>
 
 VS_START
@@ -13,7 +14,7 @@ namespace remote
 SliceService::SliceService() : methods(std::make_unique<RPCMethod>())
 {
     methods->register_method("get",{},RPCMethod::GetHandler(&SliceService::get,*this));
-    methods->register_method("render", {"slice","depth","direction"}, RPCMethod::GetHandler(&SliceService::render, *this));
+    methods->register_method("render", {"slice"}, RPCMethod::GetHandler(&SliceService::render, *this));
     methods->register_method("map",{"slice"},RPCMethod::GetHandler(&SliceService::map,*this));
 }
 void SliceService::process_message(const uint8_t *message, uint32_t size, const SliceService::Callback &callback)
@@ -125,54 +126,73 @@ Volume SliceService::get()
                          VolumeDataSet::GetVolume()->GetVolumeSpaceZ()};
     return volume;
 }
-Image SliceService::render(Slice slice,float depth,int direction)
+Image SliceService::render(Slice slice)
 {
+    AutoTimer timer("render");
+    Timer t;
+    t.start();
     cuCtxSetCurrent(GetCUDACtx());
-    static auto space_x = VolumeDataSet::GetVolume()->GetVolumeSpaceX();
-    static auto space_y = VolumeDataSet::GetVolume()->GetVolumeSpaceY();
-    static auto space_z = VolumeDataSet::GetVolume()->GetVolumeSpaceZ();
-    static auto base_space = (std::min)({space_x,space_y,space_z});
-    static auto base_sample_space = base_space * 0.5;
-    int d = depth / base_sample_space;
-    if(d*base_sample_space<depth){
-        depth = depth / d;
-    }
-    //transform to voxel
-    depth = depth / base_space;
+//    static auto space_x = VolumeDataSet::GetVolume()->GetVolumeSpaceX();
+//    static auto space_y = VolumeDataSet::GetVolume()->GetVolumeSpaceY();
+//    static auto space_z = VolumeDataSet::GetVolume()->GetVolumeSpaceZ();
+//    static auto base_space = (std::min)({space_x,space_y,space_z});
+//    static auto base_sample_space = base_space * 0.5;
+//    int d = depth / base_sample_space;
+//    if(d*base_sample_space<depth){
+//        depth = depth / d;
+//    }
+//    //transform to voxel
+//    depth = depth / base_space;
 
-    auto slicer = Slicer::CreateSlicer(slice);
-    slicer->SetSliceSpaceRatio({space_x/base_space,space_y/base_space,space_z/base_space});
+//    auto slicer = Slicer::CreateSlicer(slice);
+//    slicer->SetSliceSpaceRatio({space_x/base_space,space_y/base_space,space_z/base_space});
     const auto& slice_renderer = SliceRenderer::GetSliceRenderer();
-
+    t.stop();
+    t.print_duration();
+    t.start();
     std::vector<uint8_t> res(slice.n_pixels_width*slice.n_pixels_height);
     slice_renderer->Sample(slice,res.data(),false);
-
-    std::vector<uint8_t> tmp;
-    if(d>0){
-        tmp.resize(slice.n_pixels_width*slice.n_pixels_height);
-    }
-    if((direction & 0b1)){
-        for(int i=1;i<=d;i++){
-            slicer->MoveByNormal(depth);
-            slice_renderer->Sample(slicer->GetSlice(),tmp.data(),false);
-            MaxMix(res,tmp);
-        }
-    }
-    slicer->SetSlice(slice);
-    if((direction & 0b10)){
-        for(int i=1;i<=d;i++){
-            slicer->MoveByNormal(-depth);
-            slice_renderer->Sample(slicer->GetSlice(),tmp.data(),false);
-            MaxMix(res,tmp);
-        }
-    }
+//    t.stop();
+//    t.print_duration();
+//    t.start();
+//    std::vector<uint8_t> tmp;
+//    if(d>0){
+//        tmp.resize(slice.n_pixels_width*slice.n_pixels_height);
+//    }
+//    if((direction & 0b1)){
+//        for(int i=1;i<=d;i++){
+//            slicer->MoveByNormal(depth);
+//            {
+//                AutoTimer timer("sample");
+//                slice_renderer->Sample(slicer->GetSlice(), tmp.data(), false);
+//            }
+//            MaxMix(res,tmp);
+//        }
+//    }
+//    t.stop();
+//    t.print_duration();
+//    t.start();
+//    slicer->SetSlice(slice);
+//    if((direction & 0b10)){
+//        for(int i=1;i<=d;i++){
+//            slicer->MoveByNormal(-depth);
+//            slice_renderer->Sample(slicer->GetSlice(),tmp.data(),false);
+//            MaxMix(res,tmp);
+//        }
+//    }
+    t.stop();
+    t.print_duration();
+    t.start();
     auto img = Image::encode(res.data(),slice.n_pixels_width,slice.n_pixels_height,1,
                              Image::Format::JPEG,Image::Quality::MEDIUM);
     SliceRenderer::Release();
+    t.stop();
+    t.print_duration();
     return img;
 }
 Image SliceService::map(Slice slice)
 {
+    AutoTimer timer("map");
     cuCtxSetCurrent(GetCUDACtx());
     auto world_slice = slice;
     static auto raw_volume_sampler = VolumeSampler::CreateVolumeSampler(VolumeDataSet::GetRawVolume());
@@ -314,12 +334,12 @@ Image SliceService::map(Slice slice)
     max_p_y=max_p_y<slice.n_pixels_height?max_p_y:slice.n_pixels_height-1;
 
     for(int i=min_p_x;i<=max_p_x;i++){
-        setPixelColor(img,i,min_p_y,255,0,0);
-        setPixelColor(img,i,max_p_y,255,0,0);
+        setPixelColor(img,min_p_y,i,255,0,0);
+        setPixelColor(img,max_p_y,i,255,0,0);
     }
     for(int i =min_p_y;i<=max_p_y;i++){
-        setPixelColor(img,min_p_x,i,255,0,0);
-        setPixelColor(img,max_p_x,i,255,0,0);
+        setPixelColor(img,i,min_p_x,255,0,0);
+        setPixelColor(img,i,max_p_x,255,0,0);
     }
     return Image::encode(img.data.data(),img.width,img.height,3,
                          Image::Format::JPEG,Image::Quality::MEDIUM);

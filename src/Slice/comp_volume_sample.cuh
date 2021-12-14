@@ -18,6 +18,11 @@ struct CompSampleParameter{
     float3 down;
     float3 space;
     float3 space_ratio;
+    //params for slice that has depth attribute
+    float3 normal;
+    float step;
+    int steps;
+    int direction;
 };
 
 struct BlockParameter{

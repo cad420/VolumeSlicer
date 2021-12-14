@@ -24,6 +24,9 @@ struct alignas(16) Slice{
     uint32_t n_pixels_height;
     float voxel_per_pixel_width;
     float voxel_per_pixel_height;
+    float depth = 0.f;
+    int direction = 0;
+    uint64_t padding = 0;
 };
 
 class VS_EXPORT Slicer: public std::enable_shared_from_this<Slicer>{

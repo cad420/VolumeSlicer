@@ -6,7 +6,7 @@ include(FetchContent)
 FetchContent_Declare(
         VolumeCompression
         GIT_REPOSITORY https://github.com/wyzwzz/VolumeCompression.git
-        GIT_TAG dev
+        GIT_TAG master
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )

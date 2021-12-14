@@ -24,6 +24,9 @@ namespace seria{
                                member("n_pixels_width",&Slice::n_pixels_width),
                                member("n_pixels_height",&Slice::n_pixels_height),
                                member("voxel_per_pixel_width",&Slice::voxel_per_pixel_width),
-                               member("voxel_per_pixel_height",&Slice::voxel_per_pixel_height));
+                               member("voxel_per_pixel_height",&Slice::voxel_per_pixel_height),
+                               member("depth",&Slice::depth),
+                               member("direction",&Slice::direction)
+                               );
     }
 }
