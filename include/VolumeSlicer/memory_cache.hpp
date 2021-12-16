@@ -22,7 +22,10 @@ class VS_EXPORT AbstractMemoryCache{
         size_t id;
     };
 
-    virtual bool Query(size_t cacheID) = 0;
+    /**
+     * @brief Query if a cache is valid with the cacheID, notice this function is const
+     */
+    virtual bool Query(size_t cacheID) const = 0;
 
     virtual void SetCache(Cache cache) = 0;
 

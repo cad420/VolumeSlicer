@@ -16,7 +16,7 @@ class ChunkCache: public AbstractMemoryCache{
   public:
     void SetCacheStorage(size_t GB) override;
 
-    bool Query(size_t cacheID) override;
+    bool Query(size_t cacheID) const override;
 
     void SetCache(Cache cache) override;
 

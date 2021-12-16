@@ -31,7 +31,7 @@ void ChunkCache::SetCacheStorage(size_t GB)
     impl->lruCache = std::make_unique<LRUCache<size_t,void*>>(impl->storage.size());
     LOG_INFO("chunk cache storage size: {}",impl->storage.size());
 }
-bool ChunkCache::Query(size_t cacheID)
+bool ChunkCache::Query(size_t cacheID) const
 {
     bool cached = impl->lruCache->get_value_without_move(cacheID);
     if(cached){

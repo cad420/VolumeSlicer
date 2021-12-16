@@ -8,9 +8,10 @@
 
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/gl_helper.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 
 #include "Volume/opengl_volume_cache_impl.hpp"
-
+#include "Common/cuda_utils.hpp"
 VS_START
 
 std::unique_ptr<OpenGLVolumeBlockCache> vs::OpenGLVolumeBlockCache::Create()
@@ -38,6 +39,9 @@ OpenGLVolumeBlockCacheImpl::~OpenGLVolumeBlockCacheImpl()
 void OpenGLVolumeBlockCacheImpl::SetCacheBlockLength(uint32_t block_length)
 {
     this->block_length = block_length;
+
+    this->chunk_cache = std::make_unique<ChunkCache>(block_length*block_length*block_length);
+    this->chunk_cache->SetCacheStorage(12);
 }
 
 void OpenGLVolumeBlockCacheImpl::SetCacheCapacity(uint32_t num, uint32_t x, uint32_t y, uint32_t z)
@@ -88,33 +92,68 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
     // upload data to texture
     std::array<uint32_t, 4> pos{INVALID, INVALID, INVALID, INVALID};
     bool cached = getCachedPos(index, pos);
+
     if (!cached)
     {
+
         CUDA_DRIVER_API_CALL(cuGraphicsMapResources(1, &cu_resources[pos[3]], 0));
         CUarray cu_array;
         CUDA_DRIVER_API_CALL(cuGraphicsSubResourceGetMappedArray(&cu_array, cu_resources[pos[3]], 0, 0));
-        CUDA_MEMCPY3D m = {0};
+
+        //copy origin data in opengl texture to cache
+        if(chunk_cache){
+            for (auto &it : block_cache_table)
+            {
+                if (it.pos_index == pos && it.block_index != index && it.cached && it.block_index[0] != INVALID)
+                {
+                    auto cacheID = BlockIndexToCacheID(it.block_index);
+                    if(chunk_cache->Query(cacheID)){
+                        chunk_cache->GetCache(cacheID);//access the cache to change the cache priority
+                        break;
+                    }
+                    AutoTimer timer("copy block from opengl texture to chunk cache cost time ");
+                    auto cache = chunk_cache->GetCacheRef(cacheID);
+                    /**
+                     * too slow
+                    glGetTextureSubImage(gl_textures[pos[3]],0,
+                                         pos[0]*block_length,pos[1]*block_length,pos[2]*block_length,
+                                         block_length,block_length,block_length,
+                                         GL_RED,GL_UNSIGNED_BYTE,cache.size,cache.data);
+                    glFinish();
+                    GL_CHECK
+                    */
+                    {
+                        CUDA_MEMCPY3D m{};
+                        m.srcMemoryType = CU_MEMORYTYPE_ARRAY;
+                        m.srcArray = cu_array;
+                        m.srcXInBytes = it.pos_index[0]*block_length;
+                        m.srcY = it.pos_index[1]*block_length;
+                        m.srcZ = it.pos_index[2]*block_length;
+
+                        m.dstMemoryType = CU_MEMORYTYPE_HOST;
+                        m.dstHost = cache.data;
+
+                        m.WidthInBytes = block_length;
+                        m.Height = block_length;
+                        m.Depth = block_length;
+
+                        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+                    }
+                    LOG_INFO("Copy block({} {} {} {}) data from opengl texture to chunk cache",
+                             it.block_index[0],it.block_index[1],it.block_index[2],it.block_index[3]);
+                    break;
+                }
+            }
+        }
+
         if (device)
-        {
-            m.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-            m.srcDevice = (CUdeviceptr)data;
-        }
+            UpdateCUDATexture3D(data, (cudaArray*)cu_array, block_length, block_length * pos[0], block_length * pos[1],
+                                block_length * pos[2]);
         else
-        {
-            m.srcMemoryType = CU_MEMORYTYPE_HOST;
-            m.srcHost = data;
-        }
+            UpdateCUDATexture3D(data,  (cudaArray*)cu_array, block_length, block_length, block_length,
+                                block_length * pos[0], block_length * pos[1], block_length * pos[2]);
 
-        m.dstMemoryType = CU_MEMORYTYPE_ARRAY;
-        m.dstArray = cu_array;
-        m.dstXInBytes = pos[0] * block_length;
-        m.dstY = pos[1] * block_length;
-        m.dstZ = pos[2] * block_length;
 
-        m.WidthInBytes = block_length;
-        m.Height = block_length;
-        m.Depth = block_length;
-        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
         CUDA_DRIVER_API_CALL(cuGraphicsUnmapResources(1, &cu_resources[pos[3]], 0));
         LOG_INFO("Upload block({0},{1},{2},{3}) to OpenGL texture({4},{5},{6},{7})", index[0], index[1], index[2],
                  index[3], pos[0], pos[1], pos[2], pos[3]);
@@ -153,9 +192,19 @@ bool OpenGLVolumeBlockCacheImpl::IsCachedBlock(const std::array<uint32_t, 4> &ta
     {
         if (it.block_index == target)
         {
-            return it.cached;
+            if(it.cached){
+                return true;
+            }
         }
     }
+    //query chunk cache
+    if(chunk_cache){
+        bool cached = chunk_cache->Query(BlockIndexToCacheID(target));
+        if(cached){
+            return true;
+        }
+    }
+    return false;
 }
 
 bool OpenGLVolumeBlockCacheImpl::IsValidBlock(const std::array<uint32_t, 4> &target)
@@ -208,6 +257,20 @@ bool OpenGLVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 
         {
             it.valid = true;
             this->updateMappingTable(target, it.pos_index, true);
+            return true;
+        }
+    }
+    //query chunk cache
+    if(chunk_cache){
+        size_t cacheID = BlockIndexToCacheID(target);
+        bool cached = chunk_cache->Query(cacheID);
+        if(cached){
+
+            auto cache = chunk_cache->GetCache(cacheID);
+            assert(cache.data);
+            UploadVolumeBlock(target,reinterpret_cast<uint8_t*>(cache.data),cache.size,false);
+            LOG_INFO("Upload volume block({} {} {} {}) from chunk cache",
+                     target[0],target[1],target[2],target[3]);
             return true;
         }
     }

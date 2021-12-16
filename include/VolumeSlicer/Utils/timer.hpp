@@ -5,6 +5,7 @@
 #pragma once
 
 #include <VolumeSlicer/export.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 
 #include <chrono>
 #include <functional>
@@ -176,17 +177,28 @@ class Timer
     void print_duration(std::string unit = "ms")
     {
         if (unit == "ms")
-            std::cout << "Duration: " << d.ms() << std::endl;
+            LOG_INFO("Duration: {}",d.ms().fmt());
         else if (unit == "us")
-            std::cout << "Duration: " << d.us() << std::endl;
+            LOG_INFO("Duration: {}",d.us().fmt());
         else if (unit == "ns")
-            std::cout << "Duration: " << d.ns() << std::endl;
+            LOG_INFO("Duration: {}",d.ns().fmt());
         else if (unit == "s")
-            std::cout << "Duration: " << d.s() << std::endl;
+            LOG_INFO("Duration: {}",d.s().fmt());
         else
-            std::cout << "wrong time unit" << std::endl;
+            LOG_INFO("wrong time unit");
     }
-
+    auto duration_str(std::string unit = "ms"){
+        if (unit == "ms")
+            return d.ms().fmt();
+        else if (unit == "us")
+            return d.us().fmt();
+        else if (unit == "ns")
+            return d.ns().fmt();
+        else if (unit == "s")
+            return d.s().fmt();
+        else
+            return std::string("wrong time unit");
+    }
   private:
     std::chrono::time_point<std::chrono::system_clock> begin, end;
     Duration d;
@@ -202,8 +214,7 @@ class AutoTimer : public Timer
     ~AutoTimer()
     {
         stop();
-        std::cout << "AutoTimer ("<<msg<<") ";
-        print_duration(unit);
+        LOG_INFO("AutoTimer ({}) {}",msg,duration_str(unit));
     }
 
   private:

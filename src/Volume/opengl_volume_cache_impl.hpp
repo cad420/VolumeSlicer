@@ -5,6 +5,8 @@
 
 #include <VolumeSlicer/volume_cache.hpp>
 
+#include "Volume/chunk_cache.hpp"
+
 VS_START
 
 class OpenGLVolumeBlockCacheImpl : public OpenGLVolumeBlockCache
@@ -66,6 +68,12 @@ class OpenGLVolumeBlockCacheImpl : public OpenGLVolumeBlockCache
                             bool valid = true);
     bool getCachedPos(const std::array<uint32_t, 4> &, std::array<uint32_t, 4> &);
 
+    size_t BlockIndexToCacheID(const std::array<uint32_t,4> index){
+        size_t id = ((size_t)index[2] * lod_block_dim.at(index[3])[0] * lod_block_dim.at(index[3])[1] +
+                     index[1] * lod_block_dim.at(index[3])[0] + index[0]) * 4 +
+                    lod_mapping_table_offset.at(index[3]);
+        return id/4;
+    }
   private:
     std::list<BlockCacheItem> block_cache_table;
 
@@ -81,6 +89,8 @@ class OpenGLVolumeBlockCacheImpl : public OpenGLVolumeBlockCache
     std::vector<uint32_t> gl_textures;
 
     std::vector<CUgraphicsResource> cu_resources;
+
+    std::unique_ptr<ChunkCache> chunk_cache;
 };
 
 VS_END
