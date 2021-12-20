@@ -1,4 +1,4 @@
-
+include(${PROJECT_SOURCE_DIR}/cmake/utils.cmake)
 
 list(
         APPEND
@@ -26,3 +26,9 @@ target_include_directories(
         ${PROJECT_SOURCE_DIR}/third_party/glad/include
 )
 target_compile_features(MPILargeVolumeVisApp PRIVATE cxx_std_17)
+
+embed_shaders(
+      CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/shaders.hpp.in
+        TARGET ${CMAKE_CURRENT_SOURCE_DIR}/shader.hpp
+        DIR ${CMAKE_CURRENT_SOURCE_DIR}/shader
+)

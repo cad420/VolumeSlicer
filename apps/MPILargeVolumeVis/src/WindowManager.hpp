@@ -7,9 +7,20 @@
 #include <fstream>
 #include <mpi.h>
 #include <iostream>
+#include <optional>
 using nlohmann::json;
 class WindowManager{
 public:
+    struct AdvanceOptions{
+        struct LodPolicy{
+            std::optional<std::vector<double>> lod_dist;
+            std::optional<std::string> cdf_value_file;
+        }lod_policy;
+        struct RayCast{
+            std::optional<int> steps;
+            std::optional<float> step;
+        }ray_cast;
+    };
     WindowManager(const char* config_file){
         std::ifstream in(config_file);
         if(!in.is_open()){
@@ -32,16 +43,64 @@ public:
         frame_time_lock = j.at("frame_time_lock");
         renderer_backend = j.at("renderer_backend");
         iGPU = j.at("iGPU");
-        auto space=j.at("space");
-        space_x=space.at(0);
-        space_y=space.at(1);
-        space_z=space.at(2);
+        {
+            auto space = j.at("space");
+            space_x = space.at(0);
+            space_y = space.at(1);
+            space_z = space.at(2);
+        }
 
-        auto screen_config=j.at("screen").at(std::to_string(world_rank));
-        screen_offset_x=screen_config.at("offsetX");
-        screen_offset_y=screen_config.at("offsetY");
-        resource_path=screen_config.at("resourcePath");
-        std::cout<<"node "<<world_rank<<" resource path: "<<resource_path<<std::endl;
+        //read tf
+        {
+            auto tf = j.at("tf");
+            for(auto it=tf.begin();it!=tf.end();it++){
+                int key = std::stoi(it.key());
+                std::array<double,4> value = it.value();
+                tf_map[key] = value;
+            }
+        }
+
+        //read advance options
+        {
+            try{
+                auto opts = j.at("advance_options");
+                std::vector<double> lod_dist = opts.at("lod_policy").at("lod_dist");
+                std::string cdf_value_file = opts.at("lod_policy").at("cdf_value_file");
+                if(!lod_dist.empty()){
+                    for(auto& d:lod_dist){
+                        if(d==-1){
+                            d = std::numeric_limits<double>::max();
+                        }
+                    }
+                    advance_options.lod_policy.lod_dist = lod_dist;
+                }
+                if(!cdf_value_file.empty()){
+                    advance_options.lod_policy.cdf_value_file = cdf_value_file;
+                }
+                int steps = opts.at("ray_cast").at("steps");
+                float step = opts.at("ray_cast").at("step");
+                if(steps>0){
+                    advance_options.ray_cast.steps = steps;
+                    LOG_INFO("Config advance options: steps({}).",steps);
+                }
+                if(step>0.f){
+                    advance_options.ray_cast.step = step;
+                    LOG_INFO("Config advance options: step({}).",step);
+                }
+            }
+            catch (const std::exception& err)
+            {
+                throw err;
+            }
+        }
+
+        {
+            auto screen_config = j.at("screen").at(std::to_string(world_rank));
+            screen_offset_x = screen_config.at("offsetX");
+            screen_offset_y = screen_config.at("offsetY");
+            resource_path = screen_config.at("resourcePath");
+            std::cout << "node " << world_rank << " resource path: " << resource_path << std::endl;
+        }
     }
     ~WindowManager(){
         MPI_Finalize();
@@ -99,8 +158,21 @@ public:
     int GetGPUIndex() const{
         return iGPU;
     }
+    bool IsRoot(int rank) const{
+        return rank == root_rank;
+    }
+    bool IsRoot() const{
+        return world_rank == root_rank;
+    }
+    const auto& GetTFMap() const{
+        return tf_map;
+    }
+    const auto& GetAdvanceOptions() const{
+        return advance_options;
+    }
 public:
     //same for each node
+    int root_rank = 0;
     int world_window_width;
     int world_window_height;
     int world_size;
@@ -110,6 +182,10 @@ public:
     int frame_time_lock;
     int iGPU;
     std::string renderer_backend;
+
+    AdvanceOptions advance_options;
+
+    std::map<uint8_t,std::array<double,4>> tf_map;
 
     char processName[MPI_MAX_PROCESSOR_NAME];
     int processNameLength;

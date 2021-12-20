@@ -1,0 +1,8 @@
+#pragma once
+
+namespace shader{
+
+    inline const char* composite_render_v = R"(@comp_render_v.glsl@)";
+
+    inline const char* conposite_render_f = R"(@comp_render_f.glsl@)";
+}

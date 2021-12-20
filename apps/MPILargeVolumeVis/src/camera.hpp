@@ -106,12 +106,18 @@ namespace control{
     }
 
     enum class CameraDefinedKey{
-        Forward,
-        Backward,
-        Left,
-        Right,
-        Up,
-        Bottom
+        MOVE_Forward,
+        MOVE_Backward,
+        MOVE_Left,
+        MOVE_Right,
+        MOVE_Up,
+        MOVE_Bottom,
+        ROTATE_Left,
+        ROTATE_Right,
+        ROTATE_Up,
+        ROTATE_Down,
+        ZOOM_IN,
+        ZOOM_Out
     };
     enum class CameraDefinedMouseButton{
         Left,Right,Middle
@@ -228,7 +234,7 @@ namespace control{
     const float PITCH=0.0f;
     const float YAW=-90.0f;
     const float SPEED=20.f;
-    const float SENSITIVITY=0.3f;
+    const float SENSITIVITY=0.05f;
     const float ZOOM=20.0f;
     class FPSCamera: public Camera{
     public:
@@ -280,7 +286,7 @@ namespace control{
         float yaw,pitch,move_speed,move_sense,zoom;
         glm::vec3 space_ratio;
         double last_x,last_y;
-//        bool first=true;
+
     };
 
     inline void FPSCamera::updateVector() {
@@ -296,7 +302,7 @@ namespace control{
     inline void FPSCamera::processMouseScroll(float yoffset) {
         zoom-=yoffset;
         if(zoom<0.1f)
-            zoom=0.1f;
+            zoom=1.f;
         if(zoom>45.0f)
             zoom=45.0f;
     }
@@ -330,18 +336,20 @@ namespace control{
 
     inline void FPSCamera::processKeyEvent(CameraDefinedKey key, float t) {
             float ds=move_speed*t;
-            if(key==CameraDefinedKey::Forward)
-                pos+=space_ratio*view_direction*ds;
-            if(key==CameraDefinedKey::Backward)
-                pos-=space_ratio*view_direction*ds;
-            if(key==CameraDefinedKey::Left)
-                pos-=space_ratio*right*ds;
-            if(key==CameraDefinedKey::Right)
-                pos+=space_ratio*right*ds;
-            if(key==CameraDefinedKey::Up)
-                pos+=space_ratio*up*ds;
-            if(key==CameraDefinedKey::Bottom)
-                pos-=space_ratio*up*ds;
+            switch(key){
+            case CameraDefinedKey::MOVE_Forward:{pos+=space_ratio*view_direction*ds;break;}
+            case CameraDefinedKey::MOVE_Backward:{pos-=space_ratio*view_direction*ds;break;}
+            case CameraDefinedKey::MOVE_Left:{pos-=space_ratio*right*ds;break;}
+            case CameraDefinedKey::MOVE_Right:{pos+=space_ratio*right*ds;break;}
+            case CameraDefinedKey::MOVE_Up:{pos+=space_ratio*up*ds;break;}
+            case CameraDefinedKey::MOVE_Bottom:{pos-=space_ratio*up*ds;break;}
+            case CameraDefinedKey::ROTATE_Left:{yaw -= move_sense*5;updateVector();break;}
+            case CameraDefinedKey::ROTATE_Right:{yaw += move_sense*5;updateVector();break;}
+            case CameraDefinedKey::ROTATE_Up:{pitch += move_sense*5;pitch = pitch>60.f?60.f:pitch;updateVector();break;}
+            case CameraDefinedKey::ROTATE_Down:{pitch -= move_sense*5;pitch = pitch<-60.f?-60.f:pitch;updateVector();break;}
+            case CameraDefinedKey::ZOOM_IN:{zoom -= 1.f; zoom = zoom<0.1f?1.f:zoom;break;}
+            case CameraDefinedKey::ZOOM_Out:{zoom += 1.f; zoom = zoom>45.f?45.f:zoom;break;}
+            }
 
     }
 
