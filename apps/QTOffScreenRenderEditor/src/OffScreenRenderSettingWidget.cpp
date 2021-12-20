@@ -15,6 +15,10 @@ static auto LoadCameraSequenceFromFile(const std::string&)->std::vector<Camera>;
 static void SaveCameraSequenceToFile(const std::string&,const std::vector<Camera>& cameras);
 static void SaveRenderConfigToFile(const std::string&,const RenderConfig&);
 
+#define SmoothCameraItem smoothCamerasItem_v2
+#define SmoothKernelN 8
+#define REMOVE_DUPLICATE
+
 OffScreenRenderSettingWidget::OffScreenRenderSettingWidget(QWidget *parent)
 :QWidget(parent)
 {
@@ -40,10 +44,14 @@ OffScreenRenderSettingWidget::OffScreenRenderSettingWidget(QWidget *parent)
     camera_del_pb->setFixedWidth(60);
     smooth_camera_pb = new QPushButton("Smooth");
     smooth_camera_pb->setFixedWidth(60);
+    camera_point_num_sb = new QSpinBox();
+    camera_point_num_sb->setFixedWidth(60);
+    camera_point_num_sb->setRange(0,99999);
     camera_pb_layout->addWidget(camera_load_pb);
     camera_pb_layout->addWidget(camera_export_pb);
     camera_pb_layout->addWidget(camera_del_pb);
     camera_pb_layout->addWidget(smooth_camera_pb);
+    camera_pb_layout->addWidget(camera_point_num_sb);
     //enable until volume loaded
     camera_load_pb->setEnabled(false);
     camera_export_pb->setEnabled(false);
@@ -155,13 +163,14 @@ OffScreenRenderSettingWidget::OffScreenRenderSettingWidget(QWidget *parent)
     connect(camera_item_widget,&QListWidget::currentTextChanged,this,[this](const QString& name){
         const auto& cameras = camera_map[name.toStdString()];
         sendCameraPosToVis(cameras);
+        camera_point_num_sb->setValue(cameras.size());
     });
     connect(smooth_camera_pb,&QPushButton::clicked,this,[this](){
         if(camera_item_widget->count()==0) return;
         auto items = camera_item_widget->selectedItems();
         for(auto item:items){
             auto name = item->text().toStdString();
-            smoothCamerasItem(name);
+            SmoothCameraItem(name);
         }
     });
     connect(save_render_config_pb,&QPushButton::clicked,this,[this](){
@@ -300,7 +309,7 @@ void OffScreenRenderSettingWidget::smoothCamerasItem(const std::string &name)
 
         dir.emplace_back(last_dir);
 
-        zoom.emplace_back(Vec3{last_zoom,0.f,0.f});
+        zoom.emplace_back(last_zoom);
 #endif
 
         for(auto& cam:cameras){
@@ -320,7 +329,7 @@ void OffScreenRenderSettingWidget::smoothCamerasItem(const std::string &name)
                 last_dir = cur_dir;
             }
             if(cur_zoom != last_zoom){
-                zoom.emplace_back(Vec3{cur_zoom,0.f,0.f});
+                zoom.emplace_back(cur_zoom);
 
                 last_zoom = cur_zoom;
             }
@@ -391,6 +400,74 @@ void OffScreenRenderSettingWidget::smoothCamerasItem(const std::string &name)
         LOG_ERROR("smoothCamerasItem error: {}",err.what());
     }
 }
+
+void OffScreenRenderSettingWidget::smoothCamerasItem_v2(const std::string &name)
+{
+    LOG_INFO("Call smooth cameras version-2");
+    try{
+        auto& cameras = camera_map.at(name);
+        if(cameras.empty()) return;
+        int cameras_num = cameras.size();
+        glm::vec3 world_up = {0.f,1.f,0.f};
+#ifdef REMOVE_DUPLICATE
+        LOG_INFO("camera num before removing duplicated: {}",cameras.size());
+        auto isCameraDuplicated = [](const Camera& cam1,const Camera& cam2)->bool{
+            if(cam1.pos == cam2.pos && cam1.look_at==cam2.look_at && cam1.zoom == cam2.zoom){
+                return true;
+            }
+            else{
+                return false;
+            }
+        };
+        auto copy_cameras = std::move(cameras);
+        auto prev_camera = copy_cameras.front();
+        cameras.clear();
+        cameras.emplace_back(prev_camera);
+        for(size_t i =1;i<copy_cameras.size();i++){
+            auto& cur_camera = copy_cameras[i];
+            if(!isCameraDuplicated(prev_camera,cur_camera)){
+                prev_camera = cur_camera;
+                cameras.emplace_back(prev_camera);
+            }
+        }
+        LOG_INFO("camera num after removing duplicated: {}",cameras.size());
+#endif
+        for(int i=0;i<cameras_num;i++){
+            glm::vec3 pos = {0.f,0.f,0.f};
+            glm::vec3 dir = {0.f,0.f,0.f};
+            float zoom = 0.f;
+            int count = 0;
+            for(int j = std::max(i-SmoothKernelN/2,0);j<std::min(cameras_num,i+SmoothKernelN/2);j++){
+                auto& camera = cameras[j];
+                pos += glm::vec3{camera.pos[0],camera.pos[1],camera.pos[2]};
+                dir += glm::normalize(glm::vec3{camera.look_at[0]-camera.pos[0],
+                                                         camera.look_at[1]-camera.pos[1],
+                                                         camera.look_at[2]-camera.pos[2]});
+                zoom += camera.zoom;
+                count++;
+            }
+            pos /= count;
+            dir /= count;
+            dir = glm::normalize(dir);
+            zoom /= count;
+            glm::vec3 lookat = pos+dir;
+            glm::vec3 right = glm::normalize(glm::cross(dir,world_up));
+            glm::vec3 up = glm::normalize(glm::cross(right,dir));
+            auto& camera = cameras[i];
+            camera.pos = {pos.x,pos.y,pos.z};
+            camera.look_at = {lookat.x,lookat.y,lookat.z};
+            camera.right = {right.x,right.y,right.z};
+            camera.up = {up.x,up.y,up.z};
+            camera.zoom = zoom;
+        }
+        sendCameraPosToVis(cameras);
+    }
+    catch (const std::exception& err)
+    {
+        LOG_ERROR("smoothCamerasItem_v2 error: {}",err.what());
+    }
+}
+
 struct RenderConfig{
     int fps;
     std::string backend;//cpu or cuda
@@ -473,10 +550,27 @@ bool OffScreenRenderSettingWidget::saveOffScreenRenderSettingToFile(const std::s
 void OffScreenRenderSettingWidget::startRenderProgram()
 {
     //todo add a check messagebox
-
-    if(!saveOffScreenRenderSettingToFile(OffScreenVolumeRendererTmpConfigFile,false)) return;
-
-    bool s = QProcess::startDetached(OffScreenVolumeRendererName,{OffScreenVolumeRendererTmpConfigFile},".");
+    auto res = QMessageBox::question(this,"Close volume and start off-rendering",
+                                     "Starting OffScreenVolumeRenderer may need to close loaded volume first, click ok for close volume and no cancel");
+    if(res == QMessageBox::Ok){
+        emit volumeShouldClose();
+        {
+            QTime stopTime = QTime::currentTime().addSecs(1);
+            while (QTime::currentTime() < stopTime)
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        }
+    }
+    else if(res == QMessageBox::No){
+        return;
+    }
+    bool s;
+    if(!saveOffScreenRenderSettingToFile(OffScreenVolumeRendererTmpConfigFile,false)){
+        //todo start a .bat file and start off-renderer by system
+        s = QProcess::startDetached(OffScreenVolumeRendererName,{},".");
+    }
+    else{
+        s = QProcess::startDetached(OffScreenVolumeRendererName,{OffScreenVolumeRendererTmpConfigFile},".");
+    }
 
     if(s){
         LOG_INFO("Started off-screen render program");

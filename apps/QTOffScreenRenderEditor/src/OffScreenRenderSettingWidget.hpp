@@ -30,6 +30,8 @@ class OffScreenRenderSettingWidget:public QWidget{
     using Handle =  std::function<TransferFunc()>;
     void setTransferFuncHandle(const Handle&);
     void setLoadedVolumeFile(const std::string&);
+  Q_SIGNALS:
+    void volumeShouldClose();
   public Q_SLOTS:
     void receiveRecordCameras(std::vector<Camera>);
     void volumeLoaded(const std::shared_ptr<CompVolume>&);
@@ -40,6 +42,7 @@ class OffScreenRenderSettingWidget:public QWidget{
     void exportCamerasToFile(const std::string&,const std::string&);
     void deleteCamerasItem(const std::string&);
     void smoothCamerasItem(const std::string&);
+    void smoothCamerasItem_v2(const std::string&);
     void clear();
     bool saveOffScreenRenderSettingToFile(const std::string&,bool);
     //todo cause too much gpu memory, so when start new render program should close the volume
@@ -52,6 +55,7 @@ class OffScreenRenderSettingWidget:public QWidget{
     QPushButton* camera_load_pb;
     QPushButton* camera_export_pb;
     QPushButton* camera_del_pb;
+    QSpinBox* camera_point_num_sb;
     QPushButton* smooth_camera_pb;
 
     std::unordered_map<std::string,std::vector<Camera>> camera_map;

@@ -67,7 +67,7 @@ class TransferFuncImpl
 inline void TransferFuncImpl::generateTransferFunc()
 {
 
-    transfer_func.resize(TF_DIM * 4);
+    transfer_func.resize(TF_DIM * 4,0.f);
     std::vector<uint8_t> keys;
     for (auto it : color_setting)
         keys.emplace_back(it.first);
@@ -110,7 +110,7 @@ inline void TransferFuncImpl::generatePreIntTransferFunc()
 {
     if (transfer_func.empty())
         generateTransferFunc();
-    preint_transfer_func.resize(4 * TF_DIM * TF_DIM);
+    preint_transfer_func.resize(4 * TF_DIM * TF_DIM,0.f);
 
     float rayStep = 1.0;
     for (int sb = 0; sb < TF_DIM; sb++)

@@ -16,10 +16,10 @@
 VS_START
 
 /**
- * @brief class just support simple raw volume and surface render.
- * only use OpenGL, no use for CUDA
+ * @brief Class just support simple raw volume and slice mix render.
+ * Only require OpenGL, no use for CUDA.
  */
-class MultiVolumeRender : public RawVolumeRenderer
+class MultiVolumeRender : public SliceRawVolumeMixRenderer
 {
   public:
     MultiVolumeRender(int w, int h);
@@ -34,8 +34,6 @@ class MultiVolumeRender : public RawVolumeRenderer
 
     void SetVolume(const std::shared_ptr<RawVolume> &volume) noexcept override;
 
-    void ResetVolumeSpace(float x, float y, float z) noexcept override;
-
     void SetVisibleX(float x0, float x1) noexcept override;
 
     void SetVisibleY(float y0, float y1) noexcept override;
@@ -47,8 +45,6 @@ class MultiVolumeRender : public RawVolumeRenderer
     void SetVisible(bool volume, bool slice) noexcept override;
 
     void render() noexcept override;
-
-    void RenderSlice() noexcept override;
 
     auto GetFrame() noexcept -> Frame override;
 

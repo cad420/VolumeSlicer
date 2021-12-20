@@ -16,9 +16,10 @@
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/gl_helper.hpp>
 #include <VolumeSlicer/render.hpp>
+
 VS_START
 
-std::unique_ptr<RawVolumeRenderer> CreateRenderer(int w, int h)
+std::unique_ptr<SliceRawVolumeMixRenderer> CreateRenderer(int w, int h)
 {
     return std::make_unique<MultiVolumeRender>(w, h);
 }
@@ -87,19 +88,6 @@ void MultiVolumeRender::SetVolume(const std::shared_ptr<RawVolume> &volume) noex
     GL_CHECK
 }
 
-void MultiVolumeRender::ResetVolumeSpace(float x, float y, float z) noexcept
-{
-    if (space_x == x && space_y == y && space_z == z)
-        return;
-
-    this->space_x = x;
-    this->space_y = y;
-    this->space_z = z;
-    setVolumeBoard();
-    // change space will also change visible board
-    setVisibleBoard();
-}
-
 void MultiVolumeRender::SetVisibleX(float x0, float x1) noexcept
 {
     if (x0 == this->x0 && x1 == this->x1)
@@ -108,6 +96,7 @@ void MultiVolumeRender::SetVisibleX(float x0, float x1) noexcept
     this->x1 = x1;
     setVisibleBoard();
 }
+
 void MultiVolumeRender::SetVisibleY(float y0, float y1) noexcept
 {
     if (this->y0 == y0 && this->y1 == y1)
@@ -116,6 +105,7 @@ void MultiVolumeRender::SetVisibleY(float y0, float y1) noexcept
     this->y1 = y1;
     setVisibleBoard();
 }
+
 void MultiVolumeRender::SetVisibleZ(float z0, float z1) noexcept
 {
     if (this->z0 == z0 && this->z1 == z1)
@@ -139,6 +129,8 @@ void MultiVolumeRender::resize(int w, int h) noexcept
         this->window_width = w;
         this->window_height = h;
         setCurrentCtx();
+        glfwSetWindowSize(window,w,h);
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
         glViewport(0, 0, w, h);
         setPosFrameBuffer();
     }
@@ -310,11 +302,6 @@ void MultiVolumeRender::render() noexcept
     glFinish();
 
     GL_CHECK
-}
-
-void MultiVolumeRender::RenderSlice() noexcept
-{
-    LOG_ERROR("Not support yet");
 }
 
 void MultiVolumeRender::setVolumeBoard()
@@ -545,6 +532,7 @@ void MultiVolumeRender::SetTransferFunction(TransferFunc &&tf) noexcept
 
     GL_CHECK
 }
+
 void MultiVolumeRender::SetTransferFunc1D(float *tf, int dim) noexcept
 {
     setCurrentCtx();
@@ -560,6 +548,7 @@ void MultiVolumeRender::SetTransferFunc1D(float *tf, int dim) noexcept
     glTextureSubImage1D(transfer_func_tex, 0, 0, 256, GL_RGBA, GL_FLOAT, tf);
     GL_CHECK
 }
+
 auto MultiVolumeRender::GetFrame() noexcept -> Frame
 {
     setCurrentCtx();
@@ -649,6 +638,7 @@ MultiVolumeRender::~MultiVolumeRender()
     glfwDestroyWindow(window);
 
 }
+
 void MultiVolumeRender::deleteGLResource()
 {
     glDeleteTextures(1, &volume_tex);

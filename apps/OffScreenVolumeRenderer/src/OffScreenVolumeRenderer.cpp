@@ -248,7 +248,7 @@ void OffScreenVolumeRenderer::RenderFrames(const char *config_file)
             image.SaveToFile((save_image_path+"/"+GetName(output_video_name)+"_frame_"+std::to_string(i)+".jpeg").c_str());
         }
         std::cout<<"before"<<" "<<i<<std::endl;
-        auto img = image.ToImage3b();
+        auto img = Image4ToImage3(image);
         video_capture.AddFrame(reinterpret_cast<uint8_t*>(img.GetData()));
         std::cout<<"after"<<std::endl;
         timer.stop();
@@ -347,7 +347,7 @@ void OffScreenVolumeRenderer::RenderFrames(OffScreenVolumeRenderer::RenderConfig
             image.SaveToFile((config.image_save_path+"/"+GetName(config.output_video_name)+"_frame_"+std::to_string(i)+".jpeg").c_str());
         }
         std::cout<<"before"<<" "<<i<<std::endl;
-        auto img = image.ToImage3b();
+        auto img = Image4ToImage3(image);
         video_capture.AddFrame(reinterpret_cast<uint8_t*>(img.GetData()));
         std::cout<<"after"<<std::endl;
         timer.stop();

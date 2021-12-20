@@ -82,7 +82,7 @@ private:
     std::unique_ptr<Shader> comp_render_shader;
     std::unique_ptr<Shader> zoom_slice_render_shader;
 
-    std::unique_ptr<RawVolumeRenderer> volume_slice_renderer;
+    std::unique_ptr<SliceRawVolumeMixRenderer> volume_slice_renderer;
 };
 
 

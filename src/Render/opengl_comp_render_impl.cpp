@@ -20,39 +20,52 @@
 
 VS_START
 
-std::unique_ptr<OpenGLCompVolumeRenderer> OpenGLCompVolumeRenderer::Create(int w, int h)
+std::unique_ptr<OpenGLCompVolumeRenderer> OpenGLCompVolumeRenderer::Create(int w, int h,bool create_opengl_context)
 {
-    return std::make_unique<OpenGLCompVolumeRendererImpl>(w, h);
+    return std::make_unique<OpenGLCompVolumeRendererImpl>(w, h,create_opengl_context);
 }
 
-OpenGLCompVolumeRendererImpl::OpenGLCompVolumeRendererImpl(int w, int h) : window_w(w), window_h(h)
+OpenGLCompVolumeRendererImpl::OpenGLCompVolumeRendererImpl(int w, int h,bool create_opengl_context) : window_w(w), window_h(h)
 {
     // init opengl context
-    if (glfwInit() == GLFW_FALSE)
-    {
-        std::cout << "Failed to init GLFW" << std::endl;
-        return;
+    if(create_opengl_context){
+        if (glfwInit() == GLFW_FALSE)
+        {
+            std::cout << "Failed to init GLFW" << std::endl;
+            return;
+        }
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_DOUBLEBUFFER, true);
+        window = glfwCreateWindow(window_w, window_h, "HideWindow", nullptr, nullptr);
+        if (window == nullptr)
+        {
+            throw std::runtime_error("Create GLFW window failed.");
+        }
+        make_opengl_context = [this](){
+            glfwMakeContextCurrent(window);
+        };
+        setCurrentCtx();
+        glfwHideWindow(window);
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            throw std::runtime_error("GLAD failed to load opengl api");
+        }
+       LOG_INFO("OpenGLCompVolumeRendererImpl create glfw hide window and opengl context");
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_DOUBLEBUFFER, true);
-    window = glfwCreateWindow(window_w, window_h, "HideWindow", nullptr, nullptr);
-    if (window == nullptr)
-    {
-        throw std::runtime_error("Create GLFW window failed.");
-    }
-    setCurrentCtx();
-    glfwHideWindow(window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        throw std::runtime_error("GLAD failed to load opengl api");
+    else{
+        LOG_INFO("OpenGLCompVolumeRendererImpl use external opengl context");
+        if(glEnable == nullptr){
+            throw std::runtime_error("OpenGLCompVolumeRendererImpl not find external opengl context!");
+        }
+        make_opengl_context = [](){return;};
     }
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     GL_CHECK
-    spdlog::info("successfully init OpenGL context.");
+    LOG_INFO("successfully init OpenGLCompVolumeRendererImpl OpenGL context.");
     // create shader
     OpenGLCompVolumeRendererImpl::resize(w, h);
 

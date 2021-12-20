@@ -31,6 +31,7 @@ list(
         Render/cpu_raw_render_impl.cpp
         Render/cuda_offscreen_comp_render_impl.cpp
         Render/cuda_offscreen_comp_render_impl.cu
+        Render/opengl_offscreen_comp_render_impl.cpp
         Render/simple_mesh_render_impl.cpp
         IO/reader_impl.cpp
         Common/cuda_context.cpp

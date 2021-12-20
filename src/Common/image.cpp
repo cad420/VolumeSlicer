@@ -21,13 +21,12 @@ void stbi_write_func(void *context, void *data, int size)
 }
 } // namespace
 
-void Image<Color4b>::SaveToFile(const char *file_name)
+template<> void Image<Color4b>::SaveToFile(const char *file_name)
 {
     stbi_write_png(file_name, width, height, 4, data, 0);
 }
 
-Img Img::encode(const uint8_t *data, uint32_t width, uint32_t height, uint8_t channels, vs::Img::Format format,
-                vs::Img::Quality quality, bool flip_vertically)
+Img Img::encode(const uint8_t *data, uint32_t width, uint32_t height, uint8_t channels, Img::Format format,Img::Quality quality, bool flip_vertically)
 {
     if (format != Img::Format::JPEG)
     {
@@ -48,8 +47,7 @@ Img Img::encode(const uint8_t *data, uint32_t width, uint32_t height, uint8_t ch
     {
         stbi_flip_vertically_on_write(0);
     }
-    auto res = stbi_write_jpg_to_func(stbi_write_func, reinterpret_cast<void *>(&img.data), width, height, channels,
-                                      data, quality_value);
+    auto res = stbi_write_jpg_to_func(stbi_write_func, reinterpret_cast<void *>(&img.data), width, height, channels, data, quality_value);
     if (res == 0)
     {
         throw std::runtime_error("encoding image failed.");

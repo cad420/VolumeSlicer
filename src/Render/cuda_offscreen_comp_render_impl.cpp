@@ -14,14 +14,12 @@
 
 VS_START
 
-std::unique_ptr<CUDAOffScreenCompVolumeRenderer> vs::CUDAOffScreenCompVolumeRenderer::Create(int w, int h,
-                                                                                             CUcontext ctx)
+std::unique_ptr<CUDAOffScreenCompVolumeRenderer> vs::CUDAOffScreenCompVolumeRenderer::Create(int w, int h, CUcontext ctx)
 {
     return std::make_unique<CUDAOffScreenCompVolumeRendererImpl>(w, h, ctx);
 }
 
-CUDAOffScreenCompVolumeRendererImpl::CUDAOffScreenCompVolumeRendererImpl(int w, int h, CUcontext ctx)
-    : window_w(w), window_h(h), step(0.f), steps(0)
+CUDAOffScreenCompVolumeRendererImpl::CUDAOffScreenCompVolumeRendererImpl(int w, int h, CUcontext ctx) : window_w(w), window_h(h), step(0.f), steps(0)
 {
     if (ctx)
     {
@@ -47,7 +45,7 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
 
     this->volume_block_cache = CUDAVolumeBlockCache::Create(this->cu_context);
     this->volume_block_cache->SetCacheBlockLength(comp_volume->GetBlockLength()[0]);
-    this->volume_block_cache->SetCacheCapacity(12, 1024, 1024, 1024);
+    this->volume_block_cache->SetCacheCapacity(18, 1024, 1024, 1024);
     this->volume_block_cache->CreateMappingTable(this->comp_volume->GetBlockDim());
     uint32_t max_lod = 0, min_lod = 0x0fffffff;
     {
@@ -84,12 +82,9 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     compVolumeParameter.voxel = 0.5f;
     compVolumeParameter.block_dim = make_int3(block_dim[0], block_dim[1], block_dim[2]);
     compVolumeParameter.volume_texture_shape = make_int4(1024, 1024, 1024, 12);
-    compVolumeParameter.volume_dim =
-        make_int3(comp_volume->GetVolumeDimX(), comp_volume->GetVolumeDimY(), comp_volume->GetVolumeDimZ());
-    compVolumeParameter.volume_space =
-        make_float3(comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ());
-    compVolumeParameter.volume_board = make_float3(comp_volume->GetVolumeDimX() * comp_volume->GetVolumeSpaceX(),
-                                                   comp_volume->GetVolumeDimY() * comp_volume->GetVolumeSpaceY(),
+    compVolumeParameter.volume_dim = make_int3(comp_volume->GetVolumeDimX(), comp_volume->GetVolumeDimY(), comp_volume->GetVolumeDimZ());
+    compVolumeParameter.volume_space = make_float3(comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ());
+    compVolumeParameter.volume_board = make_float3(comp_volume->GetVolumeDimX() * comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeDimY() * comp_volume->GetVolumeSpaceY(),
                                                    comp_volume->GetVolumeDimZ() * comp_volume->GetVolumeSpaceZ());
     CUDAOffRenderer::UploadCompVolumeParameter(compVolumeParameter);
     this->step = (std::min)({comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ()}) * 0.2f;
@@ -142,8 +137,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
     cudaOffCompRenderParameter.fov = camera.zoom;
     cudaOffCompRenderParameter.step = step;
     cudaOffCompRenderParameter.camera_pos = make_float3(camera.pos[0], camera.pos[1], camera.pos[2]);
-    cudaOffCompRenderParameter.front = normalize(make_float3(
-        camera.look_at[0] - camera.pos[0], camera.look_at[1] - camera.pos[1], camera.look_at[2] - camera.pos[2]));
+    cudaOffCompRenderParameter.front = normalize(make_float3(camera.look_at[0] - camera.pos[0], camera.look_at[1] - camera.pos[1], camera.look_at[2] - camera.pos[2]));
     cudaOffCompRenderParameter.up = make_float3(camera.up[0], camera.up[1], camera.up[2]);
     cudaOffCompRenderParameter.right = make_float3(camera.right[0], camera.right[1], camera.right[2]);
     CUDAOffRenderer::UploadCUDAOffCompRenderParameter(cudaOffCompRenderParameter);
@@ -152,10 +146,8 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
     CUDAOffRenderer::CUDARenderPrepare(window_w, window_h);
 
     auto block_length = comp_volume->GetBlockLength();
-    auto volume_space =
-        make_float3(comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ());
-    int3 center_block =
-        make_int3(cudaOffCompRenderParameter.camera_pos / volume_space / (block_length[0] - 2 * block_length[1]));
+    auto volume_space = make_float3(comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ());
+    int3 center_block = make_int3(cudaOffCompRenderParameter.camera_pos / volume_space / (block_length[0] - 2 * block_length[1]));
 
     std::unordered_map<std::array<uint32_t, 4>, int, Hash_UInt32Array4> m;
     // 3.render pass
@@ -181,12 +173,10 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
         auto UploadMissedBlockData = [this, &missed_blocks, &dummy_missed_blocks, &m]() {
             for (auto &block : dummy_missed_blocks)
             {
-                auto volume_block =
-                    comp_volume->GetBlock({(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
+                auto volume_block = comp_volume->GetBlock({(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
                 if (volume_block.valid)
                 {
-                    volume_block_cache->UploadVolumeBlock(volume_block.index, volume_block.block_data->GetDataPtr(),
-                                                          volume_block.block_data->GetSize(), true);
+                    volume_block_cache->UploadVolumeBlock(volume_block.index, volume_block.block_data->GetDataPtr(), volume_block.block_data->GetSize(), true);
                     m[volume_block.index] += 1;
                     volume_block.Release();
                     missed_blocks.erase(block);
@@ -199,27 +189,21 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
             int i = 0, n = volume_block_cache->GetRemainEmptyBlock();
             std::vector<int4> sorted_missed_blocks(missed_blocks.size());
             std::copy(missed_blocks.begin(), missed_blocks.end(), sorted_missed_blocks.begin());
-            std::sort(sorted_missed_blocks.begin(), sorted_missed_blocks.end(),
-                      [center_block](const int4 &v1, const int4 &v2) {
-                          if (v1.w == v2.w)
-                          {
-                              int d1 = (v1.x - center_block.x) * (v1.x - center_block.x) +
-                                       (v1.y - center_block.y) * (v1.y - center_block.y) +
-                                       (v1.z - center_block.z) * (v1.z - center_block.z);
-                              int d2 = (v2.x - center_block.x) * (v2.x - center_block.x) +
-                                       (v2.y - center_block.y) * (v2.y - center_block.y) +
-                                       (v2.z - center_block.z) * (v2.z - center_block.z);
-                              return d1 < d2;
-                          }
-                          else
-                          {
-                              return v1.w < v2.w;
-                          }
-                      });
+            std::sort(sorted_missed_blocks.begin(), sorted_missed_blocks.end(), [center_block](const int4 &v1, const int4 &v2) {
+                if (v1.w == v2.w)
+                {
+                    int d1 = (v1.x - center_block.x) * (v1.x - center_block.x) + (v1.y - center_block.y) * (v1.y - center_block.y) + (v1.z - center_block.z) * (v1.z - center_block.z);
+                    int d2 = (v2.x - center_block.x) * (v2.x - center_block.x) + (v2.y - center_block.y) * (v2.y - center_block.y) + (v2.z - center_block.z) * (v2.z - center_block.z);
+                    return d1 < d2;
+                }
+                else
+                {
+                    return v1.w < v2.w;
+                }
+            });
             for (auto &block : sorted_missed_blocks)
             {
-                this->comp_volume->SetRequestBlock(
-                    {(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
+                this->comp_volume->SetRequestBlock({(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
                 if (++i >= n)
                 {
                     break;
@@ -234,8 +218,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
         {
             for (auto &block : dummy_missed_blocks)
             {
-                this->comp_volume->SetRequestBlock(
-                    {(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
+                this->comp_volume->SetRequestBlock({(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
             }
             while (!missed_blocks.empty())
             {
@@ -247,9 +230,8 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
             CUDAOffRenderer::UploadMappingTable(m.data(), m.size());
         }
         spdlog::set_level(spdlog::level::info);
-        LOG_INFO(
-            "current render turn {0} load block num: {3}, total missed block num: {1}, remain missed block num: {2}, ",
-            turn, dummy_missed_blocks.size(), missed_blocks.size(), dummy_missed_blocks.size() - missed_blocks.size());
+        LOG_INFO("current render turn {0} load block num: {3}, total missed block num: {1}, remain missed block num: {2}, ",
+                 turn, dummy_missed_blocks.size(), missed_blocks.size(),dummy_missed_blocks.size() - missed_blocks.size());
     }
     CUDAOffRenderer::GetRenderImage(reinterpret_cast<uint8_t *>(image.GetData()));
     spdlog::set_level(spdlog::level::info);
@@ -259,8 +241,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
     int cnt = 0;
     for (auto &it : m)
     {
-        LOG_INFO("block ({0},{1},{2},{3}) upload count {4}.", it.first[0], it.first[1], it.first[2], it.first[3],
-                 it.second);
+        LOG_INFO("block ({0},{1},{2},{3}) upload count {4}.", it.first[0], it.first[1], it.first[2], it.first[3], it.second);
         cnt += it.second;
     }
     LOG_INFO("Total upload block num is: {0}.", cnt);

@@ -19,7 +19,7 @@ VS_START
 
 class OpenGLCompVolumeRendererImpl:public OpenGLCompVolumeRenderer{
 public:
-    OpenGLCompVolumeRendererImpl(int w,int h);
+    OpenGLCompVolumeRendererImpl(int w,int h,bool create_opengl_context);
 
     ~OpenGLCompVolumeRendererImpl() override;
 
@@ -78,8 +78,12 @@ private:
 
     void deleteGLResource();
 private:
-    void setCurrentCtx(){glfwMakeContextCurrent(window);}
+    void setCurrentCtx(){
+        make_opengl_context();
+    }
 private:
+    std::function<void()> make_opengl_context;
+
     Image<Color4b> image;
 
     GLFWwindow* window = nullptr;

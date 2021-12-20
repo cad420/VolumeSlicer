@@ -297,8 +297,8 @@ void main()
 
     inline const char* comp_render_f = R"(#version 430 core
 out vec4 frag_color;
-layout(location = 0,rgba32f) uniform volatile image2D entryPos;
-layout(location = 1,rgba32f) uniform volatile image2D exitPos;
+layout(binding = 0,rgba32f) uniform volatile image2D entryPos;
+layout(binding = 1,rgba32f) uniform volatile image2D exitPos;
 //layout(location = 2,rgba32f) uniform volatile image2DRect interResult;
 
 uniform sampler1D transferFunc;

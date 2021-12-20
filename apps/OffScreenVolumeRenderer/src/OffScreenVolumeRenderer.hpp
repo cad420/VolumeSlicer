@@ -5,6 +5,7 @@
 #include "VideoCapture.hpp"
 #include <VolumeSlicer/transfer_function.hpp>
 #include <VolumeSlicer/camera.hpp>
+#include <functional>
 class OffScreenVolumeRenderer{
   public:
     struct RenderConfig{
