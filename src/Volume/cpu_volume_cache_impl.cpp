@@ -96,10 +96,6 @@ class CPUVolumeBlockCacheImpl : public CPUVolumeBlockCache<Block3DArray>
     }
 };
 
-#define EXPLICT_INSTANCE_TEMPLATE_CLASS(CLS, T) template class CLS<T>;
-
-#define EXPLICT_INSTANCE_TEMPLATE_TEMPLATE_CLASS(CLS, T, ...) template class CLS<T<__VA_ARGS__>>;
-
 EXPLICT_INSTANCE_TEMPLATE_TEMPLATE_CLASS(CPUVolumeBlockCache, Block3DArray, uint8_t, 8)
 EXPLICT_INSTANCE_TEMPLATE_TEMPLATE_CLASS(CPUVolumeBlockCacheImpl, Block3DArray, uint8_t, 8)
 

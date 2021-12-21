@@ -5,6 +5,8 @@
 #include <chrono>
 #include <iostream>
 
+#include <VolumeSlicer/memory_helper.hpp>
+
 #include "Algorithm/helper_math.h"
 #include "Render/transfer_function_impl.hpp"
 #include "Render/cuda_comp_render_impl.hpp"
@@ -81,7 +83,12 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
 
     this->cuda_volume_block_cache = CUDAVolumeBlockCache::Create();
     this->cuda_volume_block_cache->SetCacheBlockLength(comp_volume->GetBlockLength()[0]);
-    this->cuda_volume_block_cache->SetCacheCapacity(10, 1024, 1024, 1024);
+    {
+        int num;
+        MemoryHelper::GetRecommendGPUTextureNum<uint8_t>(num);
+        LOG_INFO("CUDACompVolumeRenderer: Recommend GPU texture num({})",num);
+        this->cuda_volume_block_cache->SetCacheCapacity(num, MemoryHelper::DefaultGPUTextureSizeX, MemoryHelper::DefaultGPUTextureSizeY, MemoryHelper::DefaultGPUTextureSizeZ);
+    }
     this->cuda_volume_block_cache->CreateMappingTable(this->comp_volume->GetBlockDim());
     //  /4 represent for block not for uint32_t
     this->missed_blocks_pool.resize(this->cuda_volume_block_cache->GetMappingTable().size() / 4, 0);
@@ -119,10 +126,16 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
     compVolumeParameter.no_padding_block_length = block_length[0] - 2 * block_length[1];
     auto block_dim = comp_volume->GetBlockDim(0);
     compVolumeParameter.block_dim = make_int3(block_dim[0], block_dim[1], block_dim[2]);
-    compVolumeParameter.texture_shape = make_int4(1024, 1024, 1024, 10);
+    {
+        auto shape = cuda_volume_block_cache->GetCacheShape();
+        compVolumeParameter.texture_shape = make_int4(shape[1], shape[2], shape[3], shape[0]);
+    }
     compVolumeParameter.volume_board = make_float3(comp_volume->GetVolumeDimX() * comp_volume->GetVolumeSpaceX(),
                                                    comp_volume->GetVolumeDimY() * comp_volume->GetVolumeSpaceY(),
                                                    comp_volume->GetVolumeDimZ() * comp_volume->GetVolumeSpaceZ());
+    compVolumeParameter.volume_dim = make_int3(comp_volume->GetVolumeDimX(),
+                                               comp_volume->GetVolumeDimY(),
+                                               comp_volume->GetVolumeDimZ());
     CUDARenderer::UploadCompVolumeParameter(compVolumeParameter);
     g_compVolumeParameter = compVolumeParameter;
 
@@ -132,6 +145,11 @@ void CUDACompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_volu
 
 void CUDACompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 {
+    {
+        CUDARenderer::CUDACompRenderPolicy renderPolicy;
+        std::copy(policy.lod_dist,policy.lod_dist+10,renderPolicy.lod_dist);
+        CUDARenderer::UploadCUDACompRenderPolicy(renderPolicy);
+    }
     if (!policy.cdf_value_file.empty())
     {
         try

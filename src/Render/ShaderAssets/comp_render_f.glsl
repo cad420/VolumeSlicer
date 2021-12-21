@@ -150,11 +150,11 @@ void main() {
             if(flag == 0){
                 //            color = vec4(0.f,1.f,0.f,1.f);
                 //            sample_scalar = 0.f;
-                break;
+//                break;
             }
             else if(flag == -1){
                 //            color = vec4(1.f,0.f,0.f,1.f);
-                break;
+//                break;
             }
 
             if(sample_scalar > 0.f){

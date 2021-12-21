@@ -5,7 +5,7 @@
 #pragma once
 
 #include <VolumeSlicer/helper.hpp>
-
+#include <cuda.h>
 class CUDACtx
 {
   public:

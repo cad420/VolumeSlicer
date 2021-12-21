@@ -33,11 +33,14 @@ private:
     void render_imgui();
 
     void initRendererResource();
+
+    void createScreenQuad();
+
+    void createGLTexture();
 private:
-    SDL_Window* sdl_window;
-    SDL_GLContext gl_context;
-    uint32_t window_w,window_h;
-    SDL_Renderer* sdl_renderer;
+    SDL_Window* sdl_window = nullptr;
+    SDL_GLContext gl_context = nullptr;
+    uint32_t window_w = 0,window_h = 0;
     std::unique_ptr<WindowManager> window_manager;
 
     std::shared_ptr<CompVolume> comp_volume;
@@ -45,6 +48,9 @@ private:
     float base_space;
     std::unique_ptr<ICompVolumeRenderer> comp_volume_renderer;
 
+    uint32_t screen_quad_vao,screen_quad_vbo;
+    uint32_t comp_render_tex;
+    std::unique_ptr<Shader> comp_render_shader;
 };
 
 

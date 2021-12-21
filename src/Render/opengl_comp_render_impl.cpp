@@ -5,6 +5,7 @@
 
 #include <VolumeSlicer/Utils/timer.hpp>
 #include <VolumeSlicer/Utils/gl_helper.hpp>
+#include <VolumeSlicer/memory_helper.hpp>
 
 #include <iostream>
 #include <random>
@@ -81,7 +82,12 @@ void OpenGLCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_vo
     createVolumeSampler();
     this->opengl_volume_block_cache = OpenGLVolumeBlockCache::Create();
     this->opengl_volume_block_cache->SetCacheBlockLength(comp_volume->GetBlockLength()[0]);
-    this->opengl_volume_block_cache->SetCacheCapacity(10, 1024, 1024, 1024);
+    {
+        int num;
+        MemoryHelper::GetRecommendGPUTextureNum<uint8_t>(num);
+        LOG_INFO("OpenGLVolumeRenderer: Recommend GPU texture num({})",num);
+        this->opengl_volume_block_cache->SetCacheCapacity(num, MemoryHelper::DefaultGPUTextureSizeX, MemoryHelper::DefaultGPUTextureSizeY, MemoryHelper::DefaultGPUTextureSizeZ);
+    }
     this->opengl_volume_block_cache->CreateMappingTable(this->comp_volume->GetBlockDim());
 
     this->total_lod_block_num = opengl_volume_block_cache->GetMappingTable().size() / 4;

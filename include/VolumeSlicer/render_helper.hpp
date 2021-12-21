@@ -41,7 +41,7 @@ struct CompRenderHelper{
         auto volume_board_x = volume_space_x * volume_dim_x;
         auto volume_board_y = volume_space_y * volume_dim_y;
         auto volume_board_z = volume_space_z * volume_dim_z;
-        view_pos = {volume_board_x*0.5f,volume_board_y*0.5f,volume_board_z * 0.95f};
+        view_pos = {volume_board_x*0.5f,volume_board_y*0.5f,volume_board_z * 0.99f};
     }
 
     /**

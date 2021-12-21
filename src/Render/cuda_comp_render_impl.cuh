@@ -11,6 +11,10 @@ using namespace vs;
 
 namespace CUDARenderer{
 
+    struct CUDACompRenderPolicy{
+        double lod_dist[10];
+    };
+
     struct CUDACompRenderParameter{
         float3 view_pos;
         int w,h;
@@ -36,6 +40,7 @@ namespace CUDARenderer{
         int4 texture_shape;
         int3 block_dim;//lod 0
         float3 volume_board;//
+        int3 volume_dim;//in voxel
     };
 
     struct LightParameter{
@@ -56,6 +61,8 @@ namespace CUDARenderer{
 
     void SetCUDATextureObject(cudaTextureObject_t* textures,size_t size);
 
+    void UploadCUDACompRenderPolicy(const CUDACompRenderPolicy&);
+
     void UploadCUDACompRenderParameter(const CUDACompRenderParameter&);
 
     void UploadMPIRenderParameter(const MPIRenderParameter& mpi_render);
@@ -69,6 +76,9 @@ namespace CUDARenderer{
     void CUDARender(uint32_t w,uint32_t h,uint8_t * image);
 
     void UploadCDFMap(const uint32_t** data,int n,size_t* size);
+
+    //todo
+    void DeleteAllCUDAResources();
 }
 
 

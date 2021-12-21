@@ -39,6 +39,7 @@ list(
         Common/library.cpp
         Common/library_reposity.cpp
         Common/plugin_loader.cpp
+        Common/memory_helper.cpp
         Mesh/mesh_impl.cpp
         ${PROJECT_SOURCE_DIR}/third_party/glad/src/glad.c
 )

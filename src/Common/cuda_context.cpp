@@ -23,14 +23,14 @@ CUcontext GetCUDACtx()
 size_t GetCUDAFreeMem()
 {
     size_t free, total;
-    CUDA_RUNTIME_API_CALL(cudaMemGetInfo(&free, &total));
+    CUDA_DRIVER_API_CALL(cuMemGetInfo(&free, &total));
     return free;
 }
 
 size_t GetCUDAUsedMem()
 {
     size_t free, total;
-    CUDA_RUNTIME_API_CALL(cudaMemGetInfo(&free, &total));
+    CUDA_DRIVER_API_CALL(cuMemGetInfo(&free, &total));
     return total - free;
 }
 CUdevice GetCUDADev()

@@ -29,6 +29,9 @@ public:
 
     virtual void SetCacheCapacity(uint32_t num,uint32_t x,uint32_t y,uint32_t z) = 0;
 
+    /**
+     * @return {num,x,y,z}
+     */
     virtual auto GetCacheShape()->std::array<uint32_t,4> = 0;
 
     virtual void CreateMappingTable(const std::map<uint32_t,std::array<uint32_t,3>>&) = 0;

@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include <VolumeSlicer/Utils/box.hpp>
+
 #include "Algorithm/helper_math.h"
 #include "Common/cuda_box.hpp"
 #include "Common/cuda_utils.hpp"
@@ -13,20 +15,27 @@ using namespace CUDARenderer;
 
 namespace
 {
-
+__constant__ CUDACompRenderPolicy cudaCompRenderPolicy;
 __constant__ CUDACompRenderParameter cudaCompRenderParameter;
 __constant__ CompVolumeParameter compVolumeParameter;
 __constant__ LightParameter lightParameter;
 __constant__ MPIRenderParameter mpiRenderParameter;
 __constant__ uint4 *mappingTable;
 __constant__ uint lodMappingTableOffset[10];
-__constant__ cudaTextureObject_t cacheVolumes[10];
+__constant__ cudaTextureObject_t cacheVolumes[24];
 __constant__ cudaTextureObject_t transferFunc;
 __constant__ cudaTextureObject_t preIntTransferFunc;
 __constant__ uint *image;
 __constant__ uint *missedBlocks;
 __constant__ uint *cdfMap[10];
+__constant__ float3* ray_directions;
+__constant__ float3* ray_start_pos;
+__constant__ float3* ray_stop_pos;
 
+
+float3* d_ray_directions = nullptr;
+float3* d_ray_start_pos = nullptr;
+float3* d_ray_stop_pos = nullptr;
 uint *d_image = nullptr;
 int image_w = 0, image_h = 0;
 uint4 *d_mappingTable = nullptr;
@@ -47,34 +56,22 @@ __device__ uint rgbaFloatToUInt(float4 rgba)
 
 __device__ int evaluateLod(float distance)
 {
-    if (distance < 0.3f)
+    for (int lod = 0; lod < 10; lod++)
     {
-        return 0;
+        if (distance < cudaCompRenderPolicy.lod_dist[lod])
+        {
+            return lod;
+        }
     }
-    else if (distance < 0.5f)
-    {
-        return 1;
-    }
-    else if (distance < 1.2f)
-    {
-        return 2;
-    }
-    else if (distance < 1.6f)
-    {
-        return 3;
-    }
-    else if (distance < 3.2f)
-    {
-        return 4;
-    }
-    else if (distance < 6.4f)
-    {
-        return 5;
-    }
-    else
-    {
-        return 6;
-    }
+    return 10;
+}
+
+__device__ int IntPow(int x, int y)
+{
+    int ans = 1;
+    for (int i = 0; i < y; i++)
+        ans *= x;
+    return ans;
 }
 
 /*
@@ -87,23 +84,11 @@ __global__ void CUDACalcBlockKernel()
     int image_y = blockIdx.y * blockDim.y + threadIdx.y;
     if (image_x >= cudaCompRenderParameter.w || image_y >= cudaCompRenderParameter.h)
         return;
+    int image_idx = image_y * cudaCompRenderParameter.w + image_x;
 
-    float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov / 2)) / cudaCompRenderParameter.h;
-    float x_offset = (image_x - cudaCompRenderParameter.w / 2) * scale * cudaCompRenderParameter.w /
-                     cudaCompRenderParameter.h; // ratio
-    float y_offset = (image_y - cudaCompRenderParameter.h / 2) * scale;
-    if (cudaCompRenderParameter.mpi_render) // mpi_node_x_offset is measured in pixel
-    {
-        x_offset +=
-            mpiRenderParameter.mpi_node_x_offset * scale * cudaCompRenderParameter.w / cudaCompRenderParameter.h;
-        y_offset += mpiRenderParameter.mpi_node_y_offset * scale;
-    }
-
-    float3 pixel_view_pos = cudaCompRenderParameter.view_pos + cudaCompRenderParameter.view_direction +
-                            x_offset * cudaCompRenderParameter.right - y_offset * cudaCompRenderParameter.up;
-    float3 ray_direction = normalize(pixel_view_pos - cudaCompRenderParameter.view_pos);
-
-    float3 start_pos = cudaCompRenderParameter.view_pos;
+    float3 camera_pos = cudaCompRenderParameter.view_pos;
+    float3 start_pos = ray_start_pos[image_idx];
+    float3 ray_direction = ray_directions[image_idx];
     float3 ray_pos = start_pos;
     int last_lod = 0;
     int lod_t = 1;
@@ -112,7 +97,7 @@ __global__ void CUDACalcBlockKernel()
     int no_padding_block_length = compVolumeParameter.no_padding_block_length;
     int steps = 0;
     int nsteps = cudaCompRenderParameter.steps;
-    while (steps++ < nsteps / 4)
+    while (steps++ < nsteps / 8)
     {
         if (ray_pos.x < 0.f || ray_pos.x > compVolumeParameter.volume_board.x || ray_pos.y < 0.f ||
             ray_pos.y > compVolumeParameter.volume_board.y || ray_pos.z < 0.f ||
@@ -120,16 +105,17 @@ __global__ void CUDACalcBlockKernel()
         {
             break;
         }
-        int cur_lod = evaluateLod(length(ray_pos - start_pos));
+        int cur_lod = evaluateLod(length(ray_pos - camera_pos));
         if (cur_lod > last_lod)
         {
-            cur_step *= 2;
-            lod_t *= 2;
-            block_dim = (block_dim + 1) / 2;
-            no_padding_block_length *= 2;
+            lod_t = IntPow(2,cur_lod);
+            cur_step = cudaCompRenderParameter.step * 8 * lod_t;
+
+            block_dim = (compVolumeParameter.block_dim + lod_t -1) / (lod_t);
+            no_padding_block_length = compVolumeParameter.no_padding_block_length * lod_t;
             last_lod = cur_lod;
         }
-        if (cur_lod > 6)
+        if (cur_lod > compVolumeParameter.max_lod)
             break;
         int3 block_idx = make_int3(ray_pos / cudaCompRenderParameter.space / no_padding_block_length);
         size_t flat_block_idx = block_idx.z * block_dim.x * block_dim.y + block_idx.y * block_dim.x + block_idx.x +
@@ -174,6 +160,12 @@ __device__ float3 GetCDFEmptySkipPos(int lod, int lod_t, const float3 &sample_po
  */
 __device__ int VirtualSample(int lod, int lod_t, const float3 &samplePos, float &scalar)
 {
+    if (samplePos.x < 0 || samplePos.y < 0 || samplePos.z < 0 || samplePos.x > compVolumeParameter.volume_dim.x ||
+        samplePos.y > compVolumeParameter.volume_dim.y || samplePos.z > compVolumeParameter.volume_dim.z)
+    {
+        //        scalar = 0.f;
+        return -1;
+    }
     int lod_no_padding_block_length = compVolumeParameter.no_padding_block_length * lod_t;
     int3 lod_block_dim = (compVolumeParameter.block_dim + lod_t - 1) / lod_t;
     int3 virtual_block_idx = make_int3(samplePos / lod_no_padding_block_length);
@@ -200,13 +192,7 @@ __device__ int VirtualSample(int lod, int lod_t, const float3 &samplePos, float 
     return 1;
 }
 
-__device__ int IntPow(int x, int y)
-{
-    int ans = 1;
-    for (int i = 0; i < y; i++)
-        ans *= x;
-    return ans;
-}
+
 
 /*
  * samplePos is measured in voxel
@@ -300,19 +286,16 @@ __device__ float3 PhongShading(int lod, int lod_t, const float3 &samplePos, floa
     return ambient + specular + diffuse;
 }
 
-__global__ void CUDARenderKernel()
-{
-
+__global__ void CUDAGenRays(){
     int image_x = blockIdx.x * blockDim.x + threadIdx.x;
     int image_y = blockIdx.y * blockDim.y + threadIdx.y;
     if (image_x >= cudaCompRenderParameter.w || image_y >= cudaCompRenderParameter.h)
         return;
     uint64_t image_idx = (uint64_t)image_y * cudaCompRenderParameter.w + image_x;
 
-    float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov / 2)) / cudaCompRenderParameter.h;
-    float x_offset = (image_x - cudaCompRenderParameter.w / 2) * scale * cudaCompRenderParameter.w /
-                     cudaCompRenderParameter.h; // ratio
-    float y_offset = (image_y - cudaCompRenderParameter.h / 2) * scale;
+    float scale = 2.f * tanf(radians(cudaCompRenderParameter.fov * 0.5f)) / cudaCompRenderParameter.h;
+    float x_offset = (image_x - cudaCompRenderParameter.w *0.5f) * scale ;
+    float y_offset = (image_y - cudaCompRenderParameter.h * 0.5f) * scale;
     if (cudaCompRenderParameter.mpi_render) // mpi_node_x_offset is measured in pixel
     {
         x_offset += mpiRenderParameter.mpi_node_x_offset * cudaCompRenderParameter.w * scale *
@@ -322,14 +305,53 @@ __global__ void CUDARenderKernel()
 
     float3 pixel_view_pos = cudaCompRenderParameter.view_pos + cudaCompRenderParameter.view_direction +
                             x_offset * cudaCompRenderParameter.right - y_offset * cudaCompRenderParameter.up;
-    float3 ray_direction = normalize(pixel_view_pos - cudaCompRenderParameter.view_pos);
+    float3 pixel_view_direction = normalize(pixel_view_pos - cudaCompRenderParameter.view_pos);
+    ray_directions[image_idx] = pixel_view_direction;
 
-    float3 start_pos = cudaCompRenderParameter.view_pos;
+    auto intersect_t = IntersectWithAABB(CUDABox(make_float3(0.f), compVolumeParameter.volume_board),
+                                         CUDASimpleRay(cudaCompRenderParameter.view_pos, pixel_view_direction));
+
+    if(IsIntersected(intersect_t.x,intersect_t.y)){
+        if(intersect_t.x>0.f){
+            ray_start_pos[image_idx] = cudaCompRenderParameter.view_pos+intersect_t.x*pixel_view_direction ;
+        }
+        else{
+            ray_start_pos[image_idx] = cudaCompRenderParameter.view_pos;
+        }
+        ray_stop_pos[image_idx] = cudaCompRenderParameter.view_pos + intersect_t.y * pixel_view_direction;
+    }
+    else{
+        ray_start_pos[image_idx] = make_float3(0.f);
+        ray_stop_pos[image_idx] = make_float3(0.f);
+    }
+}
+
+__global__ void CUDARenderKernel()
+{
+
+    int image_x = blockIdx.x * blockDim.x + threadIdx.x;
+    int image_y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (image_x >= cudaCompRenderParameter.w || image_y >= cudaCompRenderParameter.h)
+        return;
+    uint64_t image_idx = (uint64_t)image_y * cudaCompRenderParameter.w + image_x;
+
+
+    float3 ray_direction = ray_directions[image_idx];
+
+    float3 start_pos = ray_start_pos[image_idx];
+
+    float3 stop_pos = ray_stop_pos[image_idx];
+
+    float3 camera_pos = cudaCompRenderParameter.view_pos;
+
+    float start2stop_dist = dot(stop_pos-start_pos,ray_direction);
 
     float3 ray_pos = start_pos;
+    //begin with lod 0
     int last_lod = 0;
     int lod_t = 1;
     float cur_step = cudaCompRenderParameter.step;
+
     float4 sample_color;
     float4 color = {0.f, 0.f, 0.f, 0.f};
 
@@ -338,42 +360,24 @@ __global__ void CUDARenderKernel()
     float3 lod_sample_pos = start_pos;
     float last_scalar = 0.f;
     int cur_lod;
-    int nsteps = cudaCompRenderParameter.steps;
+
+    int start2stop_steps = start2stop_dist/cur_step;
+    int nsteps = min(cudaCompRenderParameter.steps,start2stop_steps);
     while (steps++ < nsteps)
     {
-        if (ray_pos.x < 0.f || ray_pos.x > compVolumeParameter.volume_board.x || ray_pos.y < 0.f ||
-            ray_pos.y > compVolumeParameter.volume_board.y || ray_pos.z < 0.f ||
-            ray_pos.z > compVolumeParameter.volume_board.z)
-        {
-            color = {0.f, 0.f, 0.f, 1.f};
-            break;
-        }
-        cur_lod = evaluateLod(length(ray_pos - start_pos));
+        cur_lod = evaluateLod(length(ray_pos - camera_pos));
         if (cur_lod > last_lod)
         {
-            cur_step *= 2;
-            lod_t *= 2;
+            lod_t = IntPow(2,cur_lod);
+            cur_step = cudaCompRenderParameter.step * lod_t;
             last_lod = cur_lod;
             lod_sample_pos = ray_pos;
             lod_steps = steps;
         }
-        if (cur_lod > 6)
+        if (cur_lod > compVolumeParameter.max_lod)
             break;
 
-        float3 n_ray_pos = cudaCompRenderParameter.space *
-                           GetCDFEmptySkipPos(cur_lod, lod_t, ray_pos / cudaCompRenderParameter.space, ray_direction);
-
-        cur_lod = evaluateLod(length(n_ray_pos - start_pos));
-
-        if (cur_lod > last_lod)
-        {
-        }
-        else
-        {
-            steps += length(n_ray_pos - ray_pos) / cur_step;
-        }
-        if (cur_lod > 6)
-            break;
+//        cudaCompRenderParameter.space * GetCDFEmptySkipPos(cur_lod, lod_t, ray_pos / cudaCompRenderParameter.space, ray_direction);
 
         float sample_scalar = 0.f;
 
@@ -382,20 +386,17 @@ __global__ void CUDARenderKernel()
         if (flag > 0)
         {
 
-            if (sample_scalar > 0.30f)
+            if (sample_scalar > 0.f)
             {
                 sample_color = tex2D<float4>(preIntTransferFunc, last_scalar, sample_scalar);
                 if (sample_color.w > 0.f)
                 {
                     last_scalar = sample_scalar;
-                    //                    color=sample_color;
-                    //                    break;
                     auto shading_color = PhongShading(cur_lod,lod_t,ray_pos/cudaCompRenderParameter.space,make_float3(sample_color),ray_direction);
                     sample_color.x=shading_color.x;
                     sample_color.y=shading_color.y;
                     sample_color.z=shading_color.z;
-                    color = color + sample_color * make_float4(sample_color.w, sample_color.w, sample_color.w, 1.f) *
-                                        (1.f - color.w);
+                    color = color + sample_color * make_float4(sample_color.w, sample_color.w, sample_color.w, 1.f) * (1.f - color.w);
                     if (color.w > 0.9f)
                         break;
                 }
@@ -403,9 +404,12 @@ __global__ void CUDARenderKernel()
         }
         else
         {
+            //outside of volume board or volume block not loaded at now
+            break;
         }
         ray_pos = lod_sample_pos + (steps - lod_steps) * ray_direction * cur_step;
     }
+
     double gamma = 1.0 / 2.2;
     color.x = powf(color.x, gamma);
     color.y = powf(color.y, gamma);
@@ -417,15 +421,42 @@ __global__ void CUDARenderKernel()
 
 static void CreateDeviceRenderImage(uint32_t w, uint32_t h)
 {
-    if (d_image)
-    {
-        CUDA_RUNTIME_API_CALL(cudaFree(d_image));
-    }
-    CUDA_RUNTIME_API_CALL(cudaMalloc(&d_image, (size_t)w * h * sizeof(uint)));
     image_w = w;
     image_h = h;
-    assert(d_image);
-    CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(image, &d_image, sizeof(uint *)));
+
+    {
+        if (d_image)
+        {
+            CUDA_RUNTIME_API_CALL(cudaFree(d_image));
+        }
+        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_image, (size_t)w * h * sizeof(uint)));
+        assert(d_image);
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(image, &d_image, sizeof(uint *)));
+    }
+    {
+        if(d_ray_directions){
+            CUDA_RUNTIME_API_CALL(cudaFree(d_ray_directions));
+        }
+        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_ray_directions,(size_t)w*h*sizeof(float3)));
+        assert(d_ray_directions);
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(ray_directions,&d_ray_directions,sizeof(float3*)));
+    }
+    {
+        if(d_ray_start_pos){
+            CUDA_RUNTIME_API_CALL(cudaFree(d_ray_start_pos));
+        }
+        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_ray_start_pos,(size_t)w*h*sizeof(float3)));
+        assert(d_ray_start_pos);
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(ray_start_pos,&d_ray_start_pos,sizeof(float3*)));
+    }
+    {
+        if(d_ray_stop_pos){
+            CUDA_RUNTIME_API_CALL(cudaFree(d_ray_stop_pos));
+        }
+        CUDA_RUNTIME_API_CALL(cudaMalloc(&d_ray_stop_pos,(size_t)w*h*sizeof(float3)));
+        assert(d_ray_stop_pos);
+        CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(ray_stop_pos,&d_ray_stop_pos,sizeof(float3*)));
+    }
 }
 
 static void CreateDeviceMappingTable(const uint32_t *data, size_t size)
@@ -492,6 +523,10 @@ void UploadPreIntTransferFunc(float *data, size_t size)
 cudaStream_t stream = nullptr;
 void CUDACalcBlock(uint32_t *missed_blocks, size_t size, uint32_t w, uint32_t h)
 {
+    if (image_w != w || image_h != h)
+    {
+        CreateDeviceRenderImage(w, h);
+    }
     if (!stream)
     {
         cudaStreamCreate(&stream);
@@ -506,6 +541,9 @@ void CUDACalcBlock(uint32_t *missed_blocks, size_t size, uint32_t w, uint32_t h)
     dim3 blocks_per_grid = {(w + threads_per_block.x - 1) / threads_per_block.x,
                             (h + threads_per_block.y - 1) / threads_per_block.y};
 
+    CUDAGenRays<<<blocks_per_grid,threads_per_block,0,stream>>>();
+    CUDA_RUNTIME_CHECK
+
     CUDACalcBlockKernel<<<blocks_per_grid, threads_per_block, 0, stream>>>();
     CUDA_RUNTIME_CHECK
 
@@ -514,11 +552,6 @@ void CUDACalcBlock(uint32_t *missed_blocks, size_t size, uint32_t w, uint32_t h)
 
 void CUDARender(uint32_t w, uint32_t h, uint8_t *image)
 {
-    if (image_w != w || image_h != h)
-    {
-        CreateDeviceRenderImage(w, h);
-    }
-
     dim3 threads_per_block = {16, 16};
     dim3 blocks_per_grid = {(w + threads_per_block.x - 1) / threads_per_block.x,
                             (h + threads_per_block.y - 1) / threads_per_block.y};
@@ -584,6 +617,10 @@ void UploadCDFMap(const uint32_t **data, int n, size_t *size)
         }
         std::cout << "Lod " << i << "Upload data size: " << size[i] << " no empty cnt: " << cnt << std::endl;
     }
+}
+void UploadCUDACompRenderPolicy(const CUDACompRenderPolicy &policy)
+{
+    CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cudaCompRenderPolicy,&policy,sizeof(CUDACompRenderPolicy)));
 }
 
 } // namespace CUDARenderer
