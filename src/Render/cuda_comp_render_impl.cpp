@@ -306,7 +306,7 @@ void CUDACompVolumeRendererImpl::render(bool sync)
 void CUDACompVolumeRendererImpl::calcMissedBlocks()
 {
 
-    std::unordered_set<std::array<uint32_t, 4>, Hash_UInt32Array4> cur_missed_blocks;
+    std::unordered_set<std::array<uint32_t, 4>> cur_missed_blocks;
     START_CUDA_RUNTIME_TIMER
     CUDARenderer::CUDACalcBlock(missed_blocks_pool.data(), missed_blocks_pool.size(), window_w, window_h);
     STOP_CUDA_RUNTIME_TIMER
@@ -353,7 +353,7 @@ void CUDACompVolumeRendererImpl::filterMissedBlocks()
 {
     if (!new_missed_blocks.empty())
     {
-        std::unordered_set<std::array<uint32_t, 4>, Hash_UInt32Array4> tmp;
+        std::unordered_set<std::array<uint32_t, 4>> tmp;
         for (auto &it : new_missed_blocks)
         {
             bool cached = this->cuda_volume_block_cache->SetCachedBlockValid(it);

@@ -149,7 +149,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
     auto volume_space = make_float3(comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ());
     int3 center_block = make_int3(cudaOffCompRenderParameter.camera_pos / volume_space / (block_length[0] - 2 * block_length[1]));
 
-    std::unordered_map<std::array<uint32_t, 4>, int, Hash_UInt32Array4> m;
+    std::unordered_map<std::array<uint32_t, 4>, int> m;
     // 3.render pass
     int turn = 0;
     while (++turn)
