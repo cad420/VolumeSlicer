@@ -1,0 +1,11 @@
+{
+  "comp_volume": {
+    "comp_config_file_path": "E:/MouseNeuronData/mouse_file_config.json",
+    "comp_volume_space": [0.00032,0.00032,0.001]
+  },
+  "raw_volume": {
+    "raw_volume_path": "E:/MouseNeuronData/mouselod6_366_463_161_uint8.raw",
+    "raw_volume_dim": [366,463,161],
+    "raw_volume_space": [0.01,0.01,0.03]
+  }
+}
