@@ -128,7 +128,7 @@ bool VolumeSamplerImpl<CompVolume>::Sample(const Slice &slice, uint8_t *data, bo
         float sample_space = base_space * 0.5f;
         int steps = std::ceil(slice.depth / sample_space );
         comp_sampler_parameter.step = steps==0 ? 0 : slice.depth / steps;
-        LOG_INFO("sample steps {}",steps);
+//        LOG_INFO("sample steps {}",steps);
         comp_sampler_parameter.steps = steps;
         comp_sampler_parameter.direction = slice.direction;
     }

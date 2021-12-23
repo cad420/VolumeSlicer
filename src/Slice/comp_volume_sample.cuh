@@ -1,8 +1,8 @@
 #pragma once
 
-#include <VolumeSlicer/helper.hpp>
-#include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/Utils/cuda_helper.hpp>
 #include <VolumeSlicer/cuda_context.hpp>
+#include <VolumeSlicer/slice.hpp>
 #include <list>
 #include <map>
 VS_START

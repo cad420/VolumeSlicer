@@ -618,9 +618,27 @@ void UploadCDFMap(const uint32_t **data, int n, size_t *size)
         std::cout << "Lod " << i << "Upload data size: " << size[i] << " no empty cnt: " << cnt << std::endl;
     }
 }
+
 void UploadCUDACompRenderPolicy(const CUDACompRenderPolicy &policy)
 {
     CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cudaCompRenderPolicy,&policy,sizeof(CUDACompRenderPolicy)));
+}
+
+void DeleteAllCUDAResources()
+{
+    CUDA_RUNTIME_API_CALL(cudaFree(d_ray_directions));
+    CUDA_RUNTIME_API_CALL(cudaFree(d_ray_start_pos));
+    CUDA_RUNTIME_API_CALL(cudaFree(d_ray_stop_pos));
+    CUDA_RUNTIME_API_CALL(cudaFree(d_image));
+    CUDA_RUNTIME_API_CALL(cudaFree(d_mappingTable));
+    CUDA_RUNTIME_API_CALL(cudaFreeArray(tf));
+    CUDA_RUNTIME_API_CALL(cudaFreeArray(preInt_tf));
+    CUDA_RUNTIME_API_CALL(cudaDestroyTextureObject(transferFunc));
+    CUDA_RUNTIME_API_CALL(cudaDestroyTextureObject(preIntTransferFunc));
+    CUDA_RUNTIME_API_CALL(cudaFree(d_missedBlocks));
+    for(int i=0;i<10;i++)
+        CUDA_RUNTIME_API_CALL(cudaFree(d_cdfMap[i]));
+
 }
 
 } // namespace CUDARenderer

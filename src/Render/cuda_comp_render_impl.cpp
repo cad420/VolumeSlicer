@@ -480,4 +480,10 @@ bool CUDACompVolumeRendererImpl::isRenderFinish()
     return is_render_finish;
 }
 
+CUDACompVolumeRendererImpl::~CUDACompVolumeRendererImpl()
+{
+    CUDARenderer::DeleteAllCUDAResources();
+    cuda_volume_block_cache.reset(nullptr);
+}
+
 VS_END

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <VolumeSlicer/helper.hpp>
+#include <VolumeSlicer/Utils/cuda_helper.hpp>
 
 inline void CreateCUDATexture1D(int width, cudaArray **ppCudaArray, cudaTextureObject_t *pCudaTextureObject)
 {

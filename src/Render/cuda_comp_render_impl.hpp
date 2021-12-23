@@ -9,14 +9,15 @@
 #include <VolumeSlicer/render.hpp>
 #include <VolumeSlicer/volume_cache.hpp>
 #include <VolumeSlicer/cdf.hpp>
-
-#include "Common/hash_function.hpp"
+#include <VolumeSlicer/Utils/hash.hpp>
 
 VS_START
 
 class CUDACompVolumeRendererImpl: public CUDACompVolumeRenderer{
 public:
     CUDACompVolumeRendererImpl(int w,int h,CUcontext ctx);
+
+    ~CUDACompVolumeRendererImpl() override;
 
     void SetVolume(std::shared_ptr<CompVolume> comp_volume) override;
 

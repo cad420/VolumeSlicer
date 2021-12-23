@@ -19,11 +19,12 @@
 
 VS_START
 
-#define PrintCUDAMemInfo(string)                                                                                       \
-    spdlog::info("{0} CUDA free mem: {1:.2f}, used mem: {2:.2f}", string, (GetCUDAFreeMem() / 1024 / 1024) / 1024.0,   \
-                 (GetCUDAUsedMem() / 1024 / 1024) / 1024.0)
+#define PrintCUDAMemInfo(string)                                                                                 \
+    LOG_INFO("{0} CUDA free mem: {1:.2f}, used mem: {2:.2f}", string, (GetCUDAFreeMem() / 1024 / 1024) / 1024.0, \
+             (GetCUDAUsedMem() / 1024 / 1024) / 1024.0)
 
-template <typename T> class ConcurrentQueue
+template <typename T>
+class ConcurrentQueue
 {
   public:
     /**
@@ -92,7 +93,7 @@ template <typename T> class ConcurrentQueue
             m_cond.notify_one();
         }
 
-        spdlog::info("pop front and remain size:{0}.", m_List.size());
+        LOG_INFO("pop front and remain size:{0}.", m_List.size());
         return data;
     }
 
@@ -125,7 +126,8 @@ template <typename T> class ConcurrentQueue
         m_List.clear();
     }
 
-    template <class Ty> void clear(const std::list<Ty> &reserve)
+    template <class Ty>
+    void clear(const std::list<Ty> &reserve)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
 
@@ -164,7 +166,8 @@ template <typename T> class ConcurrentQueue
         }
     }
 
-    template <class Ty> bool find(const Ty &element)
+    template <class Ty>
+    bool find(const Ty &element)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         for (auto &it : m_List)
@@ -177,7 +180,8 @@ template <typename T> class ConcurrentQueue
         return false;
     }
 
-    template <class Ty> T get(const Ty &target)
+    template <class Ty>
+    T get(const Ty &target)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
 
@@ -221,72 +225,86 @@ template <typename T> class ConcurrentQueue
     size_t maxSize;
 };
 
-template <typename T> struct Helper;
+template <typename T>
+struct Helper;
 
-template <typename T> struct HelperImpl : Helper<decltype(&T::operator())>
+template <typename T>
+struct HelperImpl : Helper<decltype(&T::operator())>
 {
 };
 
-template <typename T> struct Helper : HelperImpl<typename std::decay<T>::type>
+template <typename T>
+struct Helper : HelperImpl<typename std::decay<T>::type>
 {
 };
 
-template <typename Ret, typename Cls, typename... Args> struct Helper<Ret (Cls::*)(Args...)>
-{
-    using return_type = Ret;
-    using argument_type = std::tuple<Args...>;
-};
-
-template <typename Ret, typename Cls, typename... Args> struct Helper<Ret (Cls::*)(Args...) const>
+template <typename Ret, typename Cls, typename... Args>
+struct Helper<Ret (Cls::*)(Args...)>
 {
     using return_type = Ret;
     using argument_type = std::tuple<Args...>;
 };
 
-template <typename R, typename... Args> struct Helper<R(Args...)>
+template <typename Ret, typename Cls, typename... Args>
+struct Helper<Ret (Cls::*)(Args...) const>
+{
+    using return_type = Ret;
+    using argument_type = std::tuple<Args...>;
+};
+
+template <typename R, typename... Args>
+struct Helper<R(Args...)>
 {
     using return_type = R;
     using argument_type = std::tuple<Args...>;
 };
 
-template <typename R, typename... Args> struct Helper<R (*)(Args...)>
+template <typename R, typename... Args>
+struct Helper<R (*)(Args...)>
 {
     using return_type = R;
     using argument_type = std::tuple<Args...>;
 };
 
-template <typename R, typename... Args> struct Helper<R (*const)(Args...)>
+template <typename R, typename... Args>
+struct Helper<R (*const)(Args...)>
 {
     using return_type = R;
     using argument_type = std::tuple<Args...>;
 };
 
-template <typename R, typename... Args> struct Helper<R (*volatile)(Args...)>
+template <typename R, typename... Args>
+struct Helper<R (*volatile)(Args...)>
 {
     using return_type = R;
     using argument_type = std::tuple<Args...>;
 };
 
-template <typename Ret, typename Args> struct InferFunctionAux
+template <typename Ret, typename Args>
+struct InferFunctionAux
 {
 };
 
-template <typename Ret, typename... Args> struct InferFunctionAux<Ret, std::tuple<Args...>>
+template <typename Ret, typename... Args>
+struct InferFunctionAux<Ret, std::tuple<Args...>>
 {
     using type = std::function<Ret(Args...)>;
 };
 
-template <typename F> struct InvokeResultOf
+template <typename F>
+struct InvokeResultOf
 {
     using type = typename Helper<F>::return_type;
 };
 
-template <typename F> struct ArgumentTypeOf
+template <typename F>
+struct ArgumentTypeOf
 {
     using type = typename Helper<F>::argument_type;
 };
 
-template <typename F> struct InferFunction
+template <typename F>
+struct InferFunction
 {
     using type = typename InferFunctionAux<typename InvokeResultOf<F>::type, typename ArgumentTypeOf<F>::type>::type;
 };
@@ -296,7 +314,8 @@ struct ThreadPool
     ThreadPool(size_t);
     ~ThreadPool();
 
-    template <typename F, typename... Args> auto AppendTask(F &&f, Args &&... args);
+    template <typename F, typename... Args>
+    auto AppendTask(F &&f, Args &&... args);
     void Wait();
 
   private:
@@ -346,8 +365,7 @@ inline ThreadPool::ThreadPool(size_t threads) : idle(threads), nthreads(threads)
 template <class F, class... Args> auto ThreadPool::AppendTask(F &&f, Args &&... args)
 {
     using return_type = typename InvokeResultOf<F>::type;
-    auto task =
-        std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    auto task = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<return_type> res = task->get_future();
     {
         std::unique_lock<std::mutex> lock(mut);
@@ -383,7 +401,8 @@ inline ThreadPool::~ThreadPool()
     }
 }
 
-template <typename T> struct atomic_wrapper
+template <typename T>
+struct atomic_wrapper
 {
     std::atomic<T> _a;
 
@@ -406,46 +425,46 @@ template <typename T> struct atomic_wrapper
     }
 };
 
-#define START_CPU_TIMER                                                                                                \
-    {                                                                                                                  \
+#define START_CPU_TIMER \
+    {                   \
         auto _start = std::chrono::steady_clock::now();
 
-#define END_CPU_TIMER                                                                                                  \
-    auto _end = std::chrono::steady_clock::now();                                                                      \
-    auto _t = std::chrono::duration_cast<std::chrono::milliseconds>(_end - _start);                                    \
-    spdlog::info("CPU cost time {0} ms.", _t.count());                                                                 \
+#define END_CPU_TIMER                                                               \
+    auto _end = std::chrono::steady_clock::now();                                   \
+    auto _t = std::chrono::duration_cast<std::chrono::milliseconds>(_end - _start); \
+    LOG_INFO("CPU cost time {0} ms.", _t.count());                                  \
     }
 
-#define START_CUDA_DRIVER_TIMER                                                                                        \
-    CUevent start, stop;                                                                                               \
-    float elapsed_time;                                                                                                \
-    cuEventCreate(&start, CU_EVENT_DEFAULT);                                                                           \
-    cuEventCreate(&stop, CU_EVENT_DEFAULT);                                                                            \
+#define START_CUDA_DRIVER_TIMER              \
+    CUevent start, stop;                     \
+    float elapsed_time;                      \
+    cuEventCreate(&start, CU_EVENT_DEFAULT); \
+    cuEventCreate(&stop, CU_EVENT_DEFAULT);  \
     cuEventRecord(start, 0);
 
-#define STOP_CUDA_DRIVER_TIMER                                                                                         \
-    cuEventRecord(stop, 0);                                                                                            \
-    cuEventSynchronize(stop);                                                                                          \
-    cuEventElapsedTime(&elapsed_time, start, stop);                                                                    \
-    cuEventDestroy(start);                                                                                             \
-    cuEventDestroy(stop);                                                                                              \
-    spdlog::info("GPU cost time {0} ms.", elapsed_time);
+#define STOP_CUDA_DRIVER_TIMER                      \
+    cuEventRecord(stop, 0);                         \
+    cuEventSynchronize(stop);                       \
+    cuEventElapsedTime(&elapsed_time, start, stop); \
+    cuEventDestroy(start);                          \
+    cuEventDestroy(stop);                           \
+    LOG_INFO("GPU cost time {0} ms.", elapsed_time);
 
-#define START_CUDA_RUNTIME_TIMER                                                                                       \
-    {                                                                                                                  \
-        cudaEvent_t start, stop;                                                                                       \
-        float elapsedTime;                                                                                             \
-        (cudaEventCreate(&start));                                                                                     \
-        (cudaEventCreate(&stop));                                                                                      \
+#define START_CUDA_RUNTIME_TIMER   \
+    {                              \
+        cudaEvent_t start, stop;   \
+        float elapsedTime;         \
+        (cudaEventCreate(&start)); \
+        (cudaEventCreate(&stop));  \
         (cudaEventRecord(start, 0));
 
-#define STOP_CUDA_RUNTIME_TIMER                                                                                        \
-    (cudaEventRecord(stop, 0));                                                                                        \
-    (cudaEventSynchronize(stop));                                                                                      \
-    (cudaEventElapsedTime(&elapsedTime, start, stop));                                                                 \
-    spdlog::info("GPU cost time {0} ms.", elapsedTime);                                                                \
-    (cudaEventDestroy(start));                                                                                         \
-    (cudaEventDestroy(stop));                                                                                          \
+#define STOP_CUDA_RUNTIME_TIMER                        \
+    (cudaEventRecord(stop, 0));                        \
+    (cudaEventSynchronize(stop));                      \
+    (cudaEventElapsedTime(&elapsedTime, start, stop)); \
+    LOG_INFO("GPU cost time {0} ms.", elapsedTime);    \
+    (cudaEventDestroy(start));                         \
+    (cudaEventDestroy(stop));                          \
     }
 
 VS_END

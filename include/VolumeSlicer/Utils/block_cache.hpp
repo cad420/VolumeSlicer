@@ -16,9 +16,11 @@
 VS_START
 
 /**
- * Using Block3DArray as container
+ * @brief This is used for CPU comp-volume render.
+ * Using Block3DArray as container.
  * Because malloc large continuous memory may failed or performance badly when access,
- * so using multi Block3DArray for storage and this may easily extend to memory for GPU
+ * so using multi Block3DArray for storage and this may easily extend to memory for GPU.
+ * @relatesalso block_array.hpp
  */
 
 template <typename Block3DArray>
@@ -74,12 +76,27 @@ class BlockCacheManager
 
         size_t Hash() const
         {
-            return (size_t)(Index()) << 48 | (size_t)(Z()) << 32 | (size_t)(Y()) << 16 | (size_t)(X());
+            return hash<glm::vec<4,uint32_t>>()(X(),Y(),Z(),Index());
         }
 
         bool Smaller(PhysicalMemoryBlockIndex const &idx) const
         {
-            return Hash() < idx.Hash();
+            if(Index()!=idx.Index()){
+                return Index()<idx.Index();
+            }
+            else{
+                if(Z()!=idx.Z()){
+                    return Z()<idx.Z();
+                }
+                else{
+                    if(Y()!=idx.Y()){
+                        return Y()<idx.Y();
+                    }
+                    else{
+                        return X()<idx.X();
+                    }
+                }
+            }
         }
 
         bool operator<(PhysicalMemoryBlockIndex const &idx) const
@@ -92,7 +109,7 @@ class BlockCacheManager
             {
                 return false;
             }
-            return Hash() < idx.Hash();
+            return Smaller(idx);
         }
 
       private:
@@ -154,10 +171,8 @@ class BlockCacheManager
         block_cache_table = std::make_unique<LRUCacheTable>(GetPhysicalMemoryBlockNum());
         InitPhysicalBlocks();
         LOG_INFO("BlockCacheManager create successfully.");
-        LOG_INFO("array num: {0}, shape: {1} {2} {3}", arrays.size(), arrays[0]->BlockNumX(), arrays[0]->BlockNumY(),
-                 arrays[1]->BlockNumZ());
-        LOG_INFO("block_cache_table capacity: {0}, current size: {1}", block_cache_table->get_capacity(),
-                 block_cache_table->get_size());
+        LOG_INFO("array num: {0}, shape: {1} {2} {3}", arrays.size(), arrays[0]->BlockNumX(), arrays[0]->BlockNumY(),arrays[1]->BlockNumZ());
+        LOG_INFO("block_cache_table capacity: {0}, current size: {1}", block_cache_table->get_capacity(),block_cache_table->get_size());
         LOG_INFO("remain_physical_blocks num: {0}", remain_physical_blocks.size());
     }
 
@@ -184,8 +199,7 @@ class BlockCacheManager
             {
                 if (block_cache_table->get_size() == 0)
                 {
-                    throw std::runtime_error(
-                        "error: block_cache_table size is zero but remain_physical_blocks is empty.");
+                    throw std::runtime_error("error: block_cache_table size is zero but remain_physical_blocks is empty.");
                 }
                 auto used_physical_index = block_cache_table->get_back().second;
                 block_cache_table->pop_back();
@@ -195,8 +209,7 @@ class BlockCacheManager
             remain_physical_blocks.pop();
             physical_index.SetValid(true);
             block_cache_table->emplace_back(virtual_block_index, physical_index);
-            arrays[physical_index.Index()]->SetBlockData(physical_index.X(), physical_index.Y(), physical_index.Z(),
-                                                         block.block_data->GetDataPtr());
+            arrays[physical_index.Index()]->SetBlockData(physical_index.X(), physical_index.Y(), physical_index.Z(),block.block_data->GetDataPtr());
         }
         block.Release();
         return true;
@@ -213,8 +226,7 @@ class BlockCacheManager
             {
                 if (block_cache_table->get_size() == 0)
                 {
-                    throw std::runtime_error(
-                        "error: block_cache_table size is zero but remain_physical_blocks is empty.");
+                    throw std::runtime_error("error: block_cache_table size is zero but remain_physical_blocks is empty.");
                 }
                 auto used_physical_index = block_cache_table->get_back().second;
                 block_cache_table->pop_back();
@@ -224,9 +236,9 @@ class BlockCacheManager
             remain_physical_blocks.pop();
             physical_index.SetValid(true);
             block_cache_table->emplace_back(virtual_block_index, physical_index);
-            arrays[physical_index.Index()]->SetBlockData(physical_index.X(), physical_index.Y(), physical_index.Z(),
-                                                         data);
+            arrays[physical_index.Index()]->SetBlockData(physical_index.X(), physical_index.Y(), physical_index.Z(),data);
         }
+        return true;
     }
 
     // this class is for cpu render, so reuse of cached block is meaningless

@@ -15,20 +15,25 @@ namespace CUDARenderer{
         double lod_dist[10];
     };
 
+    /**
+     * @brief Maybe changed during every frame render
+     */
     struct CUDACompRenderParameter{
         float3 view_pos;
         int w,h;
         float fov;
-        float step;//0.0001
+        float step;//according to space
         int steps;
         float3 view_direction;
         float3 up;
         float3 right;
-        float3 space;//0.00032 0.00032 0.001 um
+        float3 space;//um
         bool mpi_render;
     };
 
-//not changed while start rendering
+    /**
+     * @brief Parameters that are not changed while start rendering
+     */
     struct CompVolumeParameter{
         int cdf_block_num;
         int cdf_dim_len;//xyz is all the same
@@ -77,7 +82,6 @@ namespace CUDARenderer{
 
     void UploadCDFMap(const uint32_t** data,int n,size_t* size);
 
-    //todo
     void DeleteAllCUDAResources();
 }
 

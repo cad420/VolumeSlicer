@@ -30,7 +30,7 @@ class VS_EXPORT CUDAMem
     ~CUDAMem()
     {
         Destroy();
-        spdlog::info("Delete a CUDA memory.");
+        LOG_INFO("Delete a CUDA memory.");
     }
 
     CUDAMem(const CUDAMem &) = delete;

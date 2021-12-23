@@ -81,14 +81,12 @@ void SimpleMeshRendererImpl::SetMPIRender(MPIRenderParameter mpi)
 
 void SimpleMeshRendererImpl::render()
 {
-    //    AutoTimer timer;
     setCurrentCtx();
     glm::mat4 view = glm::lookAt(glm::vec3{camera.pos[0], camera.pos[1], camera.pos[2]},
                                  glm::vec3{camera.look_at[0], camera.look_at[1], camera.look_at[2]},
                                  glm::vec3{camera.up[0], camera.up[1], camera.up[2]});
-    glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.001f, 3.f);
-    //    glm::mat4 projection =
-    //    glm::ortho(-glm::radians(camera.zoom),glm::radians(camera.zoom),-glm::radians(camera.zoom),glm::radians(camera.zoom),0.001f,5.f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.01f, 5.f);
+
     projection[0][0] *= mpi.mpi_world_col_num;
     projection[1][1] *= mpi.mpi_world_row_num;
     projection[2][0] = -mpi.mpi_world_col_num + 1 + 2 * mpi.mpi_node_x_index;
@@ -99,7 +97,7 @@ void SimpleMeshRendererImpl::render()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.f, 0.f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+
     simple_mesh_render_shader->use();
     simple_mesh_render_shader->setMat4("MVPMatrix", mvp);
     simple_mesh_render_shader->setVec3("camera_pos", camera.pos[0], camera.pos[1], camera.pos[2]);
@@ -112,9 +110,7 @@ void SimpleMeshRendererImpl::render()
         GL_CHECK
     }
     glFlush();
-    //    glFinish();
     GL_CHECK
-    //    glfwSwapBuffers(window);
 }
 
 auto SimpleMeshRendererImpl::GetImage() -> const Image<Color4b> &
@@ -141,9 +137,12 @@ void SimpleMeshRendererImpl::clear()
     setCurrentCtx();
     mesh.reset();
     color_map.clear();
-    surfaces_vao.clear();
-    surfaces_vbo.clear();
-    surfaces_ebo.clear();
+    {
+        deleteGLResource();
+        surfaces_vao.clear();
+        surfaces_vbo.clear();
+        surfaces_ebo.clear();
+    }
     surfaces_indices_num.clear();
 }
 
@@ -157,24 +156,24 @@ void SimpleMeshRendererImpl::initGL()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_DOUBLEBUFFER, true);
-    glfwWindowHint(GLFW_SAMPLES, 64);
+    glfwWindowHint(GLFW_SAMPLES, 8);
     glfwWindowHint(GLFW_DEPTH_BITS, 32);
     window = glfwCreateWindow(window_w, window_h, "HideWindow", nullptr, nullptr);
     if (window == nullptr)
     {
-        throw std::runtime_error("Create GLFW window failed.");
+        throw std::runtime_error("Create SimpleMeshRenderImpl HideWindow failed.");
     }
     setCurrentCtx();
     glfwHideWindow(window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        throw std::runtime_error("GLAD failed to load opengl api");
+        throw std::runtime_error("SimpleMeshRenderImpl GLAD failed to load opengl api");
     }
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_CULL_FACE);
     GL_CHECK
-    LOG_INFO("MSS 64");
+
 }
 
 void SimpleMeshRendererImpl::setupMeshColorMap()

@@ -5,9 +5,10 @@
 #include <VolumeSlicer/Utils/timer.hpp>
 #include <iostream>
 #include <fstream>
-using namespace vs;
-int main(){
 
+using namespace vs;
+
+int main(){
     SetCUDACtx(0);
     auto renderer=CPUOffScreenCompVolumeRenderer ::Create(300,300);
     Camera camera;
@@ -66,7 +67,7 @@ int main(){
     renderer->SetRenderPolicy(policy);
 
     AutoTimer timer;
-    renderer->render();
+    renderer->render(true);
 
     auto image = renderer->GetImage();
 

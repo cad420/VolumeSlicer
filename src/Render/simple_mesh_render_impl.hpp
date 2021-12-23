@@ -33,7 +33,7 @@ class SimpleMeshRendererImpl : public SimpleMeshRenderer
 
   private:
     /**
-     * @brief must call before every OpenGL API call if in multi-thread context
+     * @note must call before every OpenGL API call if in multi-thread context.
      */
     void setCurrentCtx()
     {

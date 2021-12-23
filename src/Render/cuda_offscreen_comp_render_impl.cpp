@@ -6,11 +6,15 @@
 
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/timer.hpp>
+#include <VolumeSlicer/Utils/hash.hpp>
+#include <VolumeSlicer/memory_helper.hpp>
 
-#include "Common/hash_function.hpp"
 #include "Render/cuda_offscreen_comp_render_impl.hpp"
 #include "Render/cuda_offscreen_comp_render_impl.cuh"
 #include "Render/transfer_function_impl.hpp"
+
+#define OFF_RENDER_PARAMETER_VOXEL 0.5f
+#define OFF_RENDER_PARAMETER_STEP_RATIO 0.2f
 
 VS_START
 
@@ -79,15 +83,22 @@ void CUDAOffScreenCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> 
     compVolumeParameter.block_length = block_length[0];
     compVolumeParameter.padding = block_length[1];
     compVolumeParameter.no_padding_block_length = block_length[0] - 2 * block_length[1];
-    compVolumeParameter.voxel = 0.5f;
+    compVolumeParameter.voxel = OFF_RENDER_PARAMETER_VOXEL;
     compVolumeParameter.block_dim = make_int3(block_dim[0], block_dim[1], block_dim[2]);
-    compVolumeParameter.volume_texture_shape = make_int4(1024, 1024, 1024, 12);
+    {
+        int num;
+        MemoryHelper::GetRecommendGPUTextureNum<uint8_t>(num);
+        compVolumeParameter.volume_texture_shape = make_int4(MemoryHelper::DefaultGPUTextureSizeX,
+                                                             MemoryHelper::DefaultGPUTextureSizeY,
+                                                             MemoryHelper::DefaultGPUTextureSizeZ, num);
+    }
     compVolumeParameter.volume_dim = make_int3(comp_volume->GetVolumeDimX(), comp_volume->GetVolumeDimY(), comp_volume->GetVolumeDimZ());
     compVolumeParameter.volume_space = make_float3(comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ());
-    compVolumeParameter.volume_board = make_float3(comp_volume->GetVolumeDimX() * comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeDimY() * comp_volume->GetVolumeSpaceY(),
+    compVolumeParameter.volume_board = make_float3(comp_volume->GetVolumeDimX() * comp_volume->GetVolumeSpaceX(),
+                                                   comp_volume->GetVolumeDimY() * comp_volume->GetVolumeSpaceY(),
                                                    comp_volume->GetVolumeDimZ() * comp_volume->GetVolumeSpaceZ());
     CUDAOffRenderer::UploadCompVolumeParameter(compVolumeParameter);
-    this->step = (std::min)({comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ()}) * 0.2f;
+    this->step = (std::min)({comp_volume->GetVolumeSpaceX(), comp_volume->GetVolumeSpaceY(), comp_volume->GetVolumeSpaceZ()}) * OFF_RENDER_PARAMETER_STEP_RATIO;
     auto texes = this->volume_block_cache->GetCUDATextureObjects();
     CUDAOffRenderer::SetCUDATextureObject(texes.data(), texes.size());
 }

@@ -115,6 +115,7 @@ public:
         ~VolumeBlock(){
             block_data.reset();
         }
+
         //must explict call, cant's auto call by destructor
         void Release(){
             block_data->Release();
@@ -122,8 +123,9 @@ public:
         }
 
         std::array<uint32_t,4> index;//3+1: idx+lod
-        //if not used,should call Release
-        std::shared_ptr<CUDAMem<uint8_t>> block_data;
+
+        std::shared_ptr<CUDAMem<uint8_t>> block_data;//if not used,should call Release
+
         bool valid;//false rep nullptr for block_data and invalid, should not be used any more
     };
 

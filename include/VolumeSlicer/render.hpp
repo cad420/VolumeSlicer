@@ -188,9 +188,9 @@ public:
  */
 struct CompRenderPolicy{
     double lod_dist[10];// lod i for distance x that lod[i-1] < x <= lod[i]
-    std::string volume_value_file;
+    [[deprecated]] std::string volume_value_file;
     [[deprecated]] std::string avg_value_file;
-    std::string cdf_value_file;
+    [[deprecated]] std::string cdf_value_file;//not suit for comp-volume render
 };
 
 /**
