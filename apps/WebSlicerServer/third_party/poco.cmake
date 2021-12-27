@@ -15,8 +15,8 @@ set(FETCHCONTENT_QUIET FALSE)
 include(FetchContent)
 FetchContent_Declare(
     poco
-    GIT_REPOSITORY https://github.com/pocoproject/poco.git
-    GIT_TAG poco-1.10.1-release
+    GIT_REPOSITORY https://github.com/wyzwzz/poco.git
+    GIT_TAG wyz-release
     GIT_SHALLOW true
     GIT_PROGRESS TRUE
 )
