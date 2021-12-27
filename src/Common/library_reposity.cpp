@@ -2,7 +2,7 @@
 // Created by wyz on 2021/9/29.
 //
 
-#include <filesystem>
+#include <experimental/filesystem>
 #include <regex>
 
 #include <VolumeSlicer/Utils/library_reposity.hpp>
@@ -45,7 +45,17 @@ LibraryReposity *LibraryReposity::GetLibraryRepo()
 
 void LibraryReposity::AddLibrary(const std::string &path)
 {
-    auto full_name = std::filesystem::path(path).filename().string();
+
+    std::string full_name ;
+    std::string::size_type pos;
+    pos = full_name.find_last_of('/');
+    if(pos==std::string::npos){
+        pos = full_name.find_last_of('\\');
+    }
+    if(pos == std::string::npos){
+        throw std::runtime_error("AddLibrary: Invalid path!");
+    }
+    full_name = path.substr(pos);
     if (full_name.empty())
     {
         LOG_ERROR("AddLibrary pass wrong format path:{0}", path);
@@ -77,12 +87,12 @@ void LibraryReposity::AddLibraries(const std::string &directory)
 {
     try
     {
-        for (auto &lib : std::filesystem::directory_iterator(directory))
+        for (auto &lib : std::experimental::filesystem::directory_iterator(directory))
         {
             AddLibrary(lib.path().string());
         }
     }
-    catch (const std::filesystem::filesystem_error &err)
+    catch (const std::experimental::filesystem::filesystem_error &err)
     {
         LOG_ERROR("No such directory: {0}, {1}.", directory, err.what());
     }

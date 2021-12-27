@@ -295,7 +295,8 @@ void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
     }
     LOG_INFO("start render turn...");
     int turn = 0;
-    std::atomic<int> render_finish_num = 0;
+    std::atomic<int> render_finish_num;
+    render_finish_num = 0;
 
     while (++turn)
     {
@@ -304,7 +305,8 @@ void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
 
         // if use omp, should add lock for write
 
-        std::atomic<bool> render_finish = true; // or use w*h 2d-array
+        std::atomic<bool> render_finish;
+        render_finish = true; // or use w*h 2d-array
 
         for (int row = 0; row < window_h; row++)
         {

@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.17)
-
+cmake_minimum_required(VERSION 3.16)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-11.2/bin/nvcc)
 project(VolumeSlicer CXX C CUDA)
 
 option(VS_BUILD_TEST "" ON)

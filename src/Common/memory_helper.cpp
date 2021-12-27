@@ -28,11 +28,15 @@ void MemoryHelper::GetRecommendGPUTextureNum(int &num)
 
 void MemoryHelper::GetCPUMemoryInfo(size_t &free, size_t &total)
 {
+#if defined(_WINDOWS) || defined(_WIN32) || defined(_WIN64)
     MEMORYSTATUSEX status;
     status.dwLength = sizeof(status);
     GlobalMemoryStatusEx(&status);
     free = status.ullAvailPhys;
     total = status.ullTotalPhys;
+#else
+
+#endif
 }
 
 template <typename T>

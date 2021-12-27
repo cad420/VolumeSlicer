@@ -7,6 +7,7 @@
 #include <VolumeSlicer/export.hpp>
 
 #include <iostream>
+#include <algorithm>
 VS_START
 
 class Box
@@ -65,8 +66,8 @@ inline Vec2d IntersectWithAABB(const Box &box, const SimpleRay &ray)
     {
         std::swap(t_min_z, t_max_z);
     }
-    double enter_t = (std::max)({t_min_x, t_min_y, t_min_z});
-    double exit_t = (std::min)({t_max_x, t_max_y, t_max_z});
+    double enter_t = (std::max)(std::initializer_list<double>{t_min_x, t_min_y, t_min_z});
+    double exit_t = (std::min)(std::initializer_list<double>{t_max_x, t_max_y, t_max_z});
     return {enter_t, exit_t};
 }
 

@@ -222,7 +222,7 @@ void OpenGLCompVolumeRendererImpl::bindShaderUniform()
 
 void OpenGLCompVolumeRendererImpl::render(bool sync)
 {
-    AutoTimer timer;
+    AutoTimer timer("Render a frame cost time");
     setCurrentCtx();
 
     // clear missed_blocks
@@ -270,7 +270,7 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
     comp_render_pass_shader->use();
     glBindVertexArray(screen_quad_vao);
     {
-        AutoTimer timer1;
+        AutoTimer timer1("Calculate missed blocks cost time");
         comp_render_pass_shader->setBool("render", false);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glFinish();
@@ -278,7 +278,7 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
 
     // 2.2 load missed blocks
     {
-        AutoTimer timer1;
+        AutoTimer timer1("Upload volume block cost time");
         calcMissedBlocks();
 
         filterMissedBlocks();
@@ -304,10 +304,13 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
     glFlush();
 
     // 2.2 ray cast
-    comp_render_pass_shader->setBool("render", true);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    {
+        AutoTimer timer1("RayCast cost time");
+        comp_render_pass_shader->setBool("render", true);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glFinish();
+        glFinish();
+    }
     //    glfwSwapBuffers(window);
 
     GL_CHECK

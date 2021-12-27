@@ -187,7 +187,7 @@ class ConcurrentQueue
 
         auto wasFull = full();
 
-        for (auto &it = m_List.begin(); it != m_List.end(); it++)
+        for (auto it = m_List.begin(); it != m_List.end(); it++)
         {
             if (*it == target)
             {

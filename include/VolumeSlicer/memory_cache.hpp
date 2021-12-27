@@ -4,7 +4,7 @@
 
 #pragma once
 #include <VolumeSlicer/export.hpp>
-
+#include <cstddef>
 VS_START
 
 /**

@@ -7,13 +7,6 @@
 VS_START
 
 template <typename Block3DArray>
-std::unique_ptr<CPUVolumeBlockCache<Block3DArray>> CPUVolumeBlockCache<Block3DArray>::Create(
-    const std::shared_ptr<Block3DArray> &block_array)
-{
-    return std::make_unique<CPUVolumeBlockCacheImpl<Block3DArray>>(block_array);
-}
-
-template <typename Block3DArray>
 class CPUVolumeBlockCacheImpl : public CPUVolumeBlockCache<Block3DArray>
 {
   public:
@@ -95,6 +88,13 @@ class CPUVolumeBlockCacheImpl : public CPUVolumeBlockCache<Block3DArray>
         return {};
     }
 };
+
+template <typename Block3DArray>
+std::unique_ptr<CPUVolumeBlockCache<Block3DArray>> CPUVolumeBlockCache<Block3DArray>::Create(
+    const std::shared_ptr<Block3DArray> &block_array)
+{
+    return std::make_unique<CPUVolumeBlockCacheImpl<Block3DArray>>(block_array);
+}
 
 EXPLICT_INSTANCE_TEMPLATE_TEMPLATE_CLASS(CPUVolumeBlockCache, Block3DArray, uint8_t, 8)
 EXPLICT_INSTANCE_TEMPLATE_TEMPLATE_CLASS(CPUVolumeBlockCacheImpl, Block3DArray, uint8_t, 8)

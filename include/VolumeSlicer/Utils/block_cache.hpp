@@ -76,7 +76,7 @@ class BlockCacheManager
 
         size_t Hash() const
         {
-            return hash<glm::vec<4,uint32_t>>()(X(),Y(),Z(),Index());
+            return std::hash<glm::vec<4,uint32_t>>()(X(),Y(),Z(),Index());
         }
 
         bool Smaller(PhysicalMemoryBlockIndex const &idx) const

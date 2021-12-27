@@ -3,6 +3,7 @@
 //
 
 #include <fstream>
+#include <chrono>
 
 #include <VolumeSlicer/Ext/iblock_volume_plugin_interface.hpp>
 #include <VolumeSlicer/Ext/iraw_volume_plugin_interface.hpp>
@@ -337,9 +338,9 @@ void VolumeImpl<VolumeType::Comp>::PauseLoadBlock() noexcept
 
     while (!paused)
     {
-        _sleep(1);
-        if (!paused)
-            LOG_ERROR("waiting for pause! {0}", pause);
+//        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//        if (!paused)
+//            LOG_ERROR("waiting for pause! {0}", pause);
     }
 
     if (!paused)

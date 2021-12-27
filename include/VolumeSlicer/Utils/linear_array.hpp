@@ -57,9 +57,9 @@ class LinearArrayBase
         if (other.IsAvailable())
         {
             data = static_cast<T *>(::operator new(sizeof(T) * num));
-            if (std::is_trivially_copy_constructible_v<T>)
+            if (std::is_trivially_copy_constructible<T>::value)
             {
-                ::memcpy(data, other.data, sizeof(T) * num);
+                memcpy(data, other.data, sizeof(T) * num);
             }
             else
             {

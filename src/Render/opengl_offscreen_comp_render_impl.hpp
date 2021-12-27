@@ -2,7 +2,7 @@
 // Created by wyz on 2021/12/14.
 //
 #pragma once
-#include <VolumeSlicer/mapping_table.hpp>
+#include <VolumeSlicer/export.hpp>
 
 VS_START
 

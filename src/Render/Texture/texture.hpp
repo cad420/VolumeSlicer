@@ -183,8 +183,15 @@ class TextureBase
 
   private:
     template <uint32_t D>
-    SizeType ToLinearIndex(const CoordType &coord) const noexcept;
-
+    SizeType ToLinearIndex(const CoordType &coord) const noexcept{
+        static_assert(D<4,"Dim for should less than 4.");
+          switch(D){
+              case 1:return coord[0];
+              case 2:return shape[0] * coord[1] + coord[0];
+              case 3:return (SizeType)shape[0] * (shape[1] * coord[2] + coord[1]) + coord[0];
+          }
+    }
+#ifdef _WIN32
     template <>
     SizeType ToLinearIndex<1>(const CoordType &coord) const noexcept
     {
@@ -202,6 +209,7 @@ class TextureBase
         // 3-dimension texture may overflow use uint32_t for multiply
         return (SizeType)shape[0] * (shape[1] * coord[2] + coord[1]) + coord[0];
     }
+#endif
 
     void ReleaseData()
     {
@@ -287,17 +295,17 @@ class Texture1D : public TextureBase<TexType, 1>
         return Base::At(CoordType{idx});
     }
 
-    void UpdateTextureData(TexType *data, SizeType size) noexcept(::memcpy)
+    void UpdateTextureData(TexType *data, SizeType size)
     {
         if (!Base::IsAvailable())
         {
             return;
         }
         size = (std::min)(size, this->GetLength());
-        ::memcpy(Base::RawData(), data, size * sizeof(TexType));
+        memcpy(Base::RawData(), data, size * sizeof(TexType));
     }
 
-    void UpdateTextureSubData(SizeType offset, SizeType length, TexType *data) noexcept(::memcpy)
+    void UpdateTextureSubData(SizeType offset, SizeType length, TexType *data)
     {
         if (!Base::IsAvailable())
         {
@@ -308,7 +316,7 @@ class Texture1D : public TextureBase<TexType, 1>
             return;
         }
         length = (std::min)(length, GetLength() - offset);
-        ::memcpy(Base::RawData() + offset, data, length * sizeof(TexType));
+        memcpy(Base::RawData() + offset, data, length * sizeof(TexType));
     }
 };
 
@@ -388,7 +396,7 @@ class Texture2D : public TextureBase<TexType, 2>
         return Base::At(CoordType{x, y});
     }
 
-    void UpdateTextureData(TexType *data, SizeType width, SizeType height) noexcept(::memcpy)
+    void UpdateTextureData(TexType *data, SizeType width, SizeType height)
     {
         if (!Base::IsAvailable())
         {
@@ -396,11 +404,10 @@ class Texture2D : public TextureBase<TexType, 2>
         }
         width = (std::min)(width, GetWidth());
         height = (std::min)(height, GetHeight());
-        ::memcpy(Base::RawData(), data, sizeof(TexType) * width * height);
+        memcpy(Base::RawData(), data, sizeof(TexType) * width * height);
     }
 
-    void UpdateTextureSubData(SizeType offset_x, SizeType offset_y, SizeType length_x, SizeType length_y,
-                              TexType *data) noexcept(::memcpy)
+    void UpdateTextureSubData(SizeType offset_x, SizeType offset_y, SizeType length_x, SizeType length_y, TexType *data)
     {
         if (!Base::IsAvailable())
         {
@@ -415,7 +422,7 @@ class Texture2D : public TextureBase<TexType, 2>
         // todo use multi-threads to speed up
         for (SizeType row = offset_y; row < offset_y + length_y; row++)
         {
-            ::memcpy(Base::RawData() + row * GetWidth() + offset_x, data + (row - offset_y) * length_x,
+            memcpy(Base::RawData() + row * GetWidth() + offset_x, data + (row - offset_y) * length_x,
                      length_x * sizeof(TexType));
         }
     }
@@ -502,7 +509,7 @@ class Texture3D : public TextureBase<TexType, 3>
         return Base::At(CoordType{x, y, z});
     }
 
-    void UpdateTextureData(TexType *data, SizeType length_x, SizeType length_y, SizeType length_z) noexcept(::memcpy)
+    void UpdateTextureData(TexType *data, SizeType length_x, SizeType length_y, SizeType length_z)
     {
         if (!Base::IsAvailable())
         {
@@ -511,11 +518,11 @@ class Texture3D : public TextureBase<TexType, 3>
         length_x = (std::min)(length_x, GetXSize());
         length_y = (std::min)(length_y, GetYSize());
         length_z = (std::min)(length_z, GetZSize());
-        ::memcpy(Base::RawData(), data, sizeof(TexType) * length_x * length_y * length_z);
+        memcpy(Base::RawData(), data, sizeof(TexType) * length_x * length_y * length_z);
     }
 
     void UpdateTextureSubData(SizeType offset_x, SizeType offset_y, SizeType offset_z, SizeType length_x,
-                              SizeType length_y, SizeType length_z, TexType *data) noexcept(::memcpy)
+                              SizeType length_y, SizeType length_z, TexType *data)
     {
         if (!Base::IsAvailable())
         {
@@ -533,7 +540,7 @@ class Texture3D : public TextureBase<TexType, 3>
         {
             for (SizeType row = offset_y; row < offset_y + length_y; row++)
             {
-                ::memcpy(Base::RawData() + depth * GetXSize() * GetYSize() + row * GetXSize() + offset_x,
+                memcpy(Base::RawData() + depth * GetXSize() * GetYSize() + row * GetXSize() + offset_x,
                          data + (depth - offset_z) * length_x * length_y + (row - offset_y) * length_x,
                          length_x * sizeof(TexType));
             }

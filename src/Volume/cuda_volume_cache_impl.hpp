@@ -6,6 +6,9 @@
 
 #include <VolumeSlicer/volume_cache.hpp>
 #include "Volume/chunk_cache.hpp"
+
+#include <list>
+
 VS_START
 
 class CUDAVolumeBlockCacheImpl : public CUDAVolumeBlockCache

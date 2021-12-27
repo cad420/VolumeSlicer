@@ -7,8 +7,10 @@
 #include <VolumeSlicer/Utils/math.hpp>
 #include <VolumeSlicer/export.hpp>
 
-#include <stdexcept>
+#include <cuda_runtime.h>
 
+#include <stdexcept>
+#include <type_traits>
 VS_START
 
 /**
@@ -48,7 +50,7 @@ class Block3DArray
 
     void ReleaseData()
     {
-        if (!std::is_trivially_destructible_v<T>)
+        if (!std::is_trivially_destructible<T>::value)
         {
             for (SizeType i = 0; i < num; i++)
                 data[i].~T();

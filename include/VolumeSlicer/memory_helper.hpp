@@ -7,6 +7,7 @@
 #include <VolumeSlicer/export.hpp>
 #include <VolumeSlicer/define.hpp>
 #include <cstdint>
+#include <cstddef>
 VS_START
 
 /**

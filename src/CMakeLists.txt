@@ -47,10 +47,9 @@ add_library(VS_CORE
 #        SHARED
         ${VS_SRCS})
 
-
-set_target_properties(VS_CORE PROPERTIES PUBLIC_HEAD
-        ${PROJECT_SOURCE_DIR}/include
-        ${OPENGL_INCLUDE_DIR}
+set(VS_CORE_HEADERS ${PROJECT_SOURCE_DIR}/include;${OPENGL_INCLUDE_DIR})
+set_target_properties(VS_CORE PROPERTIES
+        PUBLIC_HEAD "${VS_CORE_HEADERS}"
         )
 
 target_include_directories(VS_CORE
@@ -75,6 +74,7 @@ target_link_libraries(VS_CORE
         OpenMP::OpenMP_CXX
         stdgpu::stdgpu
         glfw
+        stdc++fs
         )
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)
@@ -87,7 +87,7 @@ install(
         RUNTIME DESTINATION bin
         PUBLIC_HEADER DESTINATION include
 )
-target_compile_features(VS_CORE PRIVATE cxx_std_17)
+target_compile_features(VS_CORE PRIVATE cxx_std_14)
 
 embed_shaders(
         CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Render/shaders.hpp.in

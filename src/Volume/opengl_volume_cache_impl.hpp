@@ -7,6 +7,8 @@
 
 #include "Volume/chunk_cache.hpp"
 
+#include <list>
+
 VS_START
 
 class OpenGLVolumeBlockCacheImpl : public OpenGLVolumeBlockCache
