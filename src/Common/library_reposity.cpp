@@ -1,8 +1,11 @@
 //
 // Created by wyz on 2021/9/29.
 //
-
+#ifdef _WIN32
+#include <filesystem>
+#else
 #include <experimental/filesystem>
+#endif
 #include <regex>
 
 #include <VolumeSlicer/Utils/library_reposity.hpp>
@@ -85,6 +88,19 @@ void LibraryReposity::AddLibrary(const std::string &path)
 
 void LibraryReposity::AddLibraries(const std::string &directory)
 {
+#ifdef _WIN32
+    try
+    {
+        for (auto &lib : std::filesystem::directory_iterator(directory))
+        {
+            AddLibrary(lib.path().string());
+        }
+    }
+    catch (const std::filesystem::filesystem_error &err)
+    {
+        LOG_ERROR("No such directory: {0}, {1}.", directory, err.what());
+    }
+#else
     try
     {
         for (auto &lib : std::experimental::filesystem::directory_iterator(directory))
@@ -96,6 +112,7 @@ void LibraryReposity::AddLibraries(const std::string &directory)
     {
         LOG_ERROR("No such directory: {0}, {1}.", directory, err.what());
     }
+#endif
 }
 
 void *LibraryReposity::GetSymbol(const std::string &symbol)

@@ -74,7 +74,7 @@ target_link_libraries(VS_CORE
         OpenMP::OpenMP_CXX
         stdgpu::stdgpu
         glfw
-        stdc++fs
+
         )
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)
@@ -87,7 +87,12 @@ install(
         RUNTIME DESTINATION bin
         PUBLIC_HEADER DESTINATION include
 )
-target_compile_features(VS_CORE PRIVATE cxx_std_14)
+if(LINUX)
+    target_link_libraries(VS_CORE PRIVATE stdc++fs)
+    target_compile_features(VS_CORE PRIVATE cxx_std_14)
+elseif(WIN32)
+    target_compile_features(VS_CORE PRIVATE cxx_std_17)
+endif()
 
 embed_shaders(
         CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Render/shaders.hpp.in
