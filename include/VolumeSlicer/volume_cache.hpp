@@ -84,10 +84,14 @@ public:
     virtual auto GetOpenGLTextureHandles() -> std::vector<uint32_t> = 0;
 };
 
+/**
+ * @brief CPU volume block cache can be designed more simply not inherit from VolumeBlockCache.
+ * @sa BlockCacheManager
+ */
 template <typename Block3DArray>
-class VS_EXPORT CPUVolumeBlockCache: public VolumeBlockCache{
+class VS_EXPORT [[deprecated]]  CPUVolumeBlockCache: public VolumeBlockCache{
 public:
-    static std::unique_ptr<CPUVolumeBlockCache> Create(const std::shared_ptr<Block3DArray>&);
+    [[deprecated]] static std::unique_ptr<CPUVolumeBlockCache> Create(const std::shared_ptr<Block3DArray>&);
 
 
 };

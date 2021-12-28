@@ -50,13 +50,11 @@ void LibraryReposity::AddLibrary(const std::string &path)
 {
 
     std::string full_name ;
-    std::string::size_type pos;
-    pos = full_name.find_last_of('/');
-    if(pos==std::string::npos){
-        pos = full_name.find_last_of('\\');
-    }
+    std::string::size_type pos1 = path.find_last_of('/');
+    std::string::size_type pos2 = path.find_last_of('\\');
+    auto pos = std::max(pos1,pos2);
     if(pos == std::string::npos){
-        throw std::runtime_error("AddLibrary: Invalid path!");
+        throw std::runtime_error("AddLibrary: Invalid path "+path);
     }
     full_name = path.substr(pos);
     if (full_name.empty())
