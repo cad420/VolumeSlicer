@@ -30,3 +30,9 @@ target_link_libraries(
         mpack
 )
 target_compile_features(SlicerServer PRIVATE cxx_std_17)
+
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+install(
+        TARGETS SlicerServer
+        DESTINATION bin
+)

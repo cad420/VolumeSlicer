@@ -46,7 +46,7 @@ list(
 add_library(VS_CORE
 #        SHARED
         ${VS_SRCS})
-
+add_library(VS::VS_CORE ALIAS VS_CORE)
 set(VS_CORE_HEADERS ${PROJECT_SOURCE_DIR}/include;${OPENGL_INCLUDE_DIR})
 set_target_properties(VS_CORE PROPERTIES
         PUBLIC_HEAD "${VS_CORE_HEADERS}"
@@ -54,6 +54,8 @@ set_target_properties(VS_CORE PROPERTIES
 
 target_include_directories(VS_CORE
         PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         ${CUDA_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE
@@ -63,7 +65,6 @@ target_include_directories(VS_CORE
 
 target_link_libraries(VS_CORE
         PUBLIC
-
         spdlog::spdlog
         glm::glm
         ${CUDA_CUDA_LIBRARY}
@@ -79,14 +80,7 @@ target_link_libraries(VS_CORE
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/build)
 
-install(
-        TARGETS VS_CORE
-        EXPORT vs-targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include
-)
+
 if(LINUX)
     target_link_libraries(VS_CORE PRIVATE stdc++fs)
     target_compile_features(VS_CORE PRIVATE cxx_std_14)
@@ -99,3 +93,25 @@ embed_shaders(
         TARGET ${CMAKE_CURRENT_SOURCE_DIR}/Render/shaders.hpp
         DIR ${CMAKE_CURRENT_SOURCE_DIR}/Render/ShaderAssets
 )
+
+if(VS_INSTALL)
+
+    install(
+            TARGETS VS_CORE
+            DESTINATION lib
+    )
+
+    install(
+            DIRECTORY ${PROJECT_SOURCE_DIR}/include/VolumeSlicer
+            DESTINATION include
+    )
+#    install(
+#            EXPORT VS-targets
+#            FILE VS-targets.cmake
+#            NAMESPACE VS::
+#            DESTINATION lib/cmake/VS
+#    )
+
+
+
+endif()
