@@ -16,14 +16,14 @@ target_link_libraries(
         VS_CORE
         SDL2-static
         imgui
-        ${MPI_LIBRARIES}
+        ${MPI_CXX_LIBRARIES}
         ${OPENGL_LIBRARIES}
 )
 target_include_directories(
         MPILargeMeshVis
         PRIVATE
         ${PROJECT_SOURCE_DIR}/third_party
-        ${MPI_INCLUDE_DIR}
+        ${MPI_CXX_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}/third_party/glad/include
 )
 target_compile_features(MPILargeMeshVis PRIVATE cxx_std_17)

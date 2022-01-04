@@ -6,7 +6,7 @@
 
 #include <VolumeSlicer/export.hpp>
 
-#include "Algorithm/helper_math.h"
+#include "helper_math.h"
 
 VS_START
 

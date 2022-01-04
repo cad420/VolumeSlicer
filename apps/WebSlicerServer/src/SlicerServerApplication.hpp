@@ -29,6 +29,9 @@ class SlicerServerApplication : public Poco::Util::ServerApplication
     }
   private:
     inline static int max_server_num;
+    std::string m_manager_address;
+    std::string m_storage = ".";
+    uint32_t m_port = 0;
 };
 }
 
