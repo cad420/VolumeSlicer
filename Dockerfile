@@ -31,7 +31,6 @@ COPY --from=builder /opt/VS /opt/VS
 
 EXPOSE 3050
 
-CMD ["/opt/VS/bin/SlicerServer"]
 
 # nvidia-docker2 required
 # sudo docker build . -t vs:02 --build-arg https_proxy=http://10.186.43.201:1080

@@ -705,7 +705,7 @@ inline auto ReadVolumeValueFile(std::string const &filename)
     std::ifstream in(filename);
     if (!in.is_open())
     {
-        throw std::runtime_error("Volume value file open failed.");
+        throw std::runtime_error("Data value file open failed.");
     }
     nlohmann::json j;
     in >> j;
