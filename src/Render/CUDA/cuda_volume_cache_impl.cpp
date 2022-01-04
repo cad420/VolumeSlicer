@@ -9,8 +9,7 @@
 #include <VolumeSlicer/Utils/timer.hpp>
 
 #include "Common/cuda_utils.hpp"
-#include "Data/cuda_volume_cache_impl.hpp"
-
+#include "cuda_volume_cache_impl.hpp"
 
 VS_START
 

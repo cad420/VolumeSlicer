@@ -39,9 +39,16 @@ void SlicerServerApplication::defineOptions(Poco::Util::OptionSet &options)
                           .callback(OptionCallback(
                               this, &SlicerServerApplication::hanldle_option)));
 
-    options.addOption(Option("storage", "s", "storage path")
+    options.addOption(Option("comp", "c", "comp storage path")
                           .required(false)
-                          .argument("storage")
+                          .argument("comp")
+                          .repeatable(false)
+                          .callback(OptionCallback(
+                              this, &SlicerServerApplication::hanldle_option)));
+
+    options.addOption(Option("raw", "r", "raw storage path")
+                          .required(false)
+                          .argument("raw")
                           .repeatable(false)
                           .callback(OptionCallback(
                               this, &SlicerServerApplication::hanldle_option)));
@@ -59,32 +66,47 @@ void SlicerServerApplication::hanldle_option(const std::string &name, const std:
         return;
     }
 
-    if (name == "storage") {
-        m_storage = value;
-        if(m_storage.back()!='/'){
-            m_storage += '/';
-        }
+    if (name == "comp") {
+        m_storage_comp = value;
+        return;
+    }
+
+    if (name == "raw") {
+        m_storage_raw = value;
         return;
     }
 }
 int SlicerServerApplication::main(const std::vector<std::string> &args)
 {
+#ifdef _WIN32
+    for(int i=0;i<args.size();i++){
+        auto pos=args[i].find('=');
+        hanldle_option(args[i].substr(2,pos-2),args[i].substr(pos+1));
+    }
+#endif
     SetCUDACtx(0);
-    VolumeDataSet::Load(m_storage+"mouse_file_config2.json");
-    VolumeDataSet::Load(m_storage+"mouselod6_366_463_161_uint8.raw");
+    if(!m_storage_comp.empty())
+        VolumeDataSet::Load(m_storage_comp);
+    if(!m_storage_raw.empty())
+        VolumeDataSet::Load(m_storage_raw);
+
     max_server_num = 6;
     MessageQueue::set_queue_type("slice");
 
     std::unique_ptr<ManagerClient> manager = nullptr;
     std::string address=m_manager_address;
-    manager = std::make_unique<ManagerClient>(address);
+    if(!address.empty())
+        manager = std::make_unique<ManagerClient>(address);
 
     std::unique_ptr<Poco::Net::HTTPServer> server = nullptr;
-    Poco::Net::ServerSocket svs(m_port);
-    server = std::make_unique<Poco::Net::HTTPServer>(Poco::makeShared<RequestHandlerFactory>(), svs,
-                                                     Poco::makeAuto<Poco::Net::HTTPServerParams>());
-    server->start();
-    LOG_INFO("SlicerServer start at port {0}", m_port);
+    if(m_port)
+    {
+        Poco::Net::ServerSocket svs(m_port);
+        server = std::make_unique<Poco::Net::HTTPServer>(Poco::makeShared<RequestHandlerFactory>(), svs,
+                                                         Poco::makeAuto<Poco::Net::HTTPServerParams>());
+        server->start();
+        LOG_INFO("SlicerServer start at port {0}", m_port);
+    }
 
     waitForTerminationRequest();
 

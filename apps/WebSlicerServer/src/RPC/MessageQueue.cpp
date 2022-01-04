@@ -54,7 +54,7 @@ void MessageQueue::process()
     while(running){
         std::unique_lock<std::mutex> lk(mtx);
         if(!tasks.empty()){
-            std::cout<<"Message queue worker thread id: "<<std::this_thread::get_id()<<std::endl;
+//            std::cout<<"Message queue worker thread id: "<<std::this_thread::get_id()<<std::endl;
             auto task = std::move(tasks.front());
             tasks.pop();
             lk.unlock();

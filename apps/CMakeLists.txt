@@ -21,9 +21,6 @@ if(VS_BUILD_APP_MPILargeMeshVis
     endif()
 endif()
 
-
-find_package(OpenGL REQUIRED)
-
 if(VS_BUILD_APP_OffScreenVolumeRenderer OR VS_BUILD_APP_QTOffScreenRenderEditor)
     set(OpenCV_DIR ${CMAKE_CURRENT_SOURCE_DIR}/OffScreenVolumeRenderer/third_party/opencv)
     find_package(OpenCV REQUIRED)
