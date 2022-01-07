@@ -52,7 +52,16 @@ void SliceService::process_message(const uint8_t *message, uint32_t size, const 
 
         mpack_writer_init_growable(&response_writer, reinterpret_cast<char **>(&response),
                                    reinterpret_cast<size_t *>(&total));
-        mpack_start_map(&response_writer, 1);
+        if(mpack_node_map_contains_cstr(root,"id")){
+            mpack_start_map(&response_writer, 2);
+            auto id_node = mpack_node_map_cstr(root,"id");
+            auto id = std::string(mpack_node_str(id_node),mpack_node_strlen(id_node));
+            LOG_INFO("message id: {}",id);
+            mpack_write_cstr(&response_writer,"id");
+            mpack_write_cstr(&response_writer,id.c_str());
+        }
+        else
+            mpack_start_map(&response_writer, 1);
 
         methods->invoke(method,param_node,&response_writer);
     }
@@ -115,7 +124,6 @@ static void MaxMix(std::vector<uint8_t>& res,std::vector<uint8_t>& v){
 //rpc method
 Volume SliceService::get()
 {
-    cuCtxSetCurrent(GetCUDACtx());
     Volume volume;
     volume.volume_name="neuron";
     volume.volume_dim={VolumeDataSet::GetVolume()->GetVolumeDimX(),
