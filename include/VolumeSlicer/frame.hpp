@@ -22,7 +22,9 @@ VS_START
 class VS_EXPORT Img
 {
   public:
-    Image(Image&& image) noexcept{
+    Img() = default;
+    Img(const Img&) = default;
+    Img(Img&& image) noexcept{
         this->format = image.format;
         this->width = image.width;
         this->height = image.height;
@@ -31,8 +33,8 @@ class VS_EXPORT Img
         image.format = Img::Format::RAW;
         image.width = image.height = image.channels = 0;
     }
-    Image& operator=(Image&& image) noexcept{
-        new (this)(std::move(image));
+    Img& operator=(Img&& image) noexcept{
+        new(this) Img(std::move(image));
         return *this;
     }
 
