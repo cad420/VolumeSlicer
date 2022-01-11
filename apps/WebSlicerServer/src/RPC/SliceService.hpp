@@ -52,6 +52,11 @@ class SliceService: public JsonRPCService{
      */
     Image map(Slice slice);
 
+    /*
+     * @brief get render and map results in frame
+     */
+    Frame render_frame(Slice slice);
+
   private:
     std::unique_ptr<RPCMethod> methods;
 
