@@ -22,6 +22,20 @@ VS_START
 class VS_EXPORT Img
 {
   public:
+    Image(Image&& image) noexcept{
+        this->format = image.format;
+        this->width = image.width;
+        this->height = image.height;
+        this->channels = image.channels;
+        this->data = std::move(image.data);
+        image.format = Img::Format::RAW;
+        image.width = image.height = image.channels = 0;
+    }
+    Image& operator=(Image&& image) noexcept{
+        new (this)(std::move(image));
+        return *this;
+    }
+
     enum class Format
     {
         RAW,

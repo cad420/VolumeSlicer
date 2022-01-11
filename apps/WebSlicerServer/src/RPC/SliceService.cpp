@@ -16,6 +16,7 @@ SliceService::SliceService() : methods(std::make_unique<RPCMethod>())
     methods->register_method("get",{},RPCMethod::GetHandler(&SliceService::get,*this));
     methods->register_method("render", {"slice"}, RPCMethod::GetHandler(&SliceService::render, *this));
     methods->register_method("map",{"slice"},RPCMethod::GetHandler(&SliceService::map,*this));
+    methods->register_method("render_frame",{"slice"},RPCMethod::GetHandler(&SliceService::render_frame,*this));
 }
 void SliceService::process_message(const uint8_t *message, uint32_t size, const SliceService::Callback &callback)
 {
@@ -353,6 +354,12 @@ Image SliceService::map(Slice slice)
                          Image::Format::JPEG,Image::Quality::MEDIUM);
 }
 
+Frame SliceService::render_frame(Slice slice){
+    Frame frame;
+    frame.ret = std::move(render(slice));
+    frame.map = std::move(map(slice));
+    return frame;
+}
 
 }
 VS_END

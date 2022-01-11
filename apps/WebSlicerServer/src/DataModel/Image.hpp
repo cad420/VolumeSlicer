@@ -9,6 +9,13 @@ VS_START
 namespace remote{
 
 using Image = Img;
+
+class Frame{
+    public:
+    Image ret;
+    Image map;
+}
+
 }
 
 VS_END
@@ -20,6 +27,15 @@ namespace seria{
             member("width",&Image::width),
             member("height",&Image::height),
             member("data",&Image::data)
+            );
+    }
+
+    template<>
+    inline auto register_object<vs::remote::Image>(){
+        using Frame = vs::remote::Frame;
+        return std::make_tuple(
+            member("ret",&Frame::ret),
+            member("map",&Frame::map)
             );
     }
 }
