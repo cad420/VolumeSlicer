@@ -10,7 +10,7 @@
 #include <VolumeSlicer/Utils/gl_helper.hpp>
 #include <VolumeSlicer/Utils/timer.hpp>
 
-#include "Data/opengl_volume_cache_impl.hpp"
+#include "opengl_volume_cache_impl.hpp"
 #include "Common/cuda_utils.hpp"
 VS_START
 

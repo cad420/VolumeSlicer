@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
+
 project(VolumeSlicer CXX C CUDA)
+#find_package(CUDA REQUIRED) # ???
 
 option(VS_BUILD_TEST "" OFF)
 option(VS_BUILD_TOOLS "" OFF)
