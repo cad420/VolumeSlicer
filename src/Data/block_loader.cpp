@@ -105,10 +105,10 @@ bool BlockLoader::AddTask(const std::array<uint32_t, 4> &idx)
                         LOG_INFO("in AppendTask {0} {1} {2} {3}.", block.index[0], block.index[1], block.index[2], block.index[3]);
 
                         block.block_data = cu_mem_pool->GetCUDAMem();
-
+                        START_CPU_TIMER
                         assert(block.block_data->GetDataPtr());
                         workers[worker_id].uncompress(block.block_data->GetDataPtr(), block_size_bytes, packet);
-
+                        END_CPU_TIMER
                         block.valid = true;
                         products.push_back(block);
 
