@@ -24,20 +24,20 @@ int main(){
     auto volume=CompVolume::Load("E:/MouseNeuronData/mouse_file_config.json");
     {
 //     46 42 7 0; 46 40 2 0; 46 42 9 0;46 41 9 ,0
-//        volume->SetRequestBlock({46,40,9,0});
-//        _sleep(3000);
-//        auto block=volume->GetBlock({46,40,9,0});
-//
-//        std::vector<uint8_t> v(512*512*512);
-//        cudaMemcpy(v.data(),block.block_data->GetDataPtr(),v.size(),cudaMemcpyDefault);
-//        std::fstream out("46#40#9#lod01_512_512_512_uint8.raw",std::ios::binary|std::ios::out);
-//        if(!out.is_open()){
-//            std::cout<<"not open"<<std::endl;
-//            return 1;
-//        }
-//        out.write(reinterpret_cast<char*>(v.data()),v.size());
-//        out.close();
-//        return 0;
+        volume->SetRequestBlock({1,2,0,4});
+        _sleep(3000);
+        auto block=volume->GetBlock({1,2,0,4});
+
+        std::vector<uint8_t> v(512*512*512);
+        cudaMemcpy(v.data(),block.block_data->GetDataPtr(),v.size(),cudaMemcpyDefault);
+        std::fstream out("1#2#0#lod4_512_512_512_uint8.raw",std::ios::binary|std::ios::out);
+        if(!out.is_open()){
+            std::cout<<"not open"<<std::endl;
+            return 1;
+        }
+        out.write(reinterpret_cast<char*>(v.data()),v.size());
+        out.close();
+        return 0;
     }
 
     volume->SetSpaceX(0.00032);

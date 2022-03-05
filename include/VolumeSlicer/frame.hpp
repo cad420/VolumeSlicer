@@ -13,7 +13,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <vector>
-#include <type_traits>
+
 VS_START
 
 /**
@@ -23,6 +23,7 @@ class VS_EXPORT Img
 {
   public:
     Img() = default;
+    Img(const Img&) = default;
     Img(Img&& image) noexcept{
         this->format = image.format;
         this->width = image.width;
@@ -32,8 +33,8 @@ class VS_EXPORT Img
         image.format = Img::Format::RAW;
         image.width = image.height = image.channels = 0;
     }
-    Img& operator=(Img&& img) noexcept{
-        new (this)Img(std::move(img));
+    Img& operator=(Img&& image) noexcept{
+        new(this) Img(std::move(image));
         return *this;
     }
 
@@ -49,8 +50,8 @@ class VS_EXPORT Img
         LOW = 50
     };
     Format format;
-    uint32_t width{0}, height{0};
-    uint8_t channels{0};
+    uint32_t width, height;
+    uint8_t channels;
     std::vector<uint8_t> data;
 
   public:

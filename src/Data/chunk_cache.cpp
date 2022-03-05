@@ -87,8 +87,9 @@ AbstractMemoryCache::Cache &ChunkCache::GetCacheRef(size_t cacheID)
                 return cache;
             }
             else{
-                auto item = impl->lruCache->get_back();
+                const auto& item = impl->lruCache->get_back();
                 cache.data = item.second;
+                impl->lruCache->pop_back();
                 impl->lruCache->emplace_back(cache.id,cache.data);
                 return cache;
             }

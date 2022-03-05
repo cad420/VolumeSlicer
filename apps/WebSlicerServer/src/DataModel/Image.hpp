@@ -14,7 +14,7 @@ class Frame{
     public:
     Image ret;
     Image map;
-}
+};
 
 }
 
@@ -31,7 +31,7 @@ namespace seria{
     }
 
     template<>
-    inline auto register_object<vs::remote::Image>(){
+    inline auto register_object<vs::remote::Frame>(){
         using Frame = vs::remote::Frame;
         return std::make_tuple(
             member("ret",&Frame::ret),
