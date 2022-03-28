@@ -51,8 +51,8 @@ void LargeVolumeVisGUI::init(const char * config_file) {
     this->window_manager=std::make_unique<WindowManager>(config_file);
     this->window_w=window_manager->GetNodeWindowWidth();
     this->window_h=window_manager->GetNodeWindowHeight();
-    window_manager->GetWorldVolumeSpace(volume_space_x,volume_space_y,volume_space_z);
-    base_space=(std::min)({volume_space_x,volume_space_y,volume_space_z});
+//    window_manager->GetWorldVolumeSpace(volume_space_x,volume_space_y,volume_space_z);
+//    base_space=(std::min)({volume_space_x,volume_space_y,volume_space_z});
 
     SetCUDACtx(window_manager->GetGPUIndex());
 
@@ -72,11 +72,11 @@ void LargeVolumeVisGUI::show() {
         auto current_frame_t = SDL_GetTicks();//ms
         auto delta_frame_t = current_frame_t-last_frame_t;
         last_frame_t = current_frame_t;
-        float delta_t = delta_frame_t * 0.000001f;//s
+        float delta_t = std::min((uint32_t)50,delta_frame_t) * 0.000001f;//s
         static SDL_Event event;
 
         //camera pos according to volume dim count in voxel
-        std::array<float,3> view_pos;
+        std::array<float,3> view_pos = {};
         CompRenderHelper::GetDefaultViewPos(comp_volume,view_pos);
         static control::FPSCamera fpsCamera({view_pos[0],view_pos[1],view_pos[2]});
         static bool right_mouse_press;
@@ -180,7 +180,7 @@ void LargeVolumeVisGUI::show() {
         mpiRenderParameter.mpi_world_col_num=window_manager->GetWindowColNum();
         mpiRenderParameter.mpi_node_x_index=window_manager->GetWorldRankOffsetX();
         mpiRenderParameter.mpi_node_y_index=window_manager->GetWorldRankOffsetY();
-//        comp_volume_renderer->SetMPIRender(mpiRenderParameter);
+        comp_volume_renderer->SetMPIRender(mpiRenderParameter);
         Camera camera{};
         camera.pos={camera_pos.x,camera_pos.y,camera_pos.z};
         camera.up={camera_up.x,camera_up.y,camera_up.z};
@@ -327,9 +327,9 @@ LargeVolumeVisGUI::LargeVolumeVisGUI() {
 
 void LargeVolumeVisGUI::initRendererResource() {
     this->comp_volume=CompVolume::Load(window_manager->GetNodeResourcePath().c_str());
-    this->comp_volume->SetSpaceX(volume_space_x);
-    this->comp_volume->SetSpaceY(volume_space_y);
-    this->comp_volume->SetSpaceZ(volume_space_z);
+//    this->comp_volume->SetSpaceX(volume_space_x);
+//    this->comp_volume->SetSpaceY(volume_space_y);
+//    this->comp_volume->SetSpaceZ(volume_space_z);
 
     if(this->window_manager->GetRendererBackend() == "cuda"){
         this->comp_volume_renderer=CUDACompVolumeRenderer::Create(window_w, window_h);

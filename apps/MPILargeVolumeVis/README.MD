@@ -75,3 +75,8 @@ row  _______________________
                                  - camera_pos
     
 ```
+
+## MPI配置
+    smpd.exe -d
+    mpiexec -hosts 2 10.189.204.238 2 10.189.74.69 2 renderer.exe
+    or mpiexec.exe -hosts host_num host0_ip process_num_in_host0 host1_ip process_num_in_host1 renderer.exe [arg_for_renderer]

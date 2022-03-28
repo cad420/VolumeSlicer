@@ -43,8 +43,8 @@ LargeMeshVisGUI::LargeMeshVisGUI()
 
 LargeMeshVisGUI::~LargeMeshVisGUI()
 {
-    SDL_EXPR(SDL_DestroyRenderer(sdl_renderer));
-    SDL_EXPR(SDL_DestroyWindow(sdl_window));
+    if(sdl_renderer) SDL_EXPR(SDL_DestroyRenderer(sdl_renderer));
+    if(sdl_window) SDL_EXPR(SDL_DestroyWindow(sdl_window));
     SDL_EXPR(SDL_Quit());
 }
 

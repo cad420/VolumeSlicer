@@ -44,8 +44,8 @@ private:
     std::unique_ptr<WindowManager> window_manager;
 
     std::shared_ptr<CompVolume> comp_volume;
-    float volume_space_x,volume_space_y,volume_space_z;
-    float base_space;
+//    float volume_space_x,volume_space_y,volume_space_z;
+//    float base_space;
     std::unique_ptr<ICompVolumeRenderer> comp_volume_renderer;
 
     uint32_t screen_quad_vao,screen_quad_vbo;

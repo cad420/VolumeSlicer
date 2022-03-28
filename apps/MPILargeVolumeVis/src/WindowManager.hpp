@@ -42,13 +42,13 @@ public:
         col_num=j.at("col");
         frame_time_lock = j.at("frame_time_lock");
         renderer_backend = j.at("renderer_backend");
-        iGPU = j.at("iGPU");
-        {
-            auto space = j.at("space");
-            space_x = space.at(0);
-            space_y = space.at(1);
-            space_z = space.at(2);
-        }
+
+//        {
+//            auto space = j.at("space");
+//            space_x = space.at(0);
+//            space_y = space.at(1);
+//            space_z = space.at(2);
+//        }
 
         //read tf
         {
@@ -96,6 +96,7 @@ public:
 
         {
             auto screen_config = j.at("screen").at(std::to_string(world_rank));
+            iGPU = screen_config.at("iGPU");
             screen_offset_x = screen_config.at("offsetX");
             screen_offset_y = screen_config.at("offsetY");
             resource_path = screen_config.at("resourcePath");
@@ -135,11 +136,11 @@ public:
     int GetWorldRankOffsetY() const{
         return world_rank / col_num;
     }
-    void GetWorldVolumeSpace(float& x,float& y,float& z) const{
-        x=space_x;
-        y=space_y;
-        z=space_z;
-    }
+//    void GetWorldVolumeSpace(float& x,float& y,float& z) const{
+//        x=space_x;
+//        y=space_y;
+//        z=space_z;
+//    }
     int GetNodeScreenOffsetX() const{
         return screen_offset_x;
     }
@@ -178,7 +179,7 @@ public:
     int world_size;
     int row_num;
     int col_num;
-    float space_x,space_y,space_z;
+//    float space_x,space_y,space_z;
     int frame_time_lock;
     int iGPU;
     std::string renderer_backend;

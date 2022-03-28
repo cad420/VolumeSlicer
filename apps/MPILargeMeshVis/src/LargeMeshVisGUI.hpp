@@ -27,8 +27,8 @@ class LargeMeshVisGUI{
   private:
     uint32_t window_w,window_h;
 
-    SDL_Window* sdl_window;
-    SDL_Renderer* sdl_renderer;
+    SDL_Window* sdl_window = nullptr;
+    SDL_Renderer* sdl_renderer = nullptr;
 
     std::unique_ptr<WindowManager> window_manager;
 
