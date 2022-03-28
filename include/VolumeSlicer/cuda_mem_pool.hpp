@@ -80,14 +80,12 @@ std::shared_ptr<CUDAMem<T>> CUDAMemoryPool<T>::GetCUDAMem()
         }
         return false;
     });
-    static auto num = 16;
+
     for (auto &cu_mem : cu_mems)
     {
         if (!cu_mem->IsOccupied())
         {
             cu_mem->SetOccupied();
-            num--;
-            LOG_INFO("In cu_mem_pool remain cu_mem num: {0}.", num);
             return cu_mem;
         }
     }

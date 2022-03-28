@@ -298,8 +298,8 @@ __global__ void CUDAGenRays(){
     float y_offset = (image_y - cudaCompRenderParameter.h * 0.5f) * scale;
     if (cudaCompRenderParameter.mpi_render) // mpi_node_x_offset is measured in pixel
     {
-        x_offset += mpiRenderParameter.mpi_node_x_offset * cudaCompRenderParameter.w * scale *
-                    cudaCompRenderParameter.w / cudaCompRenderParameter.h;
+        x_offset += mpiRenderParameter.mpi_node_x_offset * cudaCompRenderParameter.w * scale ;
+//                    * cudaCompRenderParameter.w / cudaCompRenderParameter.h;
         y_offset += mpiRenderParameter.mpi_node_y_offset * cudaCompRenderParameter.h * scale;
     }
 

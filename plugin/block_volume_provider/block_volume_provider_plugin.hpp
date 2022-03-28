@@ -48,15 +48,19 @@ class BlockVolumeProviderPlugin : public IBlockVolumeProviderPluginInterface
     bool IsAllAvailable() override;
 
   private:
-    size_t block_size_bytes;
+    size_t block_voxel_count = 0;
+    size_t block_size_bytes = 0;
+    size_t voxel_size = 1;
 
     int cu_mem_num;
     std::unique_ptr<CUDAMemoryPool<uint8_t>> cu_mem_pool;
+//    std::unique_ptr<CUDAMemoryPool<uint8_t>> decode_mem_pool;
 
     std::unique_ptr<IH264VolumeReaderPluginInterface> packet_reader;
 
     int worker_num;
     std::vector<Worker> workers;
+    std::mutex mtx;
 
     std::unique_ptr<ThreadPool> jobs;
 
@@ -82,7 +86,7 @@ class BlockVolumeProviderPluginFactory : public vs::IPluginFactory
     }
     std::string GetModuleID() const override
     {
-        return {"VolumeSlicer.volume.loader"};
+        return "VolumeSlicer.volume.loader";
     }
 };
 

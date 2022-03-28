@@ -93,7 +93,12 @@ size_t H264VolumeReaderPlugin::GetBlockSizeByte()
     {
         auto header = readers.at(min_lod)->get_header();
         size_t block_length = std::pow(2, header.log_block_length);
-        return block_length * block_length * block_length;
+        size_t voxel_size = sv::GetVoxelSize(header.voxel);
+        if(voxel_size == 0){
+            LOG_ERROR("ERROR: voxel_size = 0 and set to 1. This may be caused by use old Header format file but with new lib");
+            voxel_size = 1;
+        }
+        return block_length * block_length * block_length * voxel_size;
     }
     catch (const std::exception &err)
     {
