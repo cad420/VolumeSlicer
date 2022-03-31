@@ -55,6 +55,7 @@ class BlockVolumeProviderPlugin : public IBlockVolumeProviderPluginInterface
     int cu_mem_num;
     std::unique_ptr<CUDAMemoryPool<uint8_t>> cu_mem_pool;
 //    std::unique_ptr<CUDAMemoryPool<uint8_t>> decode_mem_pool;
+    std::unique_ptr<uint8_t*[]> cu_host_decode_uint8_buffer;
 
     std::unique_ptr<IH264VolumeReaderPluginInterface> packet_reader;
 

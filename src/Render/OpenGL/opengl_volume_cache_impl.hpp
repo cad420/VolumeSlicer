@@ -93,6 +93,8 @@ class OpenGLVolumeBlockCacheImpl : public OpenGLVolumeBlockCache
     std::vector<CUgraphicsResource> cu_resources;
 
     std::unique_ptr<ChunkCache> chunk_cache;
+
+    CUstream transfer_stream = nullptr;
 };
 
 VS_END

@@ -8,6 +8,11 @@
 
 VS_START
 
+template <typename T>
+struct Alloc{
+
+};
+
 template<class T>
 class CUDAMemAllocator{
 public:

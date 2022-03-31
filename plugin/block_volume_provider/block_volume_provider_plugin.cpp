@@ -45,7 +45,7 @@ struct Decoder{
 //        assert(parser);
 
         auto c = avcodec_alloc_context3(codec);
-        c->thread_count = 16;
+        c->thread_count = 1;
         c->delay = 0;
         assert(c);
         int ret = avcodec_open2(c,codec,nullptr);
@@ -101,7 +101,7 @@ class Worker
     atomic_wrapper<bool> status;
 };
 
-BlockVolumeProviderPlugin::BlockVolumeProviderPlugin() : block_size_bytes(0), cu_mem_num(16), worker_num(4)
+BlockVolumeProviderPlugin::BlockVolumeProviderPlugin() : block_size_bytes(0), cu_mem_num(16), worker_num(1)
 {
     SetCUDACtx(0);
     PluginLoader::LoadPlugins("./plugins");
@@ -122,6 +122,9 @@ BlockVolumeProviderPlugin::~BlockVolumeProviderPlugin()
     products.clear();
     packet_reader.reset();
     cu_mem_pool.reset();
+    for(int i = 0;i<worker_num;i++){
+        CUDA_DRIVER_API_CALL(cuMemFreeHost(cu_host_decode_uint8_buffer[i]));
+    }
 }
 void BlockVolumeProviderPlugin::Open(const std::string &filename)
 {
@@ -137,6 +140,10 @@ void BlockVolumeProviderPlugin::Open(const std::string &filename)
     this->cu_mem_pool = std::make_unique<CUDAMemoryPool<uint8_t>>(cu_mem_num, block_voxel_count);
 //    this->decode_mem_pool = std::make_unique<CUDAMemoryPool<uint8_t>>(worker_num,block_size_bytes);
 
+    this->cu_host_decode_uint8_buffer = std::make_unique<uint8_t*[]>(worker_num);
+    for(int i = 0;i < worker_num;i++){
+        CUDA_DRIVER_API_CALL(cuMemAllocHost((void**)&this->cu_host_decode_uint8_buffer[i],block_voxel_count));
+    }
 
     for (int i = 0; i < worker_num; i++)
         workers.emplace_back();
@@ -189,7 +196,7 @@ bool BlockVolumeProviderPlugin::AddTask(const std::array<uint32_t, 4> &idx)
 
                         std::vector<uint8_t> decode_buffer(block_size_bytes,0);
 
-                        std::vector<uint8_t> decode_uint8_buffer(block_voxel_count,0);
+                        auto decode_uint8_buffer = cu_host_decode_uint8_buffer[worker_id];
 
                         workers[worker_id].uncompress(decode_buffer.data(), block_size_bytes, packet);
 
@@ -197,7 +204,7 @@ bool BlockVolumeProviderPlugin::AddTask(const std::array<uint32_t, 4> &idx)
                         assert(block.block_data->GetDataPtr());
 
                         if(voxel_size == 1){
-                          decode_uint8_buffer = std::move(decode_buffer);
+                            memcpy(decode_uint8_buffer,decode_buffer.data(),decode_buffer.size());
                         }
                         else if(voxel_size == 2){
                             using VoxelT = uint16_t;
@@ -219,7 +226,8 @@ bool BlockVolumeProviderPlugin::AddTask(const std::array<uint32_t, 4> &idx)
                             throw std::runtime_error("not support voxel size now");
                         }
                         cuCtxSetCurrent(GetCUDACtx());
-                        CUDA_DRIVER_API_CALL(cuMemcpy((CUdeviceptr)block.block_data->GetDataPtr(),(CUdeviceptr)decode_uint8_buffer.data(),decode_uint8_buffer.size()));
+//                        CUDA_DRIVER_API_CALL(cuMemcpy((CUdeviceptr)block.block_data->GetDataPtr(),(CUdeviceptr)decode_uint8_buffer.data(),decode_uint8_buffer.size()));
+                        CUDA_DRIVER_API_CALL(cuMemcpyHtoD((CUdeviceptr)block.block_data->GetDataPtr(),decode_uint8_buffer,block_voxel_count));
 //                        if(voxel_size == 2){
 //                            BitTransformToUInt8(decode_buffer->GetDataPtr(),block.block_data->GetDataPtr(),block_voxel_count,BitTransformDataType::uint16);
 //                            LOG_INFO("decoded buffer from uint16 ==> uint8");

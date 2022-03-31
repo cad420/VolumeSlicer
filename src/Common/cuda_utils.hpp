@@ -91,7 +91,7 @@ inline void UpdateCUDATexture2D(uint8_t *data, cudaArray *pCudaArray, uint32_t x
 
 // offset if count by byte
 inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t block_length, uint32_t x_offset,
-                                uint32_t y_offset, uint32_t z_offset)
+                                uint32_t y_offset, uint32_t z_offset,CUstream stream = nullptr)
 {
     CUDA_MEMCPY3D m = {0};
     m.srcMemoryType = CU_MEMORYTYPE_DEVICE;
@@ -106,12 +106,14 @@ inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t b
     m.WidthInBytes = block_length;
     m.Height = block_length;
     m.Depth = block_length;
-
-    CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+    if(stream == nullptr)
+        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+    else
+        CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,stream));
 }
 
 inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t x_length, uint32_t y_length,
-                                uint32_t z_length, uint32_t x_offset, uint32_t y_offset, uint32_t z_offset)
+                                uint32_t z_length, uint32_t x_offset, uint32_t y_offset, uint32_t z_offset,CUstream stream = nullptr)
 {
     CUDA_MEMCPY3D m = {0};
     m.srcMemoryType = CU_MEMORYTYPE_HOST;
@@ -127,7 +129,10 @@ inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t x
     m.Height = y_length;
     m.Depth = z_length;
 
-    CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+    if(stream == nullptr)
+        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+    else
+        CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,stream));
 }
 
 __host__ __device__ inline int PowII(int x, int y)

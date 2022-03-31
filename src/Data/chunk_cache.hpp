@@ -24,7 +24,7 @@ class ChunkCache: public AbstractMemoryCache{
 
     Cache& GetCacheRef(size_t cacheID) override;
 
-    explicit ChunkCache(size_t chunkSize);
+    explicit ChunkCache(size_t chunkSize,bool cuda_pinned = false);
 
     virtual ~ChunkCache();
   private:

@@ -220,7 +220,8 @@ void LargeVolumeVisGUI::show() {
 
         comp_volume_renderer->resize(window_w,window_h);
         comp_volume_renderer->SetStep(step,steps);
-        comp_volume_renderer->render(true);
+        comp_volume_renderer->render(false);
+
 
         if(!isOpenGL){
             glClearColor(0.f,0.f,0.f,1.f);

@@ -222,55 +222,57 @@ void OpenGLCompVolumeRendererImpl::bindShaderUniform()
 
 void OpenGLCompVolumeRendererImpl::render(bool sync)
 {
+    LOG_INFO("run into internal render");
     AutoTimer timer("Render a frame cost time");
+
     setCurrentCtx();
 
-    // clear missed_blocks
-    memset(mapping_missed_blocks, 0, total_lod_block_num * sizeof(uint32_t));
-
-    // binding
     bindShaderUniform();
 
     // get mvp from camera
     glm::mat4 view = glm::lookAt(glm::vec3{camera.pos[0], camera.pos[1], camera.pos[2]},
                                  glm::vec3{camera.look_at[0], camera.look_at[1], camera.look_at[2]},
                                  glm::vec3{camera.up[0], camera.up[1], camera.up[2]});
-    glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.001f, 20.f);
+    //todo near and far according to space
+    glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)window_w / window_h, 0.1f, 2000.f);
     projection[0][0] *= mpi.mpi_world_col_num;
     projection[1][1] *= mpi.mpi_world_row_num;
     projection[2][0] = -mpi.mpi_world_col_num + 1 + 2 * mpi.mpi_node_x_index;
-    projection[2][1] = mpi.mpi_world_row_num - 1 - 2 * (mpi.mpi_world_row_num-1-mpi.mpi_node_y_index);
+    projection[2][1] = mpi.mpi_world_row_num - 1 - 2 * (mpi.mpi_world_row_num - 1 - mpi.mpi_node_y_index);
     glm::mat4 mvp = projection * view;
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // 1. get entry and exit pos
-    glBindFramebuffer(GL_FRAMEBUFFER, raycast_pos_fbo);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    comp_render_pos_shader->use();
-    comp_render_pos_shader->setMat4("MVPMatrix", mvp);
+        // 1. get entry and exit pos
+    {
+        AutoTimer timer("Render ray entry and exit pos");
+        glBindFramebuffer(GL_FRAMEBUFFER, raycast_pos_fbo);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        comp_render_pos_shader->use();
+        comp_render_pos_shader->setMat4("MVPMatrix", mvp);
 
-    glBindVertexArray(volume_board_vao);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(volume_board_vao);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-    glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
-    glDrawBuffer(GL_COLOR_ATTACHMENT1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    glDisable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        glDisable(GL_CULL_FACE);
+    }
 
     // 2. render pass
     // 2.1 calculate missed blocks
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    comp_render_pass_shader->use();
-    glBindVertexArray(screen_quad_vao);
     {
         AutoTimer timer1("Calculate missed blocks cost time");
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        comp_render_pass_shader->use();
+        glBindVertexArray(screen_quad_vao);
         comp_render_pass_shader->setBool("render", false);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glFinish();
@@ -383,6 +385,9 @@ void OpenGLCompVolumeRendererImpl::calcMissedBlocks()
             cur_missed_blocks.insert({x, y, z, lod});
         }
     }
+    if(!cur_missed_blocks.empty())
+        memset(mapping_missed_blocks, 0, total_lod_block_num * sizeof(uint32_t));
+
     // sort missed blocks by distance to camera pos
     for (auto &it : cur_missed_blocks)
     {

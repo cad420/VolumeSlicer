@@ -23,6 +23,7 @@ OpenGLVolumeBlockCacheImpl::OpenGLVolumeBlockCacheImpl()
 {
     //cuda context should set before in global
 //    SetCUDACtx(0);
+    CUDA_DRIVER_API_CALL(cuStreamCreate(&transfer_stream,CU_STREAM_NON_BLOCKING));
     LOG_INFO("Create OpenGLVolumeBlockCache.");
 }
 
@@ -40,7 +41,7 @@ void OpenGLVolumeBlockCacheImpl::SetCacheBlockLength(uint32_t block_length)
 {
     this->block_length = block_length;
 
-    this->chunk_cache = std::make_unique<ChunkCache>(block_length*block_length*block_length);
+    this->chunk_cache = std::make_unique<ChunkCache>(block_length*block_length*block_length,true);
     this->chunk_cache->SetCacheStorage(12);
 }
 
@@ -123,6 +124,7 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
                     GL_CHECK
                     */
                     {
+                        AutoTimer timer("async 3d cuda mem copy");
                         CUDA_MEMCPY3D m{};
                         m.srcMemoryType = CU_MEMORYTYPE_ARRAY;
                         m.srcArray = cu_array;
@@ -137,7 +139,7 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
                         m.Height = block_length;
                         m.Depth = block_length;
 
-                        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
+                        CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,transfer_stream));
                     }
                     LOG_INFO("Copy block({} {} {} {}) data from opengl texture to chunk cache",
                              it.block_index[0],it.block_index[1],it.block_index[2],it.block_index[3]);
@@ -148,10 +150,10 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
 
         if (device)
             UpdateCUDATexture3D(data, (cudaArray*)cu_array, block_length, block_length * pos[0], block_length * pos[1],
-                                block_length * pos[2]);
+                                block_length * pos[2],transfer_stream);
         else
             UpdateCUDATexture3D(data,  (cudaArray*)cu_array, block_length, block_length, block_length,
-                                block_length * pos[0], block_length * pos[1], block_length * pos[2]);
+                                block_length * pos[0], block_length * pos[1], block_length * pos[2],transfer_stream);
 
 
         CUDA_DRIVER_API_CALL(cuGraphicsUnmapResources(1, &cu_resources[pos[3]], 0));
