@@ -4,7 +4,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 project(VolumeSlicer CXX C CUDA)
-#find_package(CUDA REQUIRED) # ???
+#find_package(CUDA REQUIRED) # linux
 
 option(VS_BUILD_TEST "" OFF)
 option(VS_BUILD_TOOLS "" OFF)
