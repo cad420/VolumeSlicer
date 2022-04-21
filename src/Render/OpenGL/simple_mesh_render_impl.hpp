@@ -7,7 +7,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include <VolumeSlicer/render.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 
 VS_START
 class SimpleMeshRendererImpl : public SimpleMeshRenderer

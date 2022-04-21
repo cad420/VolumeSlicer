@@ -1,8 +1,8 @@
 //
 // Created by csh on 10/20/2021.
 //
-#include <VolumeSlicer/cuda_context.hpp>
 #include "QTOffScreenRenderEditor.hpp"
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
 QTOffScreenRenderEditor::QTOffScreenRenderEditor(QWidget* parent):QMainWindow(parent){
     setWindowTitle("OffScreen Render Editor");
     resize(1600,900);

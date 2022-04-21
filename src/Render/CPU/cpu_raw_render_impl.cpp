@@ -2,13 +2,13 @@
 // Created by wyz on 2021/7/30.
 //
 
-#include <VolumeSlicer/cuda_context.hpp>
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
+#include <VolumeSlicer/Common/vec.hpp>
+#include <VolumeSlicer/Data/cdf.hpp>
 #include <VolumeSlicer/Utils/box.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
-#include <VolumeSlicer/Utils/timer.hpp>
-#include <VolumeSlicer/cdf.hpp>
-#include <VolumeSlicer/vec.hpp>
 #include <VolumeSlicer/Utils/texture_file.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 
 #include <omp.h>
 

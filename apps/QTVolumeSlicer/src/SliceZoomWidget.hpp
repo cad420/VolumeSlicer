@@ -6,8 +6,8 @@
 
 #include<QtWidgets/QWidget>
 
-#include <VolumeSlicer/slice.hpp>
-#include <VolumeSlicer/volume_sampler.hpp>
+#include <VolumeSlicer/Data/slice.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
 using namespace vs;
 
 class SliceZoomWidget: public QWidget{

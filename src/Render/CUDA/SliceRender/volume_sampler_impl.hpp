@@ -9,8 +9,8 @@
 
 #include "Common/boundingbox.hpp"
 
-#include <VolumeSlicer/volume_cache.hpp>
-#include <VolumeSlicer/volume_sampler.hpp>
+#include <VolumeSlicer/Data/volume_cache.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
 
 VS_START
 

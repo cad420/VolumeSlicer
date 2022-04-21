@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include <VolumeSlicer/slice.hpp>
-#include <VolumeSlicer/volume.hpp>
-#include <VolumeSlicer/volume_sampler.hpp>
-#include <VolumeSlicer/frame.hpp>
-#include <VolumeSlicer/transfer_function.hpp>
-#include <VolumeSlicer/render.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Data/slice.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Render/render.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
 using namespace vs;
 
 struct SDL_Window;

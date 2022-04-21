@@ -3,11 +3,11 @@
 //
 #pragma once
 
+#include <VolumeSlicer/CUDA/cuda_mem_pool.hpp>
 #include <VolumeSlicer/Ext/iblock_volume_plugin_interface.hpp>
 #include <VolumeSlicer/Ext/ih264_volume_plugin_interface.hpp>
 #include <VolumeSlicer/Ext/plugin.hpp>
-#include <VolumeSlicer/cuda_mem_pool.hpp>
-#include <VolumeSlicer/utils.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 
 VS_START
 

@@ -3,8 +3,8 @@
 //
 #pragma once
 
+#include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Utils/ray.hpp>
-#include <VolumeSlicer/export.hpp>
 
 #include <iostream>
 #include <algorithm>

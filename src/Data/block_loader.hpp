@@ -8,10 +8,10 @@
 
 #include "Data/volume_impl.hpp"
 
-#include <VolumeSlicer/cuda_mem_pool.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/reader.hpp>
+#include <VolumeSlicer/CUDA/cuda_mem_pool.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/IO/reader.hpp>
 
 VS_START
 

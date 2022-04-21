@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <VolumeSlicer/LRU.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Utils/LRU.hpp>
 #include <VolumeSlicer/Utils/block_array.hpp>
 #include <VolumeSlicer/Utils/hash.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
-#include <VolumeSlicer/volume.hpp>
 
 #include <queue>
 #include <vector>

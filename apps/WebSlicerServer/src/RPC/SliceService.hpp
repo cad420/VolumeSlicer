@@ -2,15 +2,15 @@
 // Created by wyz on 2021/10/28.
 //
 #pragma once
-#include "DataModel/Slice.hpp"
 #include "DataModel/Image.hpp"
+#include "DataModel/Slice.hpp"
 #include "DataModel/Volume.hpp"
-#include "Service/JsonRPCService.hpp"
 #include "RPCMethod.hpp"
+#include "Service/JsonRPCService.hpp"
+#include <VolumeSlicer/Data/volume.hpp>
+#include <condition_variable>
 #include <functional>
 #include <mutex>
-#include <condition_variable>
-#include <VolumeSlicer/volume.hpp>
 VS_START
 namespace remote{
 class SliceRenderer{

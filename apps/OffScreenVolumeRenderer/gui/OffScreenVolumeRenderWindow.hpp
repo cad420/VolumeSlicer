@@ -9,8 +9,8 @@
 
 #include <memory>
 
-#include <VolumeSlicer/render.hpp>
 #include "OffScreenVolumeRenderer.hpp"
+#include <VolumeSlicer/Render/render.hpp>
 using namespace vs;
 
 class RenderFrameWidget;

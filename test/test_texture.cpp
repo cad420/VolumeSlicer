@@ -3,7 +3,7 @@
 //
 #include <Render/Texture/sampler.hpp>
 #include <Render/Texture/texture_file.hpp>
-#include <VolumeSlicer/color.hpp>
+#include <VolumeSlicer/Common/color.hpp>
 #include <iostream>
 #include <vector>
 

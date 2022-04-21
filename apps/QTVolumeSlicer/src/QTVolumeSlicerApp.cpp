@@ -11,7 +11,7 @@
 #include "VolumeSettingWidget.hpp"
 #include "VolumeRenderSettingWidget.hpp"
 //vs
-#include <VolumeSlicer/utils.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 //std
 #include <iostream>
 #include <fstream>

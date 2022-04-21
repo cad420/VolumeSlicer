@@ -2,12 +2,12 @@
 // Created by wyz on 2021/6/28.
 //
 #include "SliceZoomWidget.hpp"
+#include <QImage>
 #include <QPaintEvent>
 #include <QPainter>
-#include <VolumeSlicer/frame.hpp>
-#include <iostream>
-#include <QImage>
+#include <VolumeSlicer/Common/frame.hpp>
 #include <glm/glm.hpp>
+#include <iostream>
 SliceZoomWidget::SliceZoomWidget(QWidget *parent) {
     initSlicer();
 }

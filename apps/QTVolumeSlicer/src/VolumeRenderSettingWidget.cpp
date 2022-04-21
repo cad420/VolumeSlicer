@@ -2,15 +2,15 @@
 // Created by wyz on 2021/6/28.
 //
 #include "VolumeRenderSettingWidget.hpp"
-#include "VolumeRenderWidget.hpp"
 #include "TransferFunctionWidget.hpp"
-#include "tf1deditor.h"
-#include <QVBoxLayout>
-#include <QCheckBox>
-#include <iostream>
-#include <QScrollArea>
 #include "TrivalVolume.hpp"
-#include <VolumeSlicer/utils.hpp>
+#include "VolumeRenderWidget.hpp"
+#include "tf1deditor.h"
+#include <QCheckBox>
+#include <QScrollArea>
+#include <QVBoxLayout>
+#include <VolumeSlicer/Utils/utils.hpp>
+#include <iostream>
 VolumeRenderSettingWidget::VolumeRenderSettingWidget(VolumeRenderWidget *widget, QWidget *parent)
 :m_volume_render_widget(widget)
 {

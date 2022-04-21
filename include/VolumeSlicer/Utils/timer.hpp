@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <VolumeSlicer/export.hpp>
+#include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 
 #include <chrono>

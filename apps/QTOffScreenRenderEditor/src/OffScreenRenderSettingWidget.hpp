@@ -6,12 +6,12 @@
 
 #include<QtWidgets>
 
-#include <VolumeSlicer/render.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 
 #include "RealTimeRenderSettingWidget.hpp"
 
 #include "RealTimeVolumeRenderWidget.hpp"
-#include "VolumeSlicer/volume.hpp"
+#include "VolumeSlicer/Data/volume.hpp"
 #include <unordered_map>
 class RenderPolicyEditor;
 class TrivalVolume;

@@ -2,8 +2,8 @@
 // Created by wyz on 2021/12/10.
 //
 #include "chunk_cache.hpp"
-#include <VolumeSlicer/LRU.hpp>
-#include <VolumeSlicer/Utils/cuda_helper.hpp>
+#include <VolumeSlicer/CUDA/cuda_helper.hpp>
+#include <VolumeSlicer/Utils/LRU.hpp>
 #include <VolumeSlicer/Utils/linear_array.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <cuda.h>

@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include <VolumeSlicer/export.hpp>
+#include <VolumeSlicer/Common/export.hpp>
 
 #define EXPORT_PLUGIN_FACTORY_DECL(plugin_factory_typename)                                                            \
     extern "C" VS_EXPORT ::vs::IPluginFactory *GetPluginFactoryInstance();

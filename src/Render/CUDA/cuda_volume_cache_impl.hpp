@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <VolumeSlicer/volume_cache.hpp>
 #include "Data/chunk_cache.hpp"
+#include <VolumeSlicer/Data/volume_cache.hpp>
 
 #include <list>
 

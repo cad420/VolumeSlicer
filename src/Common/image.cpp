@@ -1,7 +1,7 @@
 //
 // Created by wyz on 2021/8/26.
 //
-#include <VolumeSlicer/frame.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"

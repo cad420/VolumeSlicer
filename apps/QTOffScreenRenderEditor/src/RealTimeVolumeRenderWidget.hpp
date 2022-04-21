@@ -20,8 +20,7 @@
 #include "json.hpp"
 
 #include "VolumeSlicer/utils/timer.hpp"
-#include <VolumeSlicer/render.hpp>
-
+#include <VolumeSlicer/Render/render.hpp>
 
 class RealTimeRenderSettingWidget;
 class OffScreenRenderSettingWidget;

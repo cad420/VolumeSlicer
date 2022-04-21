@@ -2,7 +2,7 @@
 // Created by wyz on 2021/10/28.
 //
 #pragma once
-#include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/Data/slice.hpp>
 #include <seria/object.hpp>
 VS_START
 namespace remote{

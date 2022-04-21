@@ -5,7 +5,7 @@
 
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/plugin_loader.hpp>
-
+#include <VolumeSlicer/Utils/timer.hpp>
 //#include <VoxelCompression/voxel_uncompress/VoxelUncompress.h>
 #include "volume_transform.cuh"
 
@@ -204,7 +204,9 @@ bool BlockVolumeProviderPlugin::AddTask(const std::array<uint32_t, 4> &idx)
                         assert(block.block_data->GetDataPtr());
 
                         if(voxel_size == 1){
+                            AutoTimer timer("copy to cuda host mem");
                             memcpy(decode_uint8_buffer,decode_buffer.data(),decode_buffer.size());
+
                         }
                         else if(voxel_size == 2){
                             using VoxelT = uint16_t;

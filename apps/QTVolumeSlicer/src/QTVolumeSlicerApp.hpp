@@ -8,12 +8,12 @@
 //std
 #include <memory>
 //vs
-#include<VolumeSlicer/volume.hpp>
-#include<VolumeSlicer/render.hpp>
-#include<VolumeSlicer/transfer_function.hpp>
-#include<VolumeSlicer/camera.hpp>
-#include<VolumeSlicer/frame.hpp>
-#include<VolumeSlicer/volume_sampler.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Render/camera.hpp>
+#include <VolumeSlicer/Render/render.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
 
 using namespace vs;
 

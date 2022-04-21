@@ -4,9 +4,9 @@
 #include "RPC/SliceService.hpp"
 #include "Dataset/CompVolume.hpp"
 
+#include <VolumeSlicer/Render/volume_sampler.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/timer.hpp>
-#include <VolumeSlicer/volume_sampler.hpp>
 
 VS_START
 namespace remote

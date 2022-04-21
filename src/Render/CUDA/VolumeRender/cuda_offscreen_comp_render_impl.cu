@@ -6,9 +6,9 @@
 #include "Common/cuda_box.hpp"
 #include "Common/cuda_utils.hpp"
 
-#include <VolumeSlicer/color.hpp>
-#include <VolumeSlicer/frame.hpp>
-#include <VolumeSlicer/vec.hpp>
+#include <VolumeSlicer/Common/color.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Common/vec.hpp>
 
 #include <stdgpu/cstddef.h>
 #include <stdgpu/unordered_set.cuh>

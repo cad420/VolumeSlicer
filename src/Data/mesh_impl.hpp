@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <VolumeSlicer/Data/mesh.hpp>
 #include <VolumeSlicer/Ext/imesh_loader_plugin_interface.hpp>
-#include <VolumeSlicer/mesh.hpp>
 
 VS_START
 

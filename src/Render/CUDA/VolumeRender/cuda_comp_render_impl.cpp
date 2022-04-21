@@ -5,7 +5,7 @@
 #include <chrono>
 #include <iostream>
 
-#include <VolumeSlicer/memory_helper.hpp>
+#include <VolumeSlicer/Algorithm/memory_helper.hpp>
 
 #include "Common/helper_math.h"
 #include "Common/transfer_function_impl.hpp"

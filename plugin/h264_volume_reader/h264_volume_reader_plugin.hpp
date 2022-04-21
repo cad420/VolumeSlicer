@@ -5,7 +5,7 @@
 
 #include <VolumeSlicer/Ext/ih264_volume_plugin_interface.hpp>
 #include <VolumeSlicer/Ext/plugin.hpp>
-#include <VolumeSlicer/LRU.hpp>
+#include <VolumeSlicer/Utils/LRU.hpp>
 #include <VolumeSlicer/Utils/hash.hpp>
 
 #include <array>

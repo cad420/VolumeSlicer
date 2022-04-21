@@ -3,9 +3,9 @@
 //
 #include "opengl_comp_render_impl.hpp"
 
-#include <VolumeSlicer/Utils/timer.hpp>
+#include <VolumeSlicer/Algorithm/memory_helper.hpp>
 #include <VolumeSlicer/Utils/gl_helper.hpp>
-#include <VolumeSlicer/memory_helper.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 
 #include <iostream>
 #include <random>

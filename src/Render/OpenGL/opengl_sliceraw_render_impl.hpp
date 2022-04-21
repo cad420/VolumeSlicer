@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <VolumeSlicer/camera.hpp>
-#include <VolumeSlicer/frame.hpp>
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/transfer_function.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Render/camera.hpp>
+#include <VolumeSlicer/Render/render.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
 
 #include "shader_program.hpp"
 

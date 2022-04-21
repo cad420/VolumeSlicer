@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/cuda_memory.hpp>
-#include <VolumeSlicer/memory_cache.hpp>
+#include <VolumeSlicer/CUDA/cuda_memory.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Data/memory_cache.hpp>
 #include <VolumeSlicer/Utils/block_array.hpp>
 
 #include <cstdint>

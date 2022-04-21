@@ -1,9 +1,9 @@
 //
 // Created by wyz on 2021/8/31.
 //
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/Utils/timer.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/plugin_loader.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 using namespace vs;
 int main(){
     auto renderer=CPURawVolumeRenderer::Create(900,900);

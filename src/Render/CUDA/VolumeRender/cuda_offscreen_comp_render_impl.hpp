@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/volume_cache.hpp>
+#include <VolumeSlicer/Data/volume_cache.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 
 VS_START
 

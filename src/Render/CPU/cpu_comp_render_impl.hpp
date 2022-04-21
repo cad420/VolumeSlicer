@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <VolumeSlicer/Common/vec.hpp>
+#include <VolumeSlicer/Data/cdf.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/block_cache.hpp>
-#include <VolumeSlicer/cdf.hpp>
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/vec.hpp>
 
 #include <VolumeSlicer/Utils/sampler.hpp>
 

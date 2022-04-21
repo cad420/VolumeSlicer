@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <VolumeSlicer/Common/color.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/linear_array.hpp>
-#include <VolumeSlicer/color.hpp>
-#include <VolumeSlicer/render.hpp>
 
 #include <VolumeSlicer/Utils/sampler.hpp>
 #include <VolumeSlicer/Utils/texture.hpp>

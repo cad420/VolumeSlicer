@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Utils/math.hpp>
-#include <VolumeSlicer/export.hpp>
 
 #include <cuda_runtime.h>
 
@@ -90,13 +90,13 @@ class Block3DArray
 
     void SetBlockData(SizeType x_block, SizeType y_block, SizeType z_block, const T *block_data)
     {
-        //        ::memcpy(GetBlockData(x_block,y_block,z_block),block_data,BlockSizeInByte());
+        //::memcpy(GetBlockData(x_block,y_block,z_block),block_data,BlockSizeInByte());
         cudaMemcpy(GetBlockData(x_block, y_block, z_block), block_data, BlockSizeInByte(), cudaMemcpyDefault);
     }
 
     void SetBlockData(SizeType flat_block_idx, const T *block_data)
     {
-        //        ::memcpy(GetBlockData(flat_block_idx),block_data,BlockSizeInByte());
+        //::memcpy(GetBlockData(flat_block_idx),block_data,BlockSizeInByte());
         cudaMemcpy(GetBlockData(flat_block_idx), block_data, BlockSizeInByte(), cudaMemcpyDefault);
     }
 

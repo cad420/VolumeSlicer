@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
 #include <VolumeSlicer/Utils/box.hpp>
-#include <VolumeSlicer/cuda_context.hpp>
 
 #include "Common/helper_math.h"
 

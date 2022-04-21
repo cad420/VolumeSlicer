@@ -6,9 +6,9 @@
 
 #include <unordered_set>
 
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/volume_cache.hpp>
-#include <VolumeSlicer/cdf.hpp>
+#include <VolumeSlicer/Data/cdf.hpp>
+#include <VolumeSlicer/Data/volume_cache.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/hash.hpp>
 
 VS_START

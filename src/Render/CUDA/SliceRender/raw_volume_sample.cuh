@@ -1,6 +1,6 @@
 #pragma once
-#include <VolumeSlicer/Utils/cuda_helper.hpp>
-#include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/CUDA/cuda_helper.hpp>
+#include <VolumeSlicer/Data/slice.hpp>
 VS_START
 
 struct RawSampleParameter{

@@ -8,9 +8,8 @@
 
 
 
-#include "VolumeSlicer/volume.hpp"
-#include <VolumeSlicer/transfer_function.hpp>
-
+#include "VolumeSlicer/Data/volume.hpp"
+#include <VolumeSlicer/Render/transfer_function.hpp>
 
 class TF1DEditor;
 class TrivalVolume;

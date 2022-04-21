@@ -12,9 +12,9 @@
 #include "shaders.hpp"
 #include "Common/transfer_function_impl.hpp"
 
-#include <VolumeSlicer/Utils/logger.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/gl_helper.hpp>
-#include <VolumeSlicer/render.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
 
 VS_START
 

@@ -1,15 +1,15 @@
 //
 // Created by wyz on 2021/6/15.
 //
-#include"VolumeRenderWidget.hpp"
-#include <VolumeSlicer/transfer_function.hpp>
-#include <VolumeSlicer/camera.hpp>
-#include <VolumeSlicer/frame.hpp>
-#include <VolumeSlicer/utils.hpp>
-#include <VolumeSlicer/volume_sampler.hpp>
-#include <QPainter>
-#include <QMouseEvent>
+#include "VolumeRenderWidget.hpp"
 #include "camera.hpp"
+#include <QMouseEvent>
+#include <QPainter>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Render/camera.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 VolumeRenderWidget::VolumeRenderWidget(QWidget *parent) {
 //    initTest();
 }

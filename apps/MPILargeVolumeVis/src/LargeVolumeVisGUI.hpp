@@ -3,9 +3,9 @@
 //
 
 #pragma once
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/volume.hpp>
-#include <VolumeSlicer/volume_cache.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Data/volume_cache.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 using namespace vs;
 
 #include <cstdint>

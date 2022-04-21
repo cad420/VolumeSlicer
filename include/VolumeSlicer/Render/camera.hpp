@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/status.hpp>
-#include <VolumeSlicer/define.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Common/status.hpp>
 
 #include<array>
 

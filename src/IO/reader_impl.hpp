@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <VolumeSlicer/LRU.hpp>
+#include <VolumeSlicer/IO/reader.hpp>
+#include <VolumeSlicer/Utils/LRU.hpp>
 #include <VolumeSlicer/Utils/hash.hpp>
-#include <VolumeSlicer/reader.hpp>
 
 #include <VoxelCompression/voxel_compress/VoxelCmpDS.h>
 

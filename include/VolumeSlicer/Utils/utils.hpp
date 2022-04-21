@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <VolumeSlicer/cuda_context.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/status.hpp>
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Common/status.hpp>
 
 #include <condition_variable>
 #include <functional>
@@ -364,7 +364,8 @@ inline ThreadPool::ThreadPool(size_t threads) : idle(threads), nthreads(threads)
 // add new work item to the pool
 template <class F, class... Args> auto ThreadPool::AppendTask(F &&f, Args &&... args)
 {
-    using return_type = typename InvokeResultOf<F>::type;
+//    using return_type = typename InvokeResultOf<F>::type;
+    using return_type = typename std::result_of<F(Args...)>::type;
     auto task = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<return_type> res = task->get_future();
     {

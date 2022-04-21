@@ -1,14 +1,14 @@
 //
 // Created by wyz on 2021/10/8.
 //
-#include <VolumeSlicer/cdf.hpp>
-#include <cmdline.hpp>
 #include <Ext/iblock_volume_plugin_interface.hpp>
+#include <Utils/logger.hpp>
 #include <Utils/plugin_loader.hpp>
-#include <VolumeSlicer/utils.hpp>
+#include <VolumeSlicer/Data/cdf.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
+#include <cmdline.hpp>
 #include <json.hpp>
 #include <queue>
-#include <Utils/logger.hpp>
 using namespace vs;
 using nlohmann::json;
 int main(int argc,char** argv){

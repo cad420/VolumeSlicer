@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
 #include <VolumeSlicer/Ext/plugin_define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/volume.hpp>
 
 VS_START
 

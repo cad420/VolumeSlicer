@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <VolumeSlicer/color.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/status.hpp>
+#include <VolumeSlicer/Common/color.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Common/status.hpp>
 
 #include <array>
 #include <cassert>

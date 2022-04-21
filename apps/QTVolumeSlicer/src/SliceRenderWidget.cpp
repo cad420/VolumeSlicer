@@ -2,8 +2,8 @@
 // Created by wyz on 2021/6/28.
 //
 #include"SliceRenderWidget.hpp"
-#include <VolumeSlicer/frame.hpp>
-#include <VolumeSlicer/utils.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 
 #include <QPainter>
 #include <QImage>

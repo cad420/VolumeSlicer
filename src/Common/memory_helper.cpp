@@ -1,8 +1,8 @@
 //
 // Created by wyz on 2021/12/20.
 //
-#include <VolumeSlicer/memory_helper.hpp>
-#include <VolumeSlicer/cuda_context.hpp>
+#include <VolumeSlicer/Algorithm/memory_helper.hpp>
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
 #if defined(_WINDOWS) || defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #else

@@ -9,9 +9,9 @@
 #include "WindowManager.hpp"
 #include "shader.hpp"
 
-#include <VolumeSlicer/Utils/plugin_loader.hpp>
+#include <VolumeSlicer/Algorithm/render_helper.hpp>
 #include <VolumeSlicer/Utils/gl_helper.hpp>
-#include <VolumeSlicer/render_helper.hpp>
+#include <VolumeSlicer/Utils/plugin_loader.hpp>
 
 #include <SDL.h>
 
@@ -76,8 +76,8 @@ void LargeVolumeVisGUI::show() {
         static SDL_Event event;
 
         //camera pos according to volume dim count in voxel
-        std::array<float,3> view_pos = {};
-        CompRenderHelper::GetDefaultViewPos(comp_volume,view_pos);
+        std::array<float,3> view_pos = {5.52f,5.52f,7.9f};
+//        CompRenderHelper::GetDefaultViewPos(comp_volume,view_pos);
         static control::FPSCamera fpsCamera({view_pos[0],view_pos[1],view_pos[2]});
         static bool right_mouse_press;
         while(SDL_PollEvent(&event)){

@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include<QtWidgets/QWidget>
-#include <VolumeSlicer/slice.hpp>
-#include <VolumeSlicer/volume.hpp>
+#include <QtWidgets/QWidget>
+#include <VolumeSlicer/Data/slice.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
 using namespace vs;
 class QGroupBox;
 class QScrollArea;

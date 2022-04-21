@@ -1,8 +1,8 @@
 //
 // Created by wyz on 2021/9/28.
 //
-#include <VolumeSlicer/render.hpp>
 #include "VideoCapture.hpp"
+#include <VolumeSlicer/Render/render.hpp>
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>

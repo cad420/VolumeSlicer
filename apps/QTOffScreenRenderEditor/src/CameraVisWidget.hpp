@@ -4,16 +4,16 @@
 
 #pragma once
 
-#include <QWidget>
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLBuffer>
-#include <QOpenGLShaderProgram>
 #include "camera.hpp"
+#include <QOpenGLBuffer>
+#include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_3_Core>
-#include <VolumeSlicer/volume.hpp>
-#include <VolumeSlicer/camera.hpp>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLWidget>
+#include <QWidget>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Render/camera.hpp>
 using namespace vs;
 class CameraVisWidget:public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core{
   public:

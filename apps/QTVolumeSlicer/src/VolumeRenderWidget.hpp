@@ -4,9 +4,9 @@
 #pragma once
 #include<QtWidgets/QWidget>
 
-#include <VolumeSlicer/volume.hpp>
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/slice.hpp>
+#include <VolumeSlicer/Data/slice.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 using namespace vs;
 
 namespace control{

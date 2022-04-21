@@ -2,7 +2,7 @@
 // Created by wyz on 2021/9/1.
 //
 
-#include <VolumeSlicer/volume_cache.hpp>
+#include <VolumeSlicer/Data/volume_cache.hpp>
 
 VS_START
 

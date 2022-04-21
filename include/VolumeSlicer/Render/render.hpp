@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <VolumeSlicer/volume.hpp>
-#include <VolumeSlicer/mesh.hpp>
-#include <VolumeSlicer/camera.hpp>
-#include <VolumeSlicer/frame.hpp>
-#include <VolumeSlicer/transfer_function.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Data/mesh.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Render/camera.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
 
 VS_START
 

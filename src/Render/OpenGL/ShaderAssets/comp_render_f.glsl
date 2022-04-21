@@ -36,10 +36,11 @@ layout(std430,binding = 1) buffer MissedBlock{
 }missedBlock;
 
 
-float CalcDistanceFromCameraToBlockCenter(in vec3 sample_pos,int lod_t){
-    ivec3 virtual_block_idx = ivec3(sample_pos / (no_padding_block_length*lod_t));
-    vec3 virtual_block_center = (virtual_block_idx+0.5)*no_padding_block_length*lod_t;
-    return length((virtual_block_center*volume_space-camera_pos));
+float CalcDistanceFromCameraToBlockCenter(in vec3 sample_pos,in vec3 view_direction){
+    ivec3 virtual_block_idx = ivec3(sample_pos / (no_padding_block_length));
+    vec3 virtual_block_center = (virtual_block_idx+0.5)*no_padding_block_length;
+//    return abs(dot(virtual_block_center*volume_space-camera_pos,view_direction));
+    return length(virtual_block_center*volume_space - camera_pos);
 }
 int EvaluateLod(float distance){
     for(int i = 0;i<10;i++){
@@ -65,7 +66,7 @@ int VirtualSample(int lod,int lod_t,in vec3 sample_pos,out float scalar,bool wri
     uint flat_virtual_block_idx = virtual_block_idx.z * lod_block_dim.x * lod_block_dim.y
                                + virtual_block_idx.y * lod_block_dim.x
                                + virtual_block_idx.x + lod_mapping_table_offset[lod];
-    uvec4 physical_block_idx = mappingTable.pageEntry[flat_virtual_block_idx];
+    uvec4 physical_block_idx = mappingTable.pageEntry[flat_virtual_block_idx];//todo
     uint physical_block_flag = (physical_block_idx.w>>16) & uint(0x0000ffff);
     if(physical_block_flag==0){
         if(write && missedBlock.blockID[flat_virtual_block_idx]==0){
@@ -132,8 +133,8 @@ void main() {
     float last_sample_scalar = 0.f;
     if(render){
         for(int i=0;i<steps;i++){
-//            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,last_lod_t);
-            float dist=length(camera_pos-ray_sample_pos);
+            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,ray_direction);
+//            float dist=length(camera_pos-ray_sample_pos);
             int cur_lod = EvaluateLod(dist);
             int cur_lod_t = PowTwo(cur_lod);
             if(cur_lod>max_lod){
@@ -176,11 +177,11 @@ void main() {
     else{
         float l_step = step * 8;
         for(int i =0;i<steps/4;i++){
-//            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,last_lod_t);
+            float dist = CalcDistanceFromCameraToBlockCenter(ray_sample_pos/volume_space,ray_direction);
 //            if(dist>max_view_distance){
 //                break;
 //            }
-            float dist=length(camera_pos-ray_sample_pos);
+//            float dist=length(camera_pos-ray_sample_pos);
             int cur_lod = EvaluateLod(dist);
             int cur_lod_t = PowTwo(cur_lod);
             if(cur_lod>max_lod){

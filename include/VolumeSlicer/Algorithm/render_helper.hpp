@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <VolumeSlicer/render.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <cmath>
 VS_START

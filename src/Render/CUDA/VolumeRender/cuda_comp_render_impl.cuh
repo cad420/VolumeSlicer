@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <VolumeSlicer/cuda_context.hpp>
-#include <VolumeSlicer/render.hpp>
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 
 using namespace vs;
 

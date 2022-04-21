@@ -1,12 +1,12 @@
 //
 // Created by wyz on 2021/6/8.
 //
-#include<VolumeSlicer/volume.hpp>
-#include<VolumeSlicer/render.hpp>
-#include<VolumeSlicer/volume_sampler.hpp>
-#include<VolumeSlicer/frame.hpp>
-#include<iostream>
-#include<list>
+#include <VolumeSlicer/Common/frame.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
+#include <VolumeSlicer/Render/render.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
+#include <iostream>
+#include <list>
 using namespace vs;
 int main()
 {

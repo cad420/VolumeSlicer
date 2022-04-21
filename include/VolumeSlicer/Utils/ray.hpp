@@ -3,8 +3,8 @@
 //
 #pragma once
 
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/vec.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Common/vec.hpp>
 
 VS_START
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include<VolumeSlicer/volume.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
 
 VS_START
 

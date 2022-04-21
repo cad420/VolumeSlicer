@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <VolumeSlicer/Common/color.hpp>
 #include <VolumeSlicer/Utils/block_array.hpp>
 #include <VolumeSlicer/Utils/math.hpp>
-#include <VolumeSlicer/color.hpp>
 
 #include "texture.hpp"
 

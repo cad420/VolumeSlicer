@@ -2,8 +2,8 @@
 // Created by wyz on 2021/11/5.
 //
 #pragma once
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/mesh.hpp>
+#include <VolumeSlicer/Data/mesh.hpp>
+#include <VolumeSlicer/Render/render.hpp>
 using namespace vs;
 
 struct SDL_Window;

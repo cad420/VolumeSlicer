@@ -5,7 +5,7 @@
 #ifndef VOLUMESLICER_TFCANVAS_HPP
 #define VOLUMESLICER_TFCANVAS_HPP
 #include <QWidget>
-#include <VolumeSlicer/transfer_function.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
 using namespace vs;
 class TFCanvas: public QWidget{
     Q_OBJECT

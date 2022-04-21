@@ -1,14 +1,14 @@
  //
 // Created by wyz on 2021/9/28.
 //
-#include <spdlog/sinks/rotating_file_sink.h>
-#include <VolumeSlicer/render.hpp>
-#include <VolumeSlicer/Utils/timer.hpp>
 #include "OffScreenVolumeRenderer.hpp"
 #include "json.hpp"
-#include <fstream>
+#include <VolumeSlicer/Render/render.hpp>
+#include <VolumeSlicer/Utils/timer.hpp>
 #include <filesystem>
-using namespace vs;
+#include <fstream>
+#include <spdlog/sinks/rotating_file_sink.h>
+ using namespace vs;
 using nlohmann::json;
 static std::shared_ptr<spdlog::logger> logger;
 static std::string GetName(const std::string& name){

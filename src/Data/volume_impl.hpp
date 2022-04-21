@@ -5,9 +5,9 @@
 
 #include <vector>
 
+#include <VolumeSlicer/Data/volume.hpp>
 #include <VolumeSlicer/Ext/iblock_volume_plugin_interface.hpp>
-#include <VolumeSlicer/utils.hpp>
-#include <VolumeSlicer/volume.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 
 VS_START
 

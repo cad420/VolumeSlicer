@@ -7,12 +7,12 @@
 #include <Poco/Util/Application.h>
 #include <VolumeSlicer/Utils/logger.hpp>
 
-#include <DataModel/Slice.hpp>
-#include <seria/deserialize/rapidjson.hpp>
-#include <iostream>
-#include <VolumeSlicer/volume_sampler.hpp>
 #include "SlicerServerApplication.hpp"
+#include <DataModel/Slice.hpp>
+#include <VolumeSlicer/Render/volume_sampler.hpp>
 #include <atomic>
+#include <iostream>
+#include <seria/deserialize/rapidjson.hpp>
 VS_START
 namespace remote
 {

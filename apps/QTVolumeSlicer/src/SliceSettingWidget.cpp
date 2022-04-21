@@ -8,13 +8,13 @@
 #include "tf1deditor.h"
 #include <iostream>
 
-#include <QPushButton>
-#include <QVBoxLayout>
 #include <QGroupBox>
-#include <QScrollArea>
 #include <QLabel>
+#include <QPushButton>
+#include <QScrollArea>
+#include <QVBoxLayout>
 #include <QtWidgets>
-#include <VolumeSlicer/utils.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 
 SliceSettingWidget::SliceSettingWidget(SliceRenderWidget *widget, QWidget *parent)
 : m_slice_render_widget(widget),update(false),

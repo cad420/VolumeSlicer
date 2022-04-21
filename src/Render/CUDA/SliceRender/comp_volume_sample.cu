@@ -1,6 +1,7 @@
 #include "comp_volume_sample.cuh"
 #include "Common/helper_math.h"
 #include "Common/cuda_utils.hpp"
+#include <VolumeSlicer/Utils/timer.hpp>
 VS_START
 __constant__ CompSampleParameter compSampleParameter;
 __constant__ BlockParameter blockParameter;
@@ -157,8 +158,9 @@ void CUDACompVolumeSampler::Sample(uint8_t *data, Slice slice) {
     CUDACompVolumeSample<<<blocks_per_grid,threads_per_block>>>(cu_sample_result);
     CUDA_RUNTIME_CHECK
 
+//    AutoTimer timer("copy result from cuda to cpu");
     CUDA_RUNTIME_API_CALL(cudaMemcpy(data,cu_sample_result,(size_t)w*h,cudaMemcpyDeviceToHost));
-//    spdlog::info("Finish CUDA comp volume sample.");
+
 }
 
 void CUDACompVolumeSampler::SetBlockInfo(uint32_t block_length,uint32_t padding) {

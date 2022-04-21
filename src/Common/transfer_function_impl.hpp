@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <VolumeSlicer/transfer_function.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
 
 #include <array>
 #include <cmath>

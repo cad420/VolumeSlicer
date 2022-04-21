@@ -6,11 +6,11 @@
 
 #include <mutex>
 
-#include <VolumeSlicer/alloc.hpp>
-#include <VolumeSlicer/cuda_context.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/status.hpp>
+#include <VolumeSlicer/CUDA/alloc.hpp>
+#include <VolumeSlicer/CUDA/cuda_context.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Common/status.hpp>
 
 VS_START
 

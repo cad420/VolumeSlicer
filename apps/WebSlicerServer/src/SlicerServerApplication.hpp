@@ -4,7 +4,7 @@
 
 #pragma once
 #include <Poco/Util/ServerApplication.h>
-#include <VolumeSlicer/export.hpp>
+#include <VolumeSlicer/Common/export.hpp>
 
 #include <Poco/Util/Option.h>
 #include <Poco/Util/OptionCallback.h>

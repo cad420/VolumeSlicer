@@ -4,12 +4,12 @@
 
 #pragma once
 
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
 #include <VolumeSlicer/Utils/hash.hpp>
 #include <VolumeSlicer/Utils/linear_array.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/volume.hpp>
 
 #include <algorithm>
 #include <fstream>

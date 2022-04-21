@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <VolumeSlicer/memory_cache.hpp>
+#include <VolumeSlicer/Data/memory_cache.hpp>
 #include <memory>
 VS_START
 

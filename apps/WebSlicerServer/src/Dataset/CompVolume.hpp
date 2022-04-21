@@ -2,8 +2,8 @@
 // Created by wyz on 2021/11/2.
 //
 #pragma once
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/volume.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Data/volume.hpp>
 VS_START
 namespace remote{
 

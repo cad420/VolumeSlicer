@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <VolumeSlicer/frame.hpp>
+#include <VolumeSlicer/Common/frame.hpp>
 #include <seria/object.hpp>
 VS_START
 namespace remote{

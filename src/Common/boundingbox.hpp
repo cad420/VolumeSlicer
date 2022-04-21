@@ -11,9 +11,9 @@
 
 #include <glm/glm.hpp>
 
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
 
 VS_START
 class OBB;

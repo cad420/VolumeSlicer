@@ -3,8 +3,8 @@
 //
 #pragma once
 
+#include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Ext/plugin_define.hpp>
-#include <VolumeSlicer/export.hpp>
 
 #include <string>
 

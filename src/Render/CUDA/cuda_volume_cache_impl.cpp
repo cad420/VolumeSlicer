@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include <VolumeSlicer/volume_cache.hpp>
+#include <VolumeSlicer/Data/volume_cache.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/timer.hpp>
 

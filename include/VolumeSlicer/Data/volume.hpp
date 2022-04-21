@@ -7,8 +7,8 @@
 #include <map>
 #include <type_traits>
 
-#include <VolumeSlicer/slice.hpp>
-#include <VolumeSlicer/cuda_memory.hpp>
+#include <VolumeSlicer/CUDA/cuda_memory.hpp>
+#include <VolumeSlicer/Data/slice.hpp>
 
 VS_START
 

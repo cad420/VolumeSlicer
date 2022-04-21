@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/define.hpp>
-#include <cstdint>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
 #include <cstddef>
+#include <cstdint>
 VS_START
 
 /**

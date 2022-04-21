@@ -3,8 +3,8 @@
 //
 #pragma once
 #include "VideoCapture.hpp"
-#include <VolumeSlicer/transfer_function.hpp>
-#include <VolumeSlicer/camera.hpp>
+#include <VolumeSlicer/Render/camera.hpp>
+#include <VolumeSlicer/Render/transfer_function.hpp>
 #include <functional>
 class OffScreenVolumeRenderer{
   public:

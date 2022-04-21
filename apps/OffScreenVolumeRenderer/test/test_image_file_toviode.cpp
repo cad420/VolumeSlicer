@@ -1,10 +1,10 @@
 //
 // Created by wyz on 2021/10/18.
 //
-#include <VolumeSlicer/render.hpp>
 #include "VideoCapture.hpp"
-#include <iostream>
+#include <VolumeSlicer/Render/render.hpp>
 #include <filesystem>
+#include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 using namespace cv;

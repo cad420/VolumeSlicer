@@ -7,8 +7,7 @@
 #include<vector>
 #include<glm/glm.hpp>
 
-#include<VolumeSlicer/slice.hpp>
-
+#include <VolumeSlicer/Data/slice.hpp>
 
 VS_START
 

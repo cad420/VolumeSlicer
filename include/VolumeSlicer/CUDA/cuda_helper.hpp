@@ -7,9 +7,9 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include <VolumeSlicer/define.hpp>
-#include <VolumeSlicer/export.hpp>
-#include <VolumeSlicer/status.hpp>
+#include <VolumeSlicer/Common/define.hpp>
+#include <VolumeSlicer/Common/export.hpp>
+#include <VolumeSlicer/Common/status.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 
 inline bool check(CUresult e, int iLine, const char *szFile)

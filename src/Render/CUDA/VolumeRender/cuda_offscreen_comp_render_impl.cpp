@@ -4,10 +4,10 @@
 
 #include <algorithm>
 
+#include <VolumeSlicer/Algorithm/memory_helper.hpp>
+#include <VolumeSlicer/Utils/hash.hpp>
 #include <VolumeSlicer/Utils/logger.hpp>
 #include <VolumeSlicer/Utils/timer.hpp>
-#include <VolumeSlicer/Utils/hash.hpp>
-#include <VolumeSlicer/memory_helper.hpp>
 
 #include "cuda_offscreen_comp_render_impl.hpp"
 #include "cuda_offscreen_comp_render_impl.cuh"
