@@ -149,6 +149,7 @@ public:
     //get comp-volume's (block_length, padding, min_lod, max_lod)
     virtual auto GetBlockLength() const ->std::array<uint32_t,4> = 0;
 
+    REGISTER_FRIEND_CLASS(CompVolumeAdapter)
     REGISTER_FRIEND_CLASS(CLASS_IMPLEMENT(CUDACompVolumeRenderer))
     REGISTER_FRIEND_CLASS(CLASS_IMPLEMENT(OpenGLCompVolumeRenderer))
     REGISTER_FRIEND_CLASS(CLASS_IMPLEMENT(CPUOffScreenCompVolumeRenderer))

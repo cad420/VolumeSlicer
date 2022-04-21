@@ -1,11 +1,12 @@
 //
 // Created by wyz on 2021/10/8.
 //
-#include <Ext/iblock_volume_plugin_interface.hpp>
-#include <Utils/logger.hpp>
-#include <Utils/plugin_loader.hpp>
+#include <VolumeSlicer/Ext/iblock_volume_plugin_interface.hpp>
+#include <VolumeSlicer/Utils/logger.hpp>
+#include <VolumeSlicer/Utils/plugin_loader.hpp>
 #include <VolumeSlicer/Data/cdf.hpp>
 #include <VolumeSlicer/Utils/utils.hpp>
+#include <VolumeSlicer/Algorithm/volume_helper.hpp>
 #include <cmdline.hpp>
 #include <json.hpp>
 #include <queue>
@@ -30,8 +31,8 @@ int main(int argc,char** argv){
     auto lod_dim = comp_volume->GetBlockDim();
 
     int parallel_num = cmd.get<int>("parallel_num");
-    if( parallel_num > comp_volume->GetBlockQueueMaxSize())
-        parallel_num = comp_volume->GetBlockQueueMaxSize();
+    if( parallel_num > CompVolumeAdapter::GetBlockQueueMaxSize(comp_volume.get()))
+        parallel_num = CompVolumeAdapter::GetBlockQueueMaxSize(comp_volume.get());
     int block_length = comp_volume->GetBlockLength()[0];
     int cdf_block_length = cmd.get<int>("cdf_block_length");
 
@@ -104,7 +105,7 @@ int main(int argc,char** argv){
             if(tasks.empty()) break;
             auto block = tasks.front();
             tasks.pop();
-            comp_volume->SetRequestBlock(block);
+            CompVolumeAdapter::SetRequestBlock(comp_volume.get(),block);
         }
 
         std::vector<std::pair<std::array<uint32_t,4>,std::future<CDFRetType>>> results;
