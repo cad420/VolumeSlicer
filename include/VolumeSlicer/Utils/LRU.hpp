@@ -11,7 +11,8 @@
 #include <optional>
 #endif
 
-template <typename Key, typename Value, typename Hash = std::hash<Key>> class LRUCache
+template <typename Key, typename Value, typename Hash = std::hash<Key>>
+class LRUCache
 {
   public:
     using ItemType = std::pair<Key, Value>;

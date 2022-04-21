@@ -3,11 +3,14 @@
 //
 
 #pragma once
+
 #include <VolumeSlicer/Common/define.hpp>
 #include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Common/status.hpp>
+
 #include <array>
 #include <vector>
+
 VS_START
 
 class TFPoint{

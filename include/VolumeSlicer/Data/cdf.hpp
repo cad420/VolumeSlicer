@@ -24,6 +24,11 @@ VS_START
 
 FORWARD_IMPL_DECLARATION(CDFGenerator);
 
+/**
+ * @brief this class is designed for chebyshev-distance-field to accelerate volume render.
+ * @see https://dl.acm.org/doi/10.1145/3355088.3365164
+ * @note this is not used in any renderer now because of no-effect for out-of-core volume render.
+ */
 class CDF
 {
   public:
@@ -33,13 +38,13 @@ class CDF
         CDFItem() = default;
         CDFItem(int x, int y, int z)
             : x(x), y(y), z(z), average(-1.0),
-              //              variance(-1.0),
+              //variance(-1.0),
               chebyshev_dist(-1)
-        {
-        }
+        {}
+
         int x, y, z;
         double average;
-        //        double variance;
+        //double variance;
         int chebyshev_dist;
     };
 
@@ -98,12 +103,10 @@ class CDF
 
     void GenerateCDF()
     {
-        std::cout << "start gen" << std::endl;
-        // map is quick than unordered_map if unordered_map's hash function is bad
-        // unordered_map is slow because hash function is bad
+        LOG_DEBUG("start generate cdf");
         std::unordered_map<std::array<int, 3>, int> m;
         m.reserve(cdf.size());
-        //        std::cout<<"start map"<<std::endl;
+
         bool all_empty = true;
         for (auto &it : cdf)
         {
@@ -187,7 +190,7 @@ class CDF
         {
             it.chebyshev_dist = m[{it.x, it.y, it.z}];
         }
-        LOG_INFO("Finish generate CDF");
+        LOG_DEBUG("Finish generate CDF");
     }
 
     void AddCDFItem(CDFItem const &item)
@@ -270,6 +273,7 @@ class CDFGenerator
     void SetVolumeData(const Linear3DArray<uint8_t> &data, int cdf_block_length);
 
     using VolumeBlock = typename CompVolume::VolumeBlock;
+
     // notice VolumeBlock's data is cuda ptr
     void SetVolumeBlockData(VolumeBlock block, int volume_block_length, int cdf_block_length);
 
@@ -347,8 +351,7 @@ inline void CDFGenerator::SetVolumeBlockData(CDFGenerator::VolumeBlock block, in
 {
 
     Linear3DArray<uint8_t> array(volume_block_length, volume_block_length, volume_block_length);
-    CUDA_RUNTIME_API_CALL(cudaMemcpy(array.RawData(), block.block_data->GetDataPtr(), block.block_data->GetSize(),
-                                     cudaMemcpyDeviceToHost));
+    CUDA_RUNTIME_API_CALL(cudaMemcpy(array.RawData(), block.block_data->GetDataPtr(), block.block_data->GetSize(),cudaMemcpyDeviceToHost));
     SetVolumeData(array, cdf_block_length);
 }
 
@@ -373,6 +376,7 @@ class CDFManager
 
   public:
     CDFManager();
+
     // return false if open cdf_config_file successfully and read from file
     // or true that volume_block_length and cdf_block_length are same in file
     // or return true create with default construct function
@@ -418,6 +422,7 @@ class CDFManager
   public:
     // same format with open, see tools/H264VolumeCDFGenerator.cpp
     bool SaveCurrentCDFMapToFile(const std::string &filename) const;
+
     bool SaveCurrentValueMapToFile(const std::string &filename) const;
 
   public:
@@ -513,7 +518,7 @@ inline bool CDFManager::SetBlockLength(int volume_block_length, int cdf_block_le
 {
     if (this->volume_block_length || this->cdf_block_length)
     {
-        LOG_INFO("volume_block_length or cdf_block_length is already set.");
+        LOG_ERROR("volume_block_length or cdf_block_length is already set.");
         return false;
     }
     else
@@ -598,7 +603,7 @@ inline bool CDFManager::SetComputeOnCall(bool compute, std::function<bool(const 
 {
     if (this->value_map.empty())
     {
-        LOG_INFO("Pre-computed average value map is not load, so set compute(true) will not be successful");
+        LOG_ERROR("Pre-computed average value map is not load, so set compute(true) will not be successful");
         return false;
     }
     this->compute = compute;
@@ -650,7 +655,7 @@ inline auto CDFManager::GetVolumeBlockCDF(const std::array<uint32_t, 4> &index) 
             }
             else
             {
-                LOG_INFO("Not find value array in value_map, compute failed.");
+                LOG_ERROR("Not find value array in value_map, compute failed.");
             }
         }
     }

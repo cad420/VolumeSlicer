@@ -100,14 +100,14 @@ using SliceRawVolumeMixRenderer =Renderer<RawVolume>;
  * @brief Struct for mpi render parameters definition
  */
 struct alignas(16) MPIRenderParameter{
-    float mpi_node_x_offset=0.f;//node center to world center in index
-    float mpi_node_y_offset=0.f;
-    int mpi_world_window_w=0;
-    int mpi_world_window_h=0;
-    int mpi_world_col_num=1;
-    int mpi_world_row_num=1;
-    int mpi_node_x_index=0;
-    int mpi_node_y_index=0;
+    float mpi_node_x_offset = 0.f;//node center to world center in index
+    float mpi_node_y_offset = 0.f;
+    int mpi_world_window_w = 0;
+    int mpi_world_window_h = 0;
+    int mpi_world_col_num = 1;
+    int mpi_world_row_num = 1;
+    int mpi_node_x_index = 0;
+    int mpi_node_y_index = 0;
 };
 
 /**
@@ -165,7 +165,7 @@ public:
 
 class VS_EXPORT CUDARawVolumeRenderer: public IRawVolumeRenderer{
 public:
-    static std::unique_ptr<CUDARawVolumeRenderer> Create(int w,int h,CUcontext ctx=nullptr);
+    static std::unique_ptr<CUDARawVolumeRenderer> Create(int w,int h,CUcontext ctx = nullptr);
 };
 
 class VS_EXPORT OpenGLRawVolumeRenderer: public IRawVolumeRenderer{
@@ -216,12 +216,17 @@ public:
 class VS_EXPORT OpenGLCompVolumeRenderer: public ICompVolumeRenderer{
 public:
     /**
-     * @brief
-     * @param create_opengl_context
+     * @param create_opengl_context if false the internal renderer will try to direct using opengl function without
+     * create own opengl context than meanings it share the opengl context in the caller context.
      */
     static std::unique_ptr<OpenGLCompVolumeRenderer> Create(int w,int h,bool create_opengl_context = true);
 };
 
+/**
+ * @brief this not imply in this project now, but had implied in another project.
+ * Using vulkan renderer's efficiency is about same vs opengl,
+ * but vulkan can handle with a host compute with multi-GPUs.
+ */
 class VS_EXPORT VulkanCompVolumeRenderer: public ICompVolumeRenderer{
     static std::unique_ptr<VulkanCompVolumeRenderer> Create(int w,int h);
 };

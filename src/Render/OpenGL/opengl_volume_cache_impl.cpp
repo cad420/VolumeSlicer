@@ -12,6 +12,7 @@
 
 #include "opengl_volume_cache_impl.hpp"
 #include "Common/cuda_utils.hpp"
+
 VS_START
 
 std::unique_ptr<OpenGLVolumeBlockCache> vs::OpenGLVolumeBlockCache::Create()
@@ -29,12 +30,12 @@ OpenGLVolumeBlockCacheImpl::OpenGLVolumeBlockCacheImpl()
 
 OpenGLVolumeBlockCacheImpl::~OpenGLVolumeBlockCacheImpl()
 {
-    LOG_INFO("Call ~OpenGLVolumeBlockCacheImpl destructor.");
+    LOG_DEBUG("Call ~OpenGLVolumeBlockCacheImpl destructor.");
     for (auto &rc : cu_resources)
     {
         CUDA_DRIVER_API_CALL(cuGraphicsUnregisterResource(rc));
     }
-    glDeleteTextures(gl_textures.size(), gl_textures.data());
+    GL_EXPR(glDeleteTextures(gl_textures.size(), gl_textures.data()));
 }
 
 void OpenGLVolumeBlockCacheImpl::SetCacheBlockLength(uint32_t block_length)
@@ -114,17 +115,17 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
                     }
                     AutoTimer timer("copy block from opengl texture to chunk cache cost time ");
                     auto cache = chunk_cache->GetCacheRef(cacheID);
-                    /**
-                     * too slow
-                    glGetTextureSubImage(gl_textures[pos[3]],0,
-                                         pos[0]*block_length,pos[1]*block_length,pos[2]*block_length,
-                                         block_length,block_length,block_length,
-                                         GL_RED,GL_UNSIGNED_BYTE,cache.size,cache.data);
-                    glFinish();
-                    GL_CHECK
-                    */
+
+                    //too slow
+                    //glGetTextureSubImage(gl_textures[pos[3]],0,
+                    //                     pos[0]*block_length,pos[1]*block_length,pos[2]*block_length,
+                    //                     block_length,block_length,block_length,
+                    //                     GL_RED,GL_UNSIGNED_BYTE,cache.size,cache.data);
+                    //glFinish();
+                    //GL_CHECK
+
                     {
-                        AutoTimer timer("async 3d cuda mem copy");
+                        SCOPE_TIMER("async 3d cuda mem copy")
                         CUDA_MEMCPY3D m{};
                         m.srcMemoryType = CU_MEMORYTYPE_ARRAY;
                         m.srcArray = cu_array;
@@ -141,7 +142,7 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
 
                         CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,transfer_stream));
                     }
-                    LOG_INFO("Copy block({} {} {} {}) data from opengl texture to chunk cache",
+                    LOG_DEBUG("Copy block({} {} {} {}) data from opengl texture to chunk cache",
                              it.block_index[0],it.block_index[1],it.block_index[2],it.block_index[3]);
                     break;
                 }
@@ -157,12 +158,12 @@ void OpenGLVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4>
 
 
         CUDA_DRIVER_API_CALL(cuGraphicsUnmapResources(1, &cu_resources[pos[3]], 0));
-        LOG_INFO("Upload block({0},{1},{2},{3}) to OpenGL texture({4},{5},{6},{7})", index[0], index[1], index[2],
+        LOG_DEBUG("Upload block({0},{1},{2},{3}) to OpenGL texture({4},{5},{6},{7})", index[0], index[1], index[2],
                  index[3], pos[0], pos[1], pos[2], pos[3]);
     }
     else
     {
-        LOG_INFO("UploadVolumeBlock which has already been cached.");
+        LOG_DEBUG("UploadVolumeBlock which has already been cached.");
     }
     // update block_cache_table
     for (auto &it : block_cache_table)
@@ -271,7 +272,7 @@ bool OpenGLVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 
             auto cache = chunk_cache->GetCache(cacheID);
             assert(cache.data);
             UploadVolumeBlock(target,reinterpret_cast<uint8_t*>(cache.data),cache.size,false);
-            LOG_INFO("Upload volume block({} {} {} {}) from chunk cache",
+            LOG_DEBUG("Upload volume block({} {} {} {}) from chunk cache",
                      target[0],target[1],target[2],target[3]);
             return true;
         }
@@ -352,7 +353,7 @@ void OpenGLVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4
         LOG_ERROR("{0}:{1}", __FUNCTION__, err.what());
         LOG_ERROR("index {0} {1} {2} {3}, pos {4} {5} {6} {7}, flag_idx {8}", index[0], index[1], index[2],
                       index[3], pos[0], pos[1], pos[2], pos[3], flat_idx);
-        exit(-1);
+        std::terminate();
     }
 }
 
@@ -363,8 +364,8 @@ bool OpenGLVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &tar
     {
         if (it.block_index == target && it.cached)
         {
-            //            assert(!it.valid);
-            LOG_INFO("Copy CUDA device memory to CUDA Array which already stored.");
+            //assert(!it.valid);
+            LOG_DEBUG("Copy CUDA device memory to CUDA Array which already stored.");
             pos = it.pos_index;
             return true;
         }

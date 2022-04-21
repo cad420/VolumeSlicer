@@ -106,10 +106,8 @@ inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t b
     m.WidthInBytes = block_length;
     m.Height = block_length;
     m.Depth = block_length;
-    if(stream == nullptr)
-        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
-    else
-        CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,stream));
+
+    CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,stream));
 }
 
 inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t x_length, uint32_t y_length,
@@ -129,10 +127,7 @@ inline void UpdateCUDATexture3D(uint8_t *data, cudaArray *pCudaArray, uint32_t x
     m.Height = y_length;
     m.Depth = z_length;
 
-    if(stream == nullptr)
-        CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
-    else
-        CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,stream));
+    CUDA_DRIVER_API_CALL(cuMemcpy3DAsync(&m,stream));
 }
 
 __host__ __device__ inline int PowII(int x, int y)

@@ -133,9 +133,9 @@ void CUDAOffScreenCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
     CUDAOffRenderer::UploadPreIntTransferFunc(tf_impl.getPreIntTransferFunc().data());
 
     CUDAOffRenderer::ShadingParameter shadingParameter;
-    shadingParameter.ka = 0.35f;
-    shadingParameter.kd = 0.55f;
-    shadingParameter.ks = 0.2f;
+    shadingParameter.ka = 0.05f;
+    shadingParameter.kd = 1.f;
+    shadingParameter.ks = 0.3f;
     shadingParameter.shininess = 36.f;
     CUDAOffRenderer::UploadShadingParameter(shadingParameter);
 }
@@ -170,10 +170,9 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
         assert(missed_blocks.empty());
         // 3.1 render one pass
         {
-            AutoTimer timer;
+            SCOPE_TIMER("render one pass")
             CUDAOffRenderer::CUDARender(missed_blocks);
         }
-        spdlog::set_level(spdlog::level::err);
         // 3.2 process missed blocks
         if (missed_blocks.empty())
         {
@@ -220,6 +219,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
                     break;
                 }
             }
+            //waiting for all missed blocks
             while (!missed_blocks.empty() && volume_block_cache->GetRemainEmptyBlock() > 0)
             {
                 UploadMissedBlockData();
@@ -231,6 +231,7 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
             {
                 this->comp_volume->SetRequestBlock({(uint32_t)block.x, (uint32_t)block.y, (uint32_t)block.z, (uint32_t)block.w});
             }
+            //waiting for all missed blocks
             while (!missed_blocks.empty())
             {
                 UploadMissedBlockData();
@@ -240,12 +241,10 @@ void CUDAOffScreenCompVolumeRendererImpl::render(bool sync)
             auto &m = this->volume_block_cache->GetMappingTable();
             CUDAOffRenderer::UploadMappingTable(m.data(), m.size());
         }
-        spdlog::set_level(spdlog::level::info);
         LOG_INFO("current render turn {0} load block num: {3}, total missed block num: {1}, remain missed block num: {2}, ",
                  turn, dummy_missed_blocks.size(), missed_blocks.size(),dummy_missed_blocks.size() - missed_blocks.size());
     }
     CUDAOffRenderer::GetRenderImage(reinterpret_cast<uint8_t *>(image.GetData()));
-    spdlog::set_level(spdlog::level::info);
     LOG_INFO("CUDA comp-volume render finish.");
     LOG_INFO("Total upload block set's size is: {0}.", m.size());
     LOG_INFO("Print block upload info:");

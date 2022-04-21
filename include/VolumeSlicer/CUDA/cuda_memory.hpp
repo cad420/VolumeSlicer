@@ -19,18 +19,18 @@ class VS_EXPORT CUDAMem
 {
   public:
     // size is byte size
-    CUDAMem(size_t size) : alloc(Alloc()), device_ptr(nullptr), size(size), occupied(false)
+    CUDAMem(size_t size) : device_ptr(nullptr), size(size), occupied(false)
     {
 
         this->cu_ctx = GetCUDACtx();
 
-        alloc.alloc(&device_ptr, size);
+        Alloc::alloc(&device_ptr, size);
     }
 
     ~CUDAMem()
     {
         Destroy();
-        LOG_INFO("Delete a CUDA memory.");
+        LOG_DEBUG("Delete a CUDA memory.");
     }
 
     CUDAMem(const CUDAMem &) = delete;
@@ -53,22 +53,21 @@ class VS_EXPORT CUDAMem
         return device_ptr;
     }
 
-    bool IsOccupied()
+    bool IsOccupied() const
     {
-        std::unique_lock<std::mutex> lk(mtx);
         return occupied;
     }
 
     void SetOccupied()
     {
-        std::unique_lock<std::mutex> lk(mtx);
+        std::lock_guard<std::mutex> lk(mtx);
         occupied = true;
     }
 
     void Destroy()
     {
-        std::unique_lock<std::mutex> lk(mtx);
-        alloc.free(device_ptr);
+        std::lock_guard<std::mutex> lk(mtx);
+        Alloc::free(device_ptr);
         device_ptr = nullptr;
         size = 0;
         occupied = false;
@@ -76,17 +75,16 @@ class VS_EXPORT CUDAMem
 
     virtual void Release()
     {
-        std::unique_lock<std::mutex> lk(mtx);
+        std::lock_guard<std::mutex> lk(mtx);
         occupied = false;
     }
 
   protected:
     CUcontext cu_ctx;
-    Alloc alloc;
     T *device_ptr;
     size_t size;
     bool occupied;
-    std::mutex mtx;
+    std::mutex mtx;// a cuda memory may be accessed by multi-threads
 };
 
 VS_END

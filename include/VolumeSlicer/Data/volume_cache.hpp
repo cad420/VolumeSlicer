@@ -3,6 +3,7 @@
 //
 
 #pragma once
+
 #include <VolumeSlicer/CUDA/cuda_memory.hpp>
 #include <VolumeSlicer/Common/define.hpp>
 #include <VolumeSlicer/Common/export.hpp>
@@ -17,7 +18,9 @@
 VS_START
 
 /**
- * store blocks using mapping table
+ * @brief VolumeBlockCache is the physical storage that renderer will use.
+ * It will handle all the volume data related things like upload the volume block and update mapping table.
+ * @note It only support uint8 voxel.
  */
 class VS_EXPORT VolumeBlockCache{
 public:
@@ -27,6 +30,13 @@ public:
 
     virtual void SetCacheBlockLength(uint32_t) = 0;
 
+    /**
+     * @brief create num of physical texture with the specified xyz
+     * @param num number of physical texture
+     * @param x width of texture
+     * @param y height of texture
+     * @param z depth of texture
+     */
     virtual void SetCacheCapacity(uint32_t num,uint32_t x,uint32_t y,uint32_t z) = 0;
 
     /**
@@ -49,8 +59,7 @@ public:
     //get number of block which is not valid, and don't care of whether is cached
     virtual int  GetRemainEmptyBlock() const = 0;
 
-    //todo
-    //different for derived class
+    //may be different for derived class
     virtual void clear() = 0;
 
     //if target block is cached, then set it valid and return true and update mapping table
@@ -71,6 +80,7 @@ public:
 
     static std::unique_ptr<CUDAVolumeBlockCache> Create(CUcontext ctx=nullptr);
 
+    //get cuda implement texture handle
     virtual auto GetCUDATextureObjects()->std::vector<cudaTextureObject_t> = 0;
 
 };
@@ -81,19 +91,18 @@ public:
 
     static std::unique_ptr<OpenGLVolumeBlockCache> Create();
 
+    //get opengl implement texture handle
     virtual auto GetOpenGLTextureHandles() -> std::vector<uint32_t> = 0;
 };
 
 /**
  * @brief CPU volume block cache can be designed more simply not inherit from VolumeBlockCache.
- * @sa BlockCacheManager
+ * @sa CPU has a better volume block cache see BlockCacheManager
  */
 template <typename Block3DArray>
 class VS_EXPORT [[deprecated]]  CPUVolumeBlockCache: public VolumeBlockCache{
 public:
     [[deprecated]] static std::unique_ptr<CPUVolumeBlockCache> Create(const std::shared_ptr<Block3DArray>&);
-
-
 };
 
 VS_END

@@ -213,7 +213,6 @@ class TextureBase
 
     void ReleaseData()
     {
-        // todo call ~T() ?
         ::operator delete(data);
         data = nullptr;
     }
@@ -419,11 +418,10 @@ class Texture2D : public TextureBase<TexType, 2>
         }
         length_x = (std::min)(length_x, GetWidth() - offset_x);
         length_y = (std::min)(length_y, GetHeight() - offset_y);
-        // todo use multi-threads to speed up
+
         for (SizeType row = offset_y; row < offset_y + length_y; row++)
         {
-            memcpy(Base::RawData() + row * GetWidth() + offset_x, data + (row - offset_y) * length_x,
-                     length_x * sizeof(TexType));
+            memcpy(Base::RawData() + row * GetWidth() + offset_x, data + (row - offset_y) * length_x,length_x * sizeof(TexType));
         }
     }
 };
@@ -535,7 +533,7 @@ class Texture3D : public TextureBase<TexType, 3>
         length_x = (std::min)(length_x, GetXSize() - offset_x);
         length_y = (std::min)(length_y, GetYSize() - offset_y);
         length_z = (std::min)(length_z, GetZSize() - offset_z);
-        // todo use multi-threads to speed up
+
         for (SizeType depth = offset_z; depth < offset_z + length_z; depth++)
         {
             for (SizeType row = offset_y; row < offset_y + length_y; row++)

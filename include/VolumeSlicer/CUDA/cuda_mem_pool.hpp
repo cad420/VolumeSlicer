@@ -23,16 +23,17 @@ class CUDAMemImpl : public CUDAMem<T>
 
     void Release() override
     {
-        std::unique_lock<std::mutex> lk(this->mtx);
+        std::lock_guard<std::mutex> lk(this->mtx);
         this->occupied = false;
-        cv.notify_one();
+        cv.notify_one();//notify others which are waiting for get free cuda memory
     }
 
   private:
     std::condition_variable &cv;
 };
 
-template <class T> class VS_EXPORT CUDAMemoryPool
+template <class T>
+class VS_EXPORT CUDAMemoryPool
 {
   public:
     // block_size is byte count for any type T
@@ -70,6 +71,7 @@ std::shared_ptr<CUDAMem<T>> CUDAMemoryPool<T>::GetCUDAMem()
 {
 
     std::unique_lock<std::mutex> lk(mtx);
+    //waiting for free cuda memory which is not occupied
     cv.wait(lk, [&]() {
         for (auto &cu_mem : cu_mems)
         {
@@ -137,7 +139,7 @@ CUDAMemoryPool<T>::~CUDAMemoryPool()
         cu_mem->Release();
         cu_mem->Destroy();
     }
-    LOG_INFO("Delete CUDA memory pool.");
+    LOG_DEBUG("Delete CUDA memory pool.");
 }
 
 VS_END

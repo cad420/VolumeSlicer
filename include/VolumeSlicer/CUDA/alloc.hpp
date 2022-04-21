@@ -18,12 +18,12 @@ class CUDAMemAllocator{
 public:
     CUDAMemAllocator()=default;
 
-    void alloc(T** p_device_ptr,size_t size){
-        cuMemAlloc((CUdeviceptr*)p_device_ptr,size);
+    static void alloc(T** p_device_ptr,size_t size){
+        CUDA_DRIVER_API_CALL(cuMemAlloc((CUdeviceptr*)p_device_ptr,size));
     }
 
-    void free(T* device_ptr){
-        cuMemFree((CUdeviceptr)device_ptr);
+    static void free(T* device_ptr){
+        CUDA_DRIVER_API_CALL(cuMemFree((CUdeviceptr)device_ptr));
     }
 };
 

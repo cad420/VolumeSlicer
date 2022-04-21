@@ -8,8 +8,7 @@
 // global variable between dll and main program
 // https://myprogrammingnotes.com/global-variable-main-program-conflict-global-variable-dll-name.html
 
-// using cuda driver api in different dlls should explict create cuda context in the dll
-// todo
+// using cuda driver api in different dlls should explicitly create cuda context in the dll
 void SetCUDACtx(CUdevice d)
 {
     Singleton<CUDACtx>::init(d);
@@ -33,6 +32,7 @@ size_t GetCUDAUsedMem()
     CUDA_DRIVER_API_CALL(cuMemGetInfo(&free, &total));
     return total - free;
 }
+
 CUdevice GetCUDADev()
 {
     return Singleton<CUDACtx>::get()->GetCUDADev();

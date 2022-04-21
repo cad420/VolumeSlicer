@@ -91,7 +91,7 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
                             chunk_cache->GetCache(cacheID);//access the cache to change the cache priority
                             break;
                         }
-                        AutoTimer timer("copy block from cuda array to chunk cache cost time ");
+                        SCOPE_TIMER("copy block from cuda array to chunk cache cost time ")
                         auto cache = chunk_cache->GetCacheRef(cacheID);
 
                         CUDA_MEMCPY3D m{};
@@ -110,7 +110,7 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
 
                         CUDA_DRIVER_API_CALL(cuMemcpy3D(&m));
 
-                        LOG_INFO("Copy block({} {} {} {}) data from cuda texture to chunk cache",
+                        LOG_DEBUG("Copy block({} {} {} {}) data from cuda texture to chunk cache",
                                  it.block_index[0],it.block_index[1],it.block_index[2],it.block_index[3]);
 
                     }
@@ -124,12 +124,12 @@ void CUDAVolumeBlockCacheImpl::UploadVolumeBlock(const std::array<uint32_t, 4> &
         else
             UpdateCUDATexture3D(data, cu_arrays[pos[3]], block_length, block_length, block_length,
                                 block_length * pos[0], block_length * pos[1], block_length * pos[2]);
-        LOG_INFO("Upload block({0},{1},{2},{3}) to CUDA Array({4},{5},{6},{7})", index[0], index[1], index[2],
+        LOG_DEBUG("Upload block({0},{1},{2},{3}) to CUDA Array({4},{5},{6},{7})", index[0], index[1], index[2],
                      index[3], pos[0], pos[1], pos[2], pos[3]);
     }
     else
     {
-        LOG_INFO("UploadVolumeBlock which has already been cached.");
+        LOG_DEBUG("UploadVolumeBlock which has already been cached.");
     }
     // update block_cache_table
     for (auto &it : block_cache_table)
@@ -241,8 +241,7 @@ bool CUDAVolumeBlockCacheImpl::SetCachedBlockValid(const std::array<uint32_t, 4>
             auto cache = chunk_cache->GetCache(cacheID);
             assert(cache.data);
             UploadVolumeBlock(target,reinterpret_cast<uint8_t*>(cache.data),cache.size,false);
-            LOG_INFO("Upload volume block({} {} {} {}) from chunk cache",
-                     target[0],target[1],target[2],target[3]);
+            LOG_DEBUG("Upload volume block({} {} {} {}) from chunk cache",target[0],target[1],target[2],target[3]);
             return true;
         }
     }
@@ -323,7 +322,7 @@ void CUDAVolumeBlockCacheImpl::updateMappingTable(const std::array<uint32_t, 4> 
         LOG_ERROR("{0}:{1}", __FUNCTION__, err.what());
         LOG_ERROR("index {0} {1} {2} {3}, pos {4} {5} {6} {7}, flag_idx {8}", index[0], index[1], index[2],
                       index[3], pos[0], pos[1], pos[2], pos[3], flat_idx);
-        exit(-1);
+        std::terminate();
     }
 }
 
@@ -334,8 +333,8 @@ bool CUDAVolumeBlockCacheImpl::getCachedPos(const std::array<uint32_t, 4> &targe
     {
         if (it.block_index == target && it.cached)
         {
-            //            assert(!it.valid);
-            LOG_INFO("Copy CUDA device memory to CUDA Array which already stored.");
+            //assert(!it.valid);
+            LOG_DEBUG("Copy CUDA device memory to CUDA Array which already stored.");
             pos = it.pos_index;
             return true;
         }
@@ -366,7 +365,7 @@ auto CUDAVolumeBlockCacheImpl::GetCacheShape() -> std::array<uint32_t, 4>
 
 CUDAVolumeBlockCacheImpl::~CUDAVolumeBlockCacheImpl()
 {
-    LOG_INFO("Call ~CUDAVolumeBlockCacheImpl destructor.");
+    LOG_DEBUG("Call ~CUDAVolumeBlockCacheImpl destructor.");
     for (auto tex : cu_textures)
         CUDA_RUNTIME_API_CALL(cudaDestroyTextureObject(tex));
     for (auto arr : cu_arrays)

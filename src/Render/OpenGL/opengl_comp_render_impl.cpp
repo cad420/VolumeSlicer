@@ -62,9 +62,9 @@ OpenGLCompVolumeRendererImpl::OpenGLCompVolumeRendererImpl(int w, int h,bool cre
         }
         make_opengl_context = [](){return;};
     }
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    GL_EXPR(glEnable(GL_DEPTH_TEST));
+    GL_EXPR(glDisable(GL_BLEND));
+    GL_EXPR(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     GL_CHECK
     LOG_INFO("successfully init OpenGLCompVolumeRendererImpl OpenGL context.");
     // create shader
@@ -117,21 +117,20 @@ void OpenGLCompVolumeRendererImpl::SetVolume(std::shared_ptr<CompVolume> comp_vo
         comp_render_pass_shader->use();
         comp_render_pass_shader->setUIArray("lod_mapping_table_offset", block_offset.data(), block_offset.size());
     }
-    // todo
+
     createVolumeSampler();
     auto volume_tex_handles = opengl_volume_block_cache->GetOpenGLTextureHandles();
     std::vector<int> tex_binding;
     for (int i = 0; i < volume_tex_handles.size(); i++)
     {
-        glBindTextureUnit(VOLUME_TEXTURE_UNIT_0 + i, volume_tex_handles[i]);
-        glBindSampler(VOLUME_TEXTURE_UNIT_0 + i, gl_volume_sampler);
+        GL_EXPR(glBindTextureUnit(VOLUME_TEXTURE_UNIT_0 + i, volume_tex_handles[i]));
+        GL_EXPR(glBindSampler(VOLUME_TEXTURE_UNIT_0 + i, gl_volume_sampler));
         tex_binding.push_back(VOLUME_TEXTURE_UNIT_0 + i);
     }
     GL_CHECK
 
     comp_render_pass_shader->use();
-    // todo
-    //    comp_render_pass_shader->setIntArray("cacheVolumes",reinterpret_cast<int*>(volume_tex_handles.data()),volume_tex_handles.size());
+
     for (int i = 0; i < volume_tex_handles.size(); i++)
     {
         comp_render_pass_shader->setIntArray("cacheVolumes", tex_binding.data(), tex_binding.size());
@@ -164,36 +163,34 @@ void OpenGLCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
     TransferFuncImpl tf_impl(tf);
     if (!transfer_func_tex)
     {
-        glGenTextures(1, &transfer_func_tex);
-        glBindTexture(GL_TEXTURE_1D, transfer_func_tex);
+        GL_EXPR(glGenTextures(1, &transfer_func_tex));
+        GL_EXPR(glBindTexture(GL_TEXTURE_1D, transfer_func_tex));
         //    glBindTextureUnit
-        glBindTextureUnit(TF_TEX_UNIT, transfer_func_tex);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, TF_DIM, 0, GL_RGBA, GL_FLOAT, tf_impl.getTransferFunction().data());
+        GL_EXPR(glBindTextureUnit(TF_TEX_UNIT, transfer_func_tex));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        GL_EXPR(glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, TF_DIM, 0, GL_RGBA, GL_FLOAT, tf_impl.getTransferFunction().data()));
 
         GL_CHECK
 
-        glGenTextures(1, &preInt_tf_tex);
-        glBindTexture(GL_TEXTURE_2D, preInt_tf_tex);
+        GL_EXPR(glGenTextures(1, &preInt_tf_tex));
+        GL_EXPR(glBindTexture(GL_TEXTURE_2D, preInt_tf_tex));
         //    glBindTextureUnit
-        glBindTextureUnit(PTF_TEX_UNIT, preInt_tf_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TF_DIM, TF_DIM, 0, GL_RGBA, GL_FLOAT,
-                     tf_impl.getPreIntTransferFunc().data());
+        GL_EXPR(glBindTextureUnit(PTF_TEX_UNIT, preInt_tf_tex));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        GL_EXPR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        GL_EXPR(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TF_DIM, TF_DIM, 0, GL_RGBA, GL_FLOAT,
+                     tf_impl.getPreIntTransferFunc().data()));
 
-        GL_CHECK
     }
     else
     {
-        glTextureSubImage1D(transfer_func_tex, 0, 0, TF_DIM, GL_RGBA, GL_FLOAT, tf_impl.getTransferFunction().data());
-        glTextureSubImage2D(preInt_tf_tex, 0, 0, 0, TF_DIM, TF_DIM, GL_RGBA, GL_FLOAT,
-                            tf_impl.getPreIntTransferFunc().data());
-        GL_CHECK
+        GL_EXPR(glTextureSubImage1D(transfer_func_tex, 0, 0, TF_DIM, GL_RGBA, GL_FLOAT, tf_impl.getTransferFunction().data()));
+        GL_EXPR(glTextureSubImage2D(preInt_tf_tex, 0, 0, 0, TF_DIM, TF_DIM, GL_RGBA, GL_FLOAT,
+                            tf_impl.getPreIntTransferFunc().data()));
     }
 }
 void OpenGLCompVolumeRendererImpl::bindShaderUniform()
@@ -222,8 +219,8 @@ void OpenGLCompVolumeRendererImpl::bindShaderUniform()
 
 void OpenGLCompVolumeRendererImpl::render(bool sync)
 {
-    LOG_INFO("run into internal render");
-    AutoTimer timer("Render a frame cost time");
+    LOG_DEBUG("run into internal render");
+    SCOPE_TIMER("Render a frame cost time")
 
     setCurrentCtx();
 
@@ -241,41 +238,41 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
     projection[2][1] = mpi.mpi_world_row_num - 1 - 2 * (mpi.mpi_world_row_num - 1 - mpi.mpi_node_y_index);
     glm::mat4 mvp = projection * view;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(0.0f, 0.f, 0.f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL_EXPR(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_EXPR(glClearColor(0.0f, 0.f, 0.f, 1.0f));
+    GL_EXPR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
         // 1. get entry and exit pos
     {
-        AutoTimer timer("Render ray entry and exit pos");
-        glBindFramebuffer(GL_FRAMEBUFFER, raycast_pos_fbo);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        SCOPE_TIMER("Render ray entry and exit pos")
+        GL_EXPR(glBindFramebuffer(GL_FRAMEBUFFER, raycast_pos_fbo));
+        GL_EXPR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         comp_render_pos_shader->use();
         comp_render_pos_shader->setMat4("MVPMatrix", mvp);
 
-        glBindVertexArray(volume_board_vao);
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        GL_EXPR(glBindVertexArray(volume_board_vao));
+        GL_EXPR(glDrawBuffer(GL_COLOR_ATTACHMENT0));
+        GL_EXPR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        GL_EXPR(glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0));
 
-        glEnable(GL_CULL_FACE);
-        glFrontFace(GL_CCW);
-        glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        glDisable(GL_CULL_FACE);
+        GL_EXPR(glEnable(GL_CULL_FACE));
+        GL_EXPR(glFrontFace(GL_CCW));
+        GL_EXPR(glDrawBuffer(GL_COLOR_ATTACHMENT1));
+        GL_EXPR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        GL_EXPR(glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0));
+        GL_EXPR(glDisable(GL_CULL_FACE));
     }
 
     // 2. render pass
     // 2.1 calculate missed blocks
     {
-        AutoTimer timer1("Calculate missed blocks cost time");
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        SCOPE_TIMER("Calculate missed blocks cost time")
+        GL_EXPR(glBindFramebuffer(GL_FRAMEBUFFER, 0));
         comp_render_pass_shader->use();
-        glBindVertexArray(screen_quad_vao);
+        GL_EXPR(glBindVertexArray(screen_quad_vao));
         comp_render_pass_shader->setBool("render", false);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glFinish();
+        GL_EXPR(glDrawArrays(GL_TRIANGLES, 0, 6));
+        GL_EXPR(glFinish());
     }
 
     // 2.2 load missed blocks
@@ -303,17 +300,19 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
     auto &m = opengl_volume_block_cache->GetMappingTable();
     uploadMappingTable(m.data(), m.size());
 
-    glFlush();
+    GL_EXPR(glFlush());
 
     // 2.2 ray cast
     {
         AutoTimer timer1("RayCast cost time");
         comp_render_pass_shader->setBool("render", true);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        GL_EXPR(glDrawArrays(GL_TRIANGLES, 0, 6));
 
-        glFinish();
+        GL_EXPR(glFinish());
     }
-    //    glfwSwapBuffers(window);
+
+    //debug window for renderdoc
+    //glfwSwapBuffers(window);
 
     GL_CHECK
 }
@@ -321,9 +320,8 @@ void OpenGLCompVolumeRendererImpl::render(bool sync)
 auto OpenGLCompVolumeRendererImpl::GetImage() -> const Image<Color4b> &
 {
     setCurrentCtx();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glReadPixels(0, 0, window_w, window_h, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void *>(image.GetData()));
-    GL_CHECK
+    GL_EXPR(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_EXPR(glReadPixels(0, 0, window_w, window_h, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void *>(image.GetData())));
     return image;
 }
 
@@ -331,7 +329,7 @@ void OpenGLCompVolumeRendererImpl::resize(int w, int h)
 {
     setCurrentCtx();
     image = Image<Color4b>(w, h);
-    glViewport(0, 0, w, h);
+    GL_EXPR(glViewport(0, 0, w, h));
 }
 
 void OpenGLCompVolumeRendererImpl::clear()
@@ -353,7 +351,6 @@ void OpenGLCompVolumeRendererImpl::SetRenderPolicy(CompRenderPolicy policy)
 
 void OpenGLCompVolumeRendererImpl::SetMPIRender(MPIRenderParameter mpi)
 {
-//    setCurrentCtx();
     this->mpi = mpi;
 }
 
@@ -548,12 +545,11 @@ void OpenGLCompVolumeRendererImpl::uploadMappingTable(const uint32_t *data, size
 
 void OpenGLCompVolumeRendererImpl::createMappingTable(const uint32_t *data, size_t size)
 {
-    glGenBuffers(1, &mapping_table_ssbo);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, mapping_table_ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(uint32_t), data, GL_DYNAMIC_DRAW);
+    GL_EXPR(glGenBuffers(1, &mapping_table_ssbo));
+    GL_EXPR(glBindBuffer(GL_SHADER_STORAGE_BUFFER, mapping_table_ssbo));
+    GL_EXPR(glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(uint32_t), data, GL_DYNAMIC_DRAW));
     // binding point is 0
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mapping_table_ssbo);
-    GL_CHECK
+    GL_EXPR(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mapping_table_ssbo));
 }
 
 void OpenGLCompVolumeRendererImpl::createMissedBlockMapping()
@@ -563,9 +559,8 @@ void OpenGLCompVolumeRendererImpl::createMissedBlockMapping()
     GL_EXPR(glBufferStorage(GL_SHADER_STORAGE_BUFFER, total_lod_block_num * sizeof(uint32_t), nullptr,
                             GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
     this->mapping_missed_blocks = (uint32_t *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    GL_CHECK
+
     GL_EXPR(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, mapping_missed_blocks_ssbo));
-    GL_CHECK
 }
 
 void OpenGLCompVolumeRendererImpl::createVolumeBoundary()
@@ -585,19 +580,18 @@ void OpenGLCompVolumeRendererImpl::createVolumeBoundary()
         std::array<float, 3>{0.f, volume_board_y, volume_board_z}};
     std::array<uint32_t, 36> volume_board_indices = {0, 1, 2, 0, 2, 3, 0, 4, 1, 4, 5, 1, 1, 5, 6, 6, 2, 1,
                                                      6, 7, 2, 7, 3, 2, 7, 4, 3, 3, 4, 0, 4, 7, 6, 4, 6, 5};
-    glGenVertexArrays(1, &volume_board_vao);
-    glGenBuffers(1, &volume_board_vbo);
-    glGenBuffers(1, &volume_board_ebo);
+    GL_EXPR(glGenVertexArrays(1, &volume_board_vao));
+    GL_EXPR(glGenBuffers(1, &volume_board_vbo));
+    GL_EXPR(glGenBuffers(1, &volume_board_ebo));
 
-    glBindVertexArray(volume_board_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, volume_board_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(volume_board_vertices), volume_board_vertices.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, volume_board_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(volume_board_indices), volume_board_indices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
-    GL_CHECK
+    GL_EXPR(glBindVertexArray(volume_board_vao));
+    GL_EXPR(glBindBuffer(GL_ARRAY_BUFFER, volume_board_vbo));
+    GL_EXPR(glBufferData(GL_ARRAY_BUFFER, sizeof(volume_board_vertices), volume_board_vertices.data(), GL_STATIC_DRAW));
+    GL_EXPR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, volume_board_ebo));
+    GL_EXPR(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(volume_board_indices), volume_board_indices.data(), GL_STATIC_DRAW));
+    GL_EXPR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0));
+    GL_EXPR(glEnableVertexAttribArray(0));
+    GL_EXPR(glBindVertexArray(0));
 }
 
 void OpenGLCompVolumeRendererImpl::createScreenQuad()
@@ -608,18 +602,17 @@ void OpenGLCompVolumeRendererImpl::createScreenQuad()
 
         -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f};
 
-    glGenVertexArrays(1, &screen_quad_vao);
-    glGenBuffers(1, &screen_quad_vbo);
-    glBindVertexArray(screen_quad_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, screen_quad_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(screen_quad_vertices), screen_quad_vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glBindVertexArray(0);
+    GL_EXPR(glGenVertexArrays(1, &screen_quad_vao));
+    GL_EXPR(glGenBuffers(1, &screen_quad_vbo));
+    GL_EXPR(glBindVertexArray(screen_quad_vao));
+    GL_EXPR(glBindBuffer(GL_ARRAY_BUFFER, screen_quad_vbo));
+    GL_EXPR(glBufferData(GL_ARRAY_BUFFER, sizeof(screen_quad_vertices), screen_quad_vertices.data(), GL_STATIC_DRAW));
+    GL_EXPR(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0));
+    GL_EXPR(glEnableVertexAttribArray(0));
+    GL_EXPR(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float))));
+    GL_EXPR(glEnableVertexAttribArray(1));
+    GL_EXPR(glBindVertexArray(0));
 
-    GL_CHECK
 }
 
 void OpenGLCompVolumeRendererImpl::createShader()
@@ -633,38 +626,35 @@ void OpenGLCompVolumeRendererImpl::createPosFramebuffer()
 {
     setCurrentCtx();
 
-    glGenFramebuffers(1, &raycast_pos_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, raycast_pos_fbo);
+    GL_EXPR(glGenFramebuffers(1, &raycast_pos_fbo));
+    GL_EXPR(glBindFramebuffer(GL_FRAMEBUFFER, raycast_pos_fbo));
 
-    glGenTextures(1, &raycast_entry_pos_tex);
-    glBindTexture(GL_TEXTURE_2D, raycast_entry_pos_tex);
+    GL_EXPR(glGenTextures(1, &raycast_entry_pos_tex));
+    GL_EXPR(glBindTexture(GL_TEXTURE_2D, raycast_entry_pos_tex));
     //    glBindTextureUnit
-    glBindTextureUnit(ENTRY_TEX_UNIT, raycast_entry_pos_tex);
-    glTextureStorage2D(raycast_entry_pos_tex, 1, GL_RGBA32F, window_w, window_h);
-    glBindImageTexture(0, raycast_entry_pos_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, raycast_entry_pos_tex, 0);
-    GL_CHECK;
+    GL_EXPR(glBindTextureUnit(ENTRY_TEX_UNIT, raycast_entry_pos_tex));
+    GL_EXPR(glTextureStorage2D(raycast_entry_pos_tex, 1, GL_RGBA32F, window_w, window_h));
+    GL_EXPR(glBindImageTexture(0, raycast_entry_pos_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F));
+    GL_EXPR(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, raycast_entry_pos_tex, 0));
 
-    glGenRenderbuffers(1, &raycast_pos_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, raycast_pos_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_w, window_h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, raycast_pos_rbo);
+    GL_EXPR(glGenRenderbuffers(1, &raycast_pos_rbo));
+    GL_EXPR(glBindRenderbuffer(GL_RENDERBUFFER, raycast_pos_rbo));
+    GL_EXPR(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_w, window_h));
+    GL_EXPR(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, raycast_pos_rbo));
 
-    glGenTextures(1, &raycast_exit_pos_tex);
-    glBindTexture(GL_TEXTURE_2D, raycast_exit_pos_tex);
+    GL_EXPR(glGenTextures(1, &raycast_exit_pos_tex));
+    GL_EXPR(glBindTexture(GL_TEXTURE_2D, raycast_exit_pos_tex));
     //    glBindTextureUnit
-    glBindTextureUnit(EXIT_TEX_UNIT, raycast_exit_pos_tex);
-    glTextureStorage2D(raycast_exit_pos_tex, 1, GL_RGBA32F, window_w, window_h);
-    glBindImageTexture(1, raycast_exit_pos_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, raycast_exit_pos_tex, 0);
-    GL_CHECK
+    GL_EXPR(glBindTextureUnit(EXIT_TEX_UNIT, raycast_exit_pos_tex));
+    GL_EXPR(glTextureStorage2D(raycast_exit_pos_tex, 1, GL_RGBA32F, window_w, window_h));
+    GL_EXPR(glBindImageTexture(1, raycast_exit_pos_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F));
+    GL_EXPR(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, raycast_exit_pos_tex, 0));
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         throw std::runtime_error("Framebuffer object is not complete!");
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    GL_CHECK
+    GL_EXPR(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 void OpenGLCompVolumeRendererImpl::createVolumeSampler()
 {
@@ -700,22 +690,22 @@ void OpenGLCompVolumeRendererImpl::deleteGLResource()
 {
     setCurrentCtx();
     opengl_volume_block_cache.reset();
-    glDeleteVertexArrays(1, &volume_board_vao);
-    glDeleteBuffers(1, &volume_board_vbo);
-    glDeleteBuffers(1, &volume_board_ebo);
-    glDeleteVertexArrays(1, &screen_quad_vao);
-    glDeleteBuffers(1, &screen_quad_vbo);
-    glDeleteBuffers(1, &screen_quad_ebo);
-    glDeleteFramebuffers(1, &raycast_pos_fbo);
-    glDeleteRenderbuffers(1, &raycast_pos_rbo);
-    glDeleteTextures(1, &raycast_entry_pos_tex);
-    glDeleteTextures(1, &raycast_exit_pos_tex);
-    glDeleteBuffers(1, &mapping_table_ssbo);
-    glUnmapNamedBuffer(mapping_missed_blocks_ssbo);
-    glDeleteBuffers(1, &mapping_missed_blocks_ssbo);
-    glDeleteTextures(1, &transfer_func_tex);
-    glDeleteTextures(1, &preInt_tf_tex);
-    glDeleteSamplers(1, &gl_volume_sampler);
+    GL_EXPR(glDeleteVertexArrays(1, &volume_board_vao));
+    GL_EXPR(glDeleteBuffers(1, &volume_board_vbo));
+    GL_EXPR(glDeleteBuffers(1, &volume_board_ebo));
+    GL_EXPR(glDeleteVertexArrays(1, &screen_quad_vao));
+    GL_EXPR(glDeleteBuffers(1, &screen_quad_vbo));
+    GL_EXPR(glDeleteBuffers(1, &screen_quad_ebo));
+    GL_EXPR(glDeleteFramebuffers(1, &raycast_pos_fbo));
+    GL_EXPR(glDeleteRenderbuffers(1, &raycast_pos_rbo));
+    GL_EXPR(glDeleteTextures(1, &raycast_entry_pos_tex));
+    GL_EXPR(glDeleteTextures(1, &raycast_exit_pos_tex));
+    GL_EXPR(glDeleteBuffers(1, &mapping_table_ssbo));
+    GL_EXPR(glUnmapNamedBuffer(mapping_missed_blocks_ssbo));
+    GL_EXPR(glDeleteBuffers(1, &mapping_missed_blocks_ssbo));
+    GL_EXPR(glDeleteTextures(1, &transfer_func_tex));
+    GL_EXPR(glDeleteTextures(1, &preInt_tf_tex));
+    GL_EXPR(glDeleteSamplers(1, &gl_volume_sampler));
 }
 
 VS_END

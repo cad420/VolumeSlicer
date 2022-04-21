@@ -22,7 +22,7 @@ class VolumeImpl<VolumeType::Raw> : public Volume<VolumeType::Raw>
   public:
     VolumeImpl(std::vector<uint8_t> &&data) : raw_volume_data(std::move(data)){};
 
-    ~VolumeImpl() override
+    ~VolumeImpl() noexcept override
     {
     }
 
@@ -55,6 +55,17 @@ class VolumeImpl<VolumeType::Comp> : public CompVolume
         return VolumeType::Comp;
     }
 
+    VolumeBlock GetBlock(const std::array<uint32_t, 4> &) noexcept override;
+
+    VolumeBlock GetBlock() noexcept override;
+
+    auto GetBlockDim(int lod) const -> std::array<uint32_t, 3> override;
+
+    auto GetBlockDim() const -> const std::map<uint32_t, std::array<uint32_t, 3>> & override;
+
+    auto GetBlockLength() const -> std::array<uint32_t, 4> override;
+
+  protected:
     void ClearRequestBlock() noexcept override;
 
     void SetRequestBlock(const std::array<uint32_t, 4> &) noexcept override;
@@ -77,26 +88,22 @@ class VolumeImpl<VolumeType::Comp> : public CompVolume
 
     void StartLoadBlock() noexcept override;
 
-    VolumeBlock GetBlock(const std::array<uint32_t, 4> &) noexcept override;
-
-    VolumeBlock GetBlock() noexcept override;
-
-    auto GetBlockDim(int lod) const -> std::array<uint32_t, 3> override;
-
-    auto GetBlockDim() const -> const std::map<uint32_t, std::array<uint32_t, 3>> & override;
-
-    auto GetBlockLength() const -> std::array<uint32_t, 4> override;
-
     bool GetStatus() override;
 
   private:
     bool FindInRequestBlock(const std::array<uint32_t, 4> &idx);
 
-    bool FindInBlockQueue(const std::array<uint32_t, 4> &idx) const = delete;
-
-    // no blocking
+    /**
+     * @brief pop and return a request from request_queue, if empty return INVALID request,
+     * so user must check the returned value.
+     * @note this function is non-blocking.
+     */
     auto FetchRequest() -> std::array<uint32_t, 4>;
 
+    /**
+     * @brief fetch block from block_loader and push to block_queue.
+     * @note this function will block if block_queue is full.
+     */
     void AddBlocks();
 
     void Loading();
@@ -108,15 +115,23 @@ class VolumeImpl<VolumeType::Comp> : public CompVolume
 
     std::condition_variable cv;
     std::atomic<bool> pause;
-    bool stop;
     std::atomic<bool> paused;
 
+    //it will async load block using cpu or gpu depend on the detail implement.
+    //it works as a producer and also has a max-size storage for production.
     std::unique_ptr<IBlockVolumeProviderPluginInterface> block_loader;
 
+    //thread for send decode block index to block_loader and fetch decoded block data from block_loader
     std::thread task;
+    //if stop task will terminate
+    bool stop;
 
+    //block index for block_loader to load
     std::list<std::array<uint32_t, 4>> request_queue;
 
+    //production queue that stores the decoded volume block,
+    //it's thread-safe and has a max-size.
+    //it will block when pop if empty and push if full.
     ConcurrentQueue<VolumeBlock> block_queue;
 };
 using CompVolumeImpl = VolumeImpl<VolumeType::Comp>;

@@ -8,7 +8,7 @@
 #include <VolumeSlicer/Common/export.hpp>
 #include <VolumeSlicer/Common/status.hpp>
 
-#include<array>
+#include <array>
 
 VS_START
 class Camera{

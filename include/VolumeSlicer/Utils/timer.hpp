@@ -121,9 +121,9 @@ struct Duration final
 
 struct TimePoint
 {
-    /*
-     * see the std::put_time reference for more detail about the fmt string
-     * */
+    /**
+     * @note see the std::put_time reference for more detail about the fmt string
+     */
     auto to(const char *fmt) const
     {
         return std::put_time(localtime(&_), fmt);

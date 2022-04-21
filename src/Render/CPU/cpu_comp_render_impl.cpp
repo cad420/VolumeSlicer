@@ -68,7 +68,8 @@ void CPUOffScreenCompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
 void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
 {
     using VirtualBlockIndex = typename BlockCacheManager<BlockArray9b>::VirtualBlockIndex;
-    using VolumeBlock = typename CompVolume::VolumeBlock;
+    using VolumeBlock       = typename CompVolume::VolumeBlock;
+
     std::unordered_set<VirtualBlockIndex> missed_blocks;
     std::mutex mtx;
     auto AddMissedBlock = [&mtx, &missed_blocks](const VirtualBlockIndex &idx) {
@@ -130,8 +131,8 @@ void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
 
         int cdf = cdf_map[virtual_block_idx][flat_cdf_block_idx];
 
-        if (cdf == 0)
-            return sample_pos;
+        if (cdf == 0) return sample_pos;
+
         auto box_min_p = Vec3d(cdf_block_idx) * cdf_block_length * lod_t +
                          Vec3d(virtual_block_idx) * (int)no_padding_block_length * lod_t;
         auto box = ExpandBox(cdf - 1, box_min_p, box_min_p + Vec3d(cdf_block_length * lod_t));
@@ -188,9 +189,9 @@ void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
     };
 
     double voxel = 1.0;
-    double ka = 0.25;
-    double ks = 0.36;
-    double kd = 0.5;
+    double ka = 0.05;
+    double ks = 0.3;
+    double kd = 1.0;
     double shininess = 100.0;
 
     auto PhongShading = [voxel, ka, ks, kd, shininess, &VirtualSample](int lod, int lod_t, Vec3d const &sample_pos,
@@ -427,7 +428,7 @@ void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
         };
         if (missed_blocks.size() > block_cache_manager->GetRemainPhysicalBlockNum())
         {
-            LOG_INFO("current missed blocks num > remain_physical_blocks num");
+            LOG_DEBUG("current missed blocks num > remain_physical_blocks num");
             block_cache_manager->InitManagerResource();
             int i = 0, n = block_cache_manager->GetRemainPhysicalBlockNum();
             for (auto &block : dummy_missed_blocks)
@@ -446,7 +447,7 @@ void CPUOffScreenCompVolumeRendererImpl::render(bool sync)
         }
         else
         {
-            LOG_INFO("remain physical blocks num is enough");
+            LOG_DEBUG("remain physical blocks num is enough");
             for (auto &block : dummy_missed_blocks)
             {
                 assert(block.x >= 0 && block.y >= 0 && block.z >= 0 && block.w >= 0);

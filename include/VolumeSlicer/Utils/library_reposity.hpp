@@ -4,13 +4,15 @@
 #pragma once
 
 #include <VolumeSlicer/Utils/library.hpp>
+#include <VolumeSlicer/Common/define.hpp>
 
 #include <memory>
 #include <unordered_map>
 
 VS_START
 
-class LibraryReposityImpl;
+
+FORWARD_IMPL_DECLARATION(LibraryReposity)
 class VS_EXPORT LibraryReposity
 {
   public:

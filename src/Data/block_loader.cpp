@@ -43,9 +43,9 @@ BlockLoader::BlockLoader() : block_size_bytes(0), cu_mem_num(16), worker_num(2)
 void BlockLoader::Open(const std::string &filename)
 {
     this->packet_reader = Reader::CreateReader(filename.c_str());
-    //! only after create reader then can know block's information
+    //only after create reader then can know block's information
     this->block_size_bytes = packet_reader->GetBlockSizeByte();
-    LOG_INFO("block_size_bytes is: {0}.", block_size_bytes);
+    LOG_DEBUG("block_size_bytes is: {0}.", block_size_bytes);
     this->cu_mem_pool = std::make_unique<CUDAMemoryPool<uint8_t>>(cu_mem_num, block_size_bytes);
 
     VoxelUncompressOptions uncmp_opts;
@@ -95,20 +95,21 @@ bool BlockLoader::AddTask(const std::array<uint32_t, 4> &idx)
             if (!workers[i].isBusy())
             {
                 workers[i].setStatus(true);
-                LOG_INFO("worker {0} append task.", i);
+                LOG_DEBUG("worker {0} append task.", i);
                 jobs->AppendTask(
                     [&](int worker_id, const std::array<uint32_t, 4> &idx) {
                         std::vector<std::vector<uint8_t>> packet;
                         packet_reader->GetPacket(idx, packet);
                         VolumeBlock block;
                         block.index = idx;
-                        LOG_INFO("in AppendTask {0} {1} {2} {3}.", block.index[0], block.index[1], block.index[2], block.index[3]);
+                        LOG_DEBUG("in AppendTask {0} {1} {2} {3}.", block.index[0], block.index[1], block.index[2], block.index[3]);
 
+                        //if no available cuda memory will wait
                         block.block_data = cu_mem_pool->GetCUDAMem();
-//                        START_CPU_TIMER
+
                         assert(block.block_data->GetDataPtr());
                         workers[worker_id].uncompress(block.block_data->GetDataPtr(), block_size_bytes, packet);
-//                        END_CPU_TIMER
+
                         block.valid = true;
                         products.push_back(block);
 
@@ -139,20 +140,20 @@ auto BlockLoader::GetBlock() -> Volume<VolumeType::Comp>::VolumeBlock
     }
     else
     {
-        LOG_INFO("before GetBlock, products size: {0}.", products.size());
+        LOG_DEBUG("before GetBlock, products size: {0}.", products.size());
         return products.pop_front();
     }
 }
 
 BlockLoader::~BlockLoader()
 {
-    //! must destruct jobs first
+    //must destruct jobs first
     jobs.reset();
-    LOG_INFO("Delete block_loader...Remain product num: {0}.", products.size());
     workers.clear();
     products.clear();
     packet_reader.reset();
     cu_mem_pool.reset();
+    LOG_INFO("Delete block_loader...Remain product num: {0}.", products.size());
 }
 
 auto BlockLoader::GetBlockDim(int lod) const -> std::array<uint32_t, 3>

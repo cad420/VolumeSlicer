@@ -16,6 +16,7 @@
 #include <VolumeSlicer/Utils/logger.hpp>
 
 VS_START
+
 class OBB;
 class AABB
 {
@@ -28,10 +29,12 @@ class AABB
         max_p = {min, min, min};
         index = {INVALID, INVALID, INVALID};
     };
+
     AABB(const glm::vec3 &min_p, const glm::vec3 &max_p, const std::array<uint32_t, 4> &index)
         : min_p(min_p), max_p(max_p), index(index)
     {
     }
+
     AABB(const glm::vec3 &min_p, const glm::vec3 &max_p)
         : min_p(min_p), max_p(max_p), index({INVALID, INVALID, INVALID})
     {
@@ -43,6 +46,7 @@ class AABB
         max_p = aabb.max_p;
         index = aabb.index;
     }
+
     AABB(const std::array<uint32_t, 4> &index)
     {
         float min = std::numeric_limits<float>::lowest();
@@ -51,7 +55,9 @@ class AABB
         max_p = {min, min, min};
         this->index = index;
     }
+
     OBB convertToOBB() const;
+
     void Union(const glm::vec3 &p)
     {
         min_p = {std::fmin(min_p.x, p.x), std::fmin(min_p.y, p.y), std::fmin(min_p.z, p.z)};
@@ -125,7 +131,6 @@ class AABB
  * obb intersect algorithm:
  * https://blog.csdn.net/silangquan/article/details/50812425?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-5.control&dist_request_id=&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-5.control
  */
-
 class OBB
 {
   public:
@@ -298,7 +303,7 @@ enum class BoxVisibility
     FullyVisible
 };
 
-class Pyramid
+ class [[deprecated]] Pyramid
 {
   public:
     Pyramid(glm::vec3 start_pos, glm::vec3 lu_pos, glm::vec3 ru_pos, glm::vec3 ld_pos, glm::vec3 rd_pos)
@@ -450,12 +455,26 @@ inline bool Pyramid::point_inside_pyramid(const glm::vec3 &point) const
  *  |Ax+By+Cz+D|/sqrt(A*A+B*B+C*C)
  *
  *  [new method]
- *  test each plane of pyramid if can see the aabb, if all plane can see the aabb so the aabb is intersect with the
- * pyramid
+ *  test each plane of pyramid if can see the aabb, if all plane can see the aabb so the aabb is intersect with the pyramid,
+ *  but new method is not completely correct, it will lose the situation follow,
+ *  this is ok because this class is not used now in the project.
  */
+//
+//
+//       .
+//      /   '  .       .
+//     / AABB  /   . ' |
+//    /       /. '     |
+//       ' . / |       |
+//       * .   |       |
+//           ' .       |
+//               ' .   |
+//                   ' .
+
 inline bool Pyramid::intersect_aabb(const AABB &aabb)
 {
-    /** [abandon]
+    /**
+     [abandon]
     if(!aabb.isCubic()){
         throw std::runtime_error("test in-cubic aabb with pyramid");
     }

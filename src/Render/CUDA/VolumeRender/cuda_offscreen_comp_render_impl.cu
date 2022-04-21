@@ -177,8 +177,8 @@ __device__ float CalcDistanceFromCameraToBlockCenter(const float3 &sample_pos, i
 
 __global__ void CUDARenderPass(stdgpu::unordered_set<int4, Hash_Int4> missed_blocks)
 {
-    int image_x = blockIdx.x * blockDim.x + threadIdx.x;
-    int image_y = blockIdx.y * blockDim.y + threadIdx.y;
+    int image_x   = blockIdx.x * blockDim.x + threadIdx.x;
+    int image_y   = blockIdx.y * blockDim.y + threadIdx.y;
     int image_idx = image_y * cudaOffCompRenderParameter.image_w + image_x;
 
     if (image_x >= cudaOffCompRenderParameter.image_w || image_y >= cudaOffCompRenderParameter.image_h)
@@ -187,44 +187,46 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4, Hash_Int4> missed_blo
     float4 color = intermediate_result[image_idx];
     if (color.w > 0.99f)
         return;
-    float4 last_ray_start_pos_ = ray_start_pos[image_idx];
-    float3 last_ray_start_pos = make_float3(last_ray_start_pos_);
-    float3 last_ray_stop_pos = ray_stop_pos[image_idx];
-    float3 ray_direction = last_ray_stop_pos - last_ray_start_pos;
-    float3 ray_sample_pos = last_ray_start_pos;
 
-    int i = 0;
-    int lod_steps = 0;
-    int last_lod = last_ray_start_pos_.w;
-    int last_lod_t = IntPow(2, last_lod);
-    int steps = length(ray_direction) / cudaOffCompRenderParameter.step / last_lod_t;
-    float sample_scalar = 0.f;
+    float4 last_ray_start_pos_  = ray_start_pos[image_idx];
+    float3 last_ray_start_pos   = make_float3(last_ray_start_pos_);
+    float3 last_ray_stop_pos    = ray_stop_pos[image_idx];
+    float3 ray_direction        = last_ray_stop_pos - last_ray_start_pos;
+    float3 ray_sample_pos       = last_ray_start_pos;
     float3 lod_sample_start_pos = last_ray_start_pos;
+
     ray_direction = normalize(ray_direction);
-    float last_scalar = sample_scalar;
+
+    int i          = 0;
+    int lod_steps  = 0;
+    int last_lod   = last_ray_start_pos_.w;
+    int last_lod_t = IntPow(2, last_lod);
+    int steps      = length(ray_direction) / cudaOffCompRenderParameter.step / last_lod_t;
+
+
+    float sample_scalar = 0.f;
+    float last_scalar   = sample_scalar;
 
     for (; i < steps; i++)
     {
         int cur_lod, cur_lod_t, flag;
 
-        cur_lod = EvaluateLod(
-            CalcDistanceFromCameraToBlockCenter(ray_sample_pos / compVolumeParameter.volume_space, last_lod_t));
+        cur_lod   = EvaluateLod(CalcDistanceFromCameraToBlockCenter(ray_sample_pos / compVolumeParameter.volume_space, last_lod_t));
         cur_lod_t = IntPow(2, cur_lod);
         if (cur_lod > 6)
             break;
         if (cur_lod > last_lod)
         {
             lod_sample_start_pos = ray_sample_pos;
-            last_lod = cur_lod;
-            last_lod_t = cur_lod_t;
-            lod_steps = i;
+            last_lod             = cur_lod;
+            last_lod_t           = cur_lod_t;
+            lod_steps            = i;
         }
 
-        flag = VirtualSample(cur_lod, cur_lod_t, ray_sample_pos / compVolumeParameter.volume_space, sample_scalar,
-                             missed_blocks);
+        flag = VirtualSample(cur_lod, cur_lod_t, ray_sample_pos / compVolumeParameter.volume_space, sample_scalar,missed_blocks);
         if (flag == 0)
         {
-            ray_start_pos[image_idx] = make_float4(ray_sample_pos, cur_lod);
+            ray_start_pos[image_idx]       = make_float4(ray_sample_pos, cur_lod);
             intermediate_result[image_idx] = color;
             return;
         }
@@ -239,7 +241,7 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4, Hash_Int4> missed_blo
 
             if (sample_color.w > 0.f)
             {
-                //for gradual entry
+                //for gradient effect
                 sample_color.w *= 0.5f + 1.f / (cur_lod * cur_lod + 2.f);
 
                 last_scalar = sample_scalar;
@@ -256,8 +258,7 @@ __global__ void CUDARenderPass(stdgpu::unordered_set<int4, Hash_Int4> missed_blo
             }
         }
 
-        ray_sample_pos =
-            lod_sample_start_pos + (i + 1 - lod_steps) * ray_direction * cudaOffCompRenderParameter.step * cur_lod_t;
+        ray_sample_pos = lod_sample_start_pos + (i + 1 - lod_steps) * ray_direction * cudaOffCompRenderParameter.step * cur_lod_t;
     }
 
     color.w = 1.f;
@@ -292,15 +293,12 @@ __device__ float3 PhongShading(int lod, int lod_t, stdgpu::unordered_set<int4, H
 
     float3 ambient =
         shadingParameter.ka
-//        0.05f
         * diffuse_color;
     float3 specular =
         shadingParameter.ks
-//        1.f
         * pow(max(dot(N, (L + R) / 2.f), 0.f), shadingParameter.shininess) * make_float3(1.f);
     float3 diffuse =
         shadingParameter.kd
-//        1.f
         * max(dot(N, L), 0.f) * diffuse_color;
     return ambient + specular + diffuse;
 }
@@ -428,8 +426,7 @@ void UploadCUDAOffCompRenderPolicy(const CUDAOffCompRenderPolicy &render_policy)
 
 void UploadCUDAOffCompRenderParameter(const CUDAOffCompRenderParameter &comp_render)
 {
-    CUDA_RUNTIME_API_CALL(
-        cudaMemcpyToSymbol(cudaOffCompRenderParameter, &comp_render, sizeof(CUDAOffCompRenderParameter)));
+    CUDA_RUNTIME_API_CALL(cudaMemcpyToSymbol(cudaOffCompRenderParameter, &comp_render, sizeof(CUDAOffCompRenderParameter)));
 }
 
 void UploadCompVolumeParameter(const CompVolumeParameter &comp_volume)
@@ -483,8 +480,7 @@ void CUDARender(std::unordered_set<int4, Hash_Int4> &h_missed_blocks)
     dim3 blocks_per_grid = {(d_image_w + threads_per_block.x - 1) / threads_per_block.x,
                             (d_image_h + threads_per_block.y - 1) / threads_per_block.y};
 
-    stdgpu::unordered_set<int4, Hash_Int4> d_missed_blocks =
-        stdgpu::unordered_set<int4, Hash_Int4>::createDeviceObject(4096);
+    stdgpu::unordered_set<int4, Hash_Int4> d_missed_blocks = stdgpu::unordered_set<int4, Hash_Int4>::createDeviceObject(4096);
 
     CUDARenderPass<<<blocks_per_grid, threads_per_block>>>(d_missed_blocks);
     CUDA_RUNTIME_CHECK
@@ -499,6 +495,7 @@ void CUDARender(std::unordered_set<int4, Hash_Int4> &h_missed_blocks)
     }
     stdgpu::unordered_set<int4, Hash_Int4>::destroyDeviceObject(d_missed_blocks);
 }
+
 void GetRenderImage(uint8_t *data)
 {
     CUDA_RUNTIME_API_CALL(cudaMemcpy(data, d_color_image, sizeof(uint) * d_image_w * d_image_h, cudaMemcpyDefault));

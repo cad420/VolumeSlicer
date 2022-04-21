@@ -81,6 +81,7 @@ int VirtualSample(int lod,int lod_t,in vec3 sample_pos,out float scalar,bool wri
     scalar = texture(cacheVolumes[physical_texture_idx],physica_sample_pos).r;
     return 1;
 }
+#define KS 0.3
 vec3 PhongShading(int lod,int lod_t,in vec3 sample_pos,in vec3 diffuse_color,in vec3 view_direction){
     vec3 N;
     float x1,x2;
@@ -100,7 +101,7 @@ vec3 PhongShading(int lod,int lod_t,in vec3 sample_pos,in vec3 diffuse_color,in 
         N = -N;
     vec3 ambient = 0.05f * diffuse_color;
     vec3 diffuse =  max(dot(N,L),0.f) * diffuse_color;
-    vec3 specular = pow(max(dot(N,(L+R)/2.f),0.f),36.f) *vec3(1.f);
+    vec3 specular = KS * pow(max(dot(N,(L+R)/2.f),0.f),36.f) *vec3(1.f);
     return ambient + diffuse + specular;
 }
 

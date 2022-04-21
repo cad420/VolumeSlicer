@@ -88,6 +88,8 @@ class Block3DArray
         }
     }
 
+
+     //because current volume will always provide data in cuda memory
     void SetBlockData(SizeType x_block, SizeType y_block, SizeType z_block, const T *block_data)
     {
         //::memcpy(GetBlockData(x_block,y_block,z_block),block_data,BlockSizeInByte());

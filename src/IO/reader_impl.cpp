@@ -54,14 +54,8 @@ void ReaderImpl::GetPacket(const std::array<uint32_t, 4> &idx, std::vector<std::
     else
     {
         packet = *data_ptr;
-        LOG_INFO("find cached packet!!!");
     }
-    spdlog::info("load factor for packet cache is: {0:f}", packet_cache.get_load_factor());
-    if (packet_cache.get_load_factor() == 1)
-    {
-        LOG_INFO("cache is full!!!");
-    }
-
+    LOG_INFO("load factor for packet cache is: {0:f}", packet_cache.get_load_factor());
 }
 
 void ReaderImpl::AddLodData(int lod, const char *path)
@@ -70,7 +64,7 @@ void ReaderImpl::AddLodData(int lod, const char *path)
     {
         if (lod < 0)
         {
-           LOG_ERROR("lod({0}) < 0", lod);
+            LOG_ERROR("lod({0}) < 0", lod);
             return;
         }
         readers[lod] = std::make_unique<sv::Reader>(path);

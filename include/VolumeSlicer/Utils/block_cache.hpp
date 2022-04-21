@@ -118,7 +118,7 @@ class BlockCacheManager
     using SizeType = size_t;
     using Self = BlockCacheManager<Block3DArray>;
     using DataType = typename Block3DArray::DataType;
-    using VirtualBlockIndex = glm::ivec4; // std::array<uint32_t,4>;
+    using VirtualBlockIndex = glm::ivec4;
     using LRUCacheTable = LRUCache<VirtualBlockIndex, PhysicalMemoryBlockIndex>;
     using IndexType = typename PhysicalMemoryBlockIndex::internal_type;
     static constexpr SizeType block_length = Block3DArray::BlockLength();

@@ -8,7 +8,9 @@
 #include <VolumeSlicer/Data/volume_cache.hpp>
 #include <VolumeSlicer/Render/render.hpp>
 #include <VolumeSlicer/Utils/hash.hpp>
+
 #include <unordered_set>
+
 //#include "Render/wgl_wrap.hpp"
 #include "shader_program.hpp"
 //#include <glad/glad.h>

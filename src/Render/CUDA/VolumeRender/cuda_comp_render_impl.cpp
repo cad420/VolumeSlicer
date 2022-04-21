@@ -6,53 +6,12 @@
 #include <iostream>
 
 #include <VolumeSlicer/Algorithm/memory_helper.hpp>
+#include <VolumeSlicer/Utils/utils.hpp>
 
 #include "Common/helper_math.h"
 #include "Common/transfer_function_impl.hpp"
 #include "cuda_comp_render_impl.hpp"
 #include "cuda_comp_render_impl.cuh"
-
-#define START_CPU_TIMER                                                                                                \
-    {                                                                                                                  \
-        auto _start = std::chrono::steady_clock::now();
-
-#define END_CPU_TIMER                                                                                                  \
-    auto _end = std::chrono::steady_clock::now();                                                                      \
-    auto _t = std::chrono::duration_cast<std::chrono::milliseconds>(_end - _start);                                    \
-    std::cout << "CPU cost time : " << _t.count() << "ms" << std::endl;                                                \
-    }
-
-#define START_CUDA_DRIVER_TIMER                                                                                        \
-    CUevent start, stop;                                                                                               \
-    float elapsed_time;                                                                                                \
-    cuEventCreate(&start, CU_EVENT_DEFAULT);                                                                           \
-    cuEventCreate(&stop, CU_EVENT_DEFAULT);                                                                            \
-    cuEventRecord(start, 0);
-
-#define STOP_CUDA_DRIVER_TIMER                                                                                         \
-    cuEventRecord(stop, 0);                                                                                            \
-    cuEventSynchronize(stop);                                                                                          \
-    cuEventElapsedTime(&elapsed_time, start, stop);                                                                    \
-    cuEventDestroy(start);                                                                                             \
-    cuEventDestroy(stop);                                                                                              \
-    std::cout << "GPU cost time: " << elapsed_time << "ms" << std::endl;
-
-#define START_CUDA_RUNTIME_TIMER                                                                                       \
-    {                                                                                                                  \
-        cudaEvent_t start, stop;                                                                                       \
-        float elapsedTime;                                                                                             \
-        (cudaEventCreate(&start));                                                                                     \
-        (cudaEventCreate(&stop));                                                                                      \
-        (cudaEventRecord(start, 0));
-
-#define STOP_CUDA_RUNTIME_TIMER                                                                                        \
-    (cudaEventRecord(stop, 0));                                                                                        \
-    (cudaEventSynchronize(stop));                                                                                      \
-    (cudaEventElapsedTime(&elapsedTime, start, stop));                                                                 \
-    printf("\tGPU cost time used: %.f ms\n", elapsedTime);                                                             \
-    (cudaEventDestroy(start));                                                                                         \
-    (cudaEventDestroy(stop));                                                                                          \
-    }
 
 VS_START
 
@@ -245,11 +204,10 @@ void CUDACompVolumeRendererImpl::SetTransferFunc(TransferFunc tf)
     CUDARenderer::UploadTransferFunc(tf_impl.getTransferFunction().data());
     CUDARenderer::UploadPreIntTransferFunc(tf_impl.getPreIntTransferFunc().data());
 
-    // todo move to another place
     CUDARenderer::LightParameter lightParameter;
     lightParameter.bg_color = make_float4(0.f, 0.f, 0.f, 0.f);
-    lightParameter.ka = 0.35f;
-    lightParameter.kd = 0.75f;
+    lightParameter.ka = 0.05f;
+    lightParameter.kd = 1.f;
     lightParameter.ks = 0.3f;
     lightParameter.shininess = 36.f;
     CUDARenderer::UploadLightParameter(lightParameter);
@@ -275,7 +233,6 @@ void CUDACompVolumeRendererImpl::render(bool sync)
     cudaCompRenderParameter.mpi_render = this->mpi_render;
     CUDARenderer::UploadCUDACompRenderParameter(cudaCompRenderParameter);
 
-    //    START_CPU_TIMER
     calcMissedBlocks();
 
     filterMissedBlocks();
@@ -293,7 +250,6 @@ void CUDACompVolumeRendererImpl::render(bool sync)
     }
 
     clearCurrentInfo();
-    //    END_CPU_TIMER
 
     auto &m = this->cuda_volume_block_cache->GetMappingTable();
     CUDARenderer::UploadMappingTable(m.data(), m.size());

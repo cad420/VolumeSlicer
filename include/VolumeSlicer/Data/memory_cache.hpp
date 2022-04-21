@@ -29,14 +29,20 @@ class VS_EXPORT AbstractMemoryCache{
 
     virtual void SetCache(Cache cache) = 0;
 
+    /**
+     * @brief Get a cache by id and may change the internal cache priority
+     */
     virtual Cache GetCache(size_t cacheID) = 0;
 
+    /**
+     * @brief Get a cache reference by id and may change the internal cache priority
+     */
     virtual Cache& GetCacheRef(size_t cacheID) = 0;
 
     virtual void SetNextLevel(AbstractMemoryCache* next) {this->next = next;};
 
   protected:
-    AbstractMemoryCache* next;
+    AbstractMemoryCache* next;//next level cache pointer
 };
 
 

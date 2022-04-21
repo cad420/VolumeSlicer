@@ -14,7 +14,9 @@
 
 VS_START
 
-
+/**
+ * @brief Structure for define all properties of a 3d-slice
+ */
 struct alignas(16) Slice{
     std::array<float,4> origin;//measure in voxel
     std::array<float,4> normal;
@@ -25,46 +27,52 @@ struct alignas(16) Slice{
     float voxel_per_pixel_width;
     float voxel_per_pixel_height;
     float depth = 0.f;
-    int direction = 0;
+    [[deprecated]] int direction = 0;
     uint64_t padding = 0;
 };
 
+/**
+ * @brief Class for helping operate slice like move and zoom.
+ */
 class VS_EXPORT Slicer: public std::enable_shared_from_this<Slicer>{
 public:
-    Slicer()=default;
+    Slicer() = default;
 
-    Slicer(const Slicer&)=delete;
+    Slicer(const Slicer&) = delete;
 
-    Slicer(Slicer&&)=delete;
+    Slicer(Slicer&&) = delete;
 
-    Slicer& operator=(const Slicer&)=delete;
+    Slicer& operator=(const Slicer&) = delete;
 
-    Slicer& operator=(Slicer&&)=delete;
+    Slicer& operator=(Slicer&&) = delete;
 
     virtual ~Slicer(){};
 
     static std::unique_ptr<Slicer> CreateSlicer(const Slice& slice) noexcept;
 
-    virtual void SetSlice(const Slice& slice) =0;
+    virtual void SetSlice(const Slice& slice) = 0;
 
-    virtual bool IsModified() const =0;
+    virtual Slice GetSlice() const = 0;
 
-    virtual void SetStatus(bool modified) =0;
+    virtual bool IsModified() const = 0;
+
+    virtual void SetStatus(bool modified) = 0;
 
     virtual void SetSliceSpaceRatio(const std::array<float,3>& ratio) = 0;
+
     //***************************************
-    //functions modified slice
-    virtual void RotateByX(float)=0;
+    //functions operate slice
+    virtual void RotateByX(float) = 0;
 
-    virtual void RotateByY(float)=0;
+    virtual void RotateByY(float) = 0;
 
-    virtual void RotateByZ(float)=0;
+    virtual void RotateByZ(float) = 0;
 
     virtual void NormalX() = 0;
 
     virtual void NormalY() = 0;
 
-    virtual void NormalZ() =0;
+    virtual void NormalZ() = 0;
 
     virtual void NormalIncreaseX(float) = 0;
 
@@ -72,22 +80,24 @@ public:
 
     virtual void NormalIncreaseZ(float) = 0;
 
-    virtual void MoveByNormal(float dist)=0;
+    virtual void MoveByNormal(float dist) = 0;
 
-    virtual void MoveInPlane(float offsetX,float offsetY)=0;
+    virtual void MoveInPlane(float offsetX,float offsetY) = 0;
 
-    virtual void StretchInXY(float scaleX,float scaleY)=0;
+    virtual void StretchInXY(float scaleX,float scaleY) = 0;
+
     //***************************************
     //cpu host ptr
-    virtual uint8_t* GetImageData()=0;
+    //image data inside slicer should set user by GetImageData
 
-    virtual uint32_t GetImageW() const=0;
+    virtual uint8_t* GetImageData() = 0;
 
-    virtual uint32_t GetImageH() const=0;
+    virtual uint32_t GetImageW() const = 0;
+
+    virtual uint32_t GetImageH() const = 0;
 
     virtual void resize(int w,int h) = 0;
 
-    virtual Slice GetSlice() const=0;
 };
 
 
