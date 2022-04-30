@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
-
-project(VolumeSlicer CXX C CUDA)
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES 75)
+endif()
+project(VolumeSlicer LANGUAGES CXX C CUDA)
 #find_package(CUDA REQUIRED) # linux
 
 option(VS_BUILD_TEST "" OFF)
